@@ -1,7 +1,7 @@
 
 CREATE SCHEMA `libro_cantus` DEFAULT CHARACTER SET utf8 ;
-
-CREATE TABLE `libro_cantus`.`species` (
+USE `libro_cantus`;
+CREATE TABLE `species` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `latin_name` VARCHAR(64) NULL,
   `german_name` VARCHAR(64) NULL,
@@ -18,7 +18,27 @@ CREATE TABLE `libro_cantus`.`species` (
   UNIQUE INDEX `english_name_UNIQUE` (`english_name` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`record_time` (
+CREATE TABLE `noise` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(64) NULL,
+  `remarks` TEXT NULL,
+  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP ,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
+
+CREATE TABLE `person` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(64) NULL,
+  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
+
+
+CREATE TABLE `record_time` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `date` DATE NULL,
   `start` TIME NULL,
@@ -30,7 +50,7 @@ CREATE TABLE `libro_cantus`.`record_time` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`record_location` (
+CREATE TABLE `record_location` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(64) NULL,
   `description` TEXT NULL,
@@ -42,7 +62,7 @@ CREATE TABLE `libro_cantus`.`record_location` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
-CREATE TABLE `libro_cantus`.`record_equipment` (
+CREATE TABLE `record_equipment` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `sound_device` VARCHAR(64) NULL,
   `microphone` VARCHAR(64) NULL,
@@ -52,16 +72,9 @@ CREATE TABLE `libro_cantus`.`record_equipment` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
-CREATE TABLE `libro_cantus`.`person` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(64) NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`record_information` (
+CREATE TABLE `record_information` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `license` VARCHAR(64) NULL,
   `recordist_id` INT NULL,
@@ -71,11 +84,11 @@ CREATE TABLE `libro_cantus`.`record_information` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`recordist_id`) REFERENCES `libro_cantus`.`person`(`id`),
+  FOREIGN KEY (`recordist_id`) REFERENCES `person`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`record` (
+CREATE TABLE `record` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `duration` INT NULL,
   `sample_rate` INT NULL,
@@ -91,13 +104,13 @@ CREATE TABLE `libro_cantus`.`record` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`location_id`) REFERENCES `libro_cantus`.`record_location`(`id`),
-  FOREIGN KEY (`information_id`) REFERENCES `libro_cantus`.`record_information`(`id`),
+  FOREIGN KEY (`location_id`) REFERENCES `record_location`(`id`),
+  FOREIGN KEY (`information_id`) REFERENCES `record_information`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `original_file_name_UNIQUE` (`original_file_name` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`annotation_of_species` (
+CREATE TABLE `annotation_of_species` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `start_time` TIME NULL,
   `end_time` TIME NULL,
@@ -109,24 +122,15 @@ CREATE TABLE `libro_cantus`.`annotation_of_species` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `libro_cantus`.`record`(`id`),
-  FOREIGN KEY (`species_id`) REFERENCES `libro_cantus`.`species`(`id`),
-  FOREIGN KEY (`annotator_id`) REFERENCES `libro_cantus`.`person`(`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  FOREIGN KEY (`species_id`) REFERENCES `species`(`id`),
+  FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`noise` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(64) NULL,
-  `remarks` TEXT NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP ,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
 
 
-CREATE TABLE `libro_cantus`.`annotation_of_noise` (
+CREATE TABLE `annotation_of_noise` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `start_time` TIME NULL,
   `end_time` TIME NULL,
@@ -138,7 +142,7 @@ CREATE TABLE `libro_cantus`.`annotation_of_noise` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `libro_cantus`.`record`(`id`),
-  FOREIGN KEY (`noise_id`) REFERENCES `libro_cantus`.`noise`(`id`),
-  FOREIGN KEY (`annotator_id`) REFERENCES `libro_cantus`.`person`(`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  FOREIGN KEY (`noise_id`) REFERENCES `noise`(`id`),
+  FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
