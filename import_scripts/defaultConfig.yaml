@@ -1,0 +1,12 @@
+database:
+  user: "bewr"
+  password: "2die3!2Die3"
+  file_storage_path: "/tmp/libro_cantus/files"
+record_informations:
+  annotator:
+    name: "Olaf Jahn"
+  location:
+    name: "Britz"
+  equipment: "umc404hd-2xSureSM58"
+annoation_file_ending: [".txt"]
+record_file_ending: [".wav"]

@@ -63,17 +63,6 @@ CREATE TABLE `equipment` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
 
-CREATE TABLE `record_time` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `date` DATE NULL,
-  `start` TIME NULL,
-  `end` TIME NULL,
-  `duration` TIME NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created` TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
-
 
 CREATE TABLE `record_information` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -94,7 +83,10 @@ CREATE TABLE `record_information` (
 
 CREATE TABLE `record` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `duration` INT NULL,
+  `date` DATE NULL,
+  `start` TIME NULL,
+  `end` TIME NULL,
+  `duration` TIME NULL,
   `sample_rate` INT NULL,
   `bit_depth` TINYINT NULL,
   `channels` TINYINT NULL,
