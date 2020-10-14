@@ -1,25 +1,26 @@
-import yaml
-from os.path import exists
-import mysql.connector
+from pathlib import Path
+from mysql.connector import connect
 from tools.file_handling import get_record_annoation_tupels
+from tools.configuration import parse_config
+from tools.sub_scripts import check_record_information
 
+DATA_PATH = Path("database/data/BD_Background")
+CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 
-DATA_PATH = "database/data/BD_Background"
-CONFIG_FILE_PATH = "database/import_scripts/defaultConfig.yaml"
-
-CONFIG = None
-with open(CONFIG_FILE_PATH, "r") as stream:
-    CONFIG = yaml.safe_load(stream)
-if exists(DATA_PATH):
+if CONFIG_FILE_PATH.exists() is False:
+    raise FileNotFoundError(CONFIG_FILE_PATH)
+if DATA_PATH.is_dir() is False:
     raise FileNotFoundError(DATA_PATH)
-list_of_data = get_record_annoation_tupels(DATA_PATH)
-# mydb = mysql.connector.connect(
-#     host="localhost",
-#     user="bewr",
-#     passwd="2die3!2Die3",py
-#     database="libro_cantus",
-#     auth_plugin="mysql_native_password",
-# )
 
-# extract list of audio files
-print(list_of_data)
+config = parse_config(CONFIG_FILE_PATH)
+list_of_data = get_record_annoation_tupels(DATA_PATH)
+
+with connect(
+    host=config.database.host,
+    port=config.database.port,
+    user=config.database.user,
+    passwd=config.database.password,
+    database=config.database.name,
+    auth_plugin="mysql_native_password",
+) as mySqlConnection:
+    check_record_information(mySqlConnection, config.record_information)
