@@ -44,7 +44,7 @@ def get_equipment_id_or_create_it(
                 result = get_id_of_entry_in_table(
                     db_cursor, "equipment", ("name", equipment_name)
                 )
-                return result[0]
+                return result
             else:
                 answer = inquirer.confirm(
                     "Do you want set null instead?",

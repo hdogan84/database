@@ -2,7 +2,7 @@ from pathlib import Path
 from mysql.connector import connect
 from tools.file_handling import get_record_annoation_tupels
 from tools.configuration import parse_config
-from tools.sub_scripts import check_record_information
+from tools.sub_scripts.record_information import check_record_information
 
 DATA_PATH = Path("database/data/BD_Background")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
