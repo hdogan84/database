@@ -1,8 +1,15 @@
+from typing import NamedTuple
+from datetime import date, time, datetime
 from pathlib import Path
 from mysql.connector import connect
-from tools.file_handling import get_record_annoation_tupels
+from tools.file_handling import (
+    get_record_annoation_tupels,
+    parse_file_name_location_date_time,
+    read_parameters_from_audio_file,
+)
 from tools.configuration import parse_config
-from tools.sub_scripts.record_information import check_record_information
+from tools.sub_scripts.record_information import check_get_ids_from_record_informations
+
 
 DATA_PATH = Path("database/data/BD_Background")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
@@ -13,7 +20,17 @@ if DATA_PATH.is_dir() is False:
     raise FileNotFoundError(DATA_PATH)
 
 config = parse_config(CONFIG_FILE_PATH)
-list_of_data = get_record_annoation_tupels(DATA_PATH)
+list_of_files = get_record_annoation_tupels(
+    DATA_PATH,
+    record_file_ending=config.files.record_file_ending,
+    annoation_file_ending=config.files.annoation_file_ending,
+)
+
+# check if all filenames are valid
+for corresponding_files in list_of_files:
+    _ = parse_file_name_location_date_time(corresponding_files.audio_file.stem)
+    print(read_parameters_from_audio_file(corresponding_files.audio_file))
+
 
 with connect(
     host=config.database.host,
@@ -23,4 +40,6 @@ with connect(
     database=config.database.name,
     auth_plugin="mysql_native_password",
 ) as mySqlConnection:
-    check_record_information(mySqlConnection, config.record_information)
+    record_information_ids = check_get_ids_from_record_informations(
+        mySqlConnection, config.record_information
+    )

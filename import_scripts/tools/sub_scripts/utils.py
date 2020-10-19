@@ -8,27 +8,37 @@ def ask_for_data(
     return list(
         map(
             (
-                lambda label: inquirer.text(
-                    "Please enter {label}:".format(label=label),
+                lambda value_validate_tuple: inquirer.text(
+                    "Please enter {label}:".format(label=value_validate_tuple[0]),
                     default="",
-                    validate=validate,
+                    validate=value_validate_tuple[1],
                 )
             ),
-            values,
+            zip(values, validate),
         )
     )
 
 
-def is_float(value: str) -> bool:
+def is_float(_, value: str) -> bool:
+
     try:
         float(value)
         return True
     except ValueError as _:
+        print("\nPlease enter a number")
         return False
 
 
 def text_max_length(max_length: int) -> Callable[[str], bool]:
-    def max_len(value: str) -> bool:
-        return len(value) <= max_length
+    def max_len(_, value: str) -> bool:
+        if len(value) <= max_length:
+            return True
+        else:
+            print(
+                "\nText is to long it can only be {} characters, but it is {}".format(
+                    max_length, len(value)
+                )
+            )
+            return False
 
     return max_len
