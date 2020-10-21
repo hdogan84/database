@@ -15,7 +15,7 @@ def get_location_id_or_create_it(
     with db_connection.cursor() as db_cursor:
 
         result = get_id_of_entry_in_table(
-            db_cursor, "location", ("name", location_name)
+            db_cursor, "location", [("name", location_name)]
         )
 
         if result is None:
@@ -23,7 +23,6 @@ def get_location_id_or_create_it(
                 "Location {name} not found do you want to create it?".format(
                     name=location_name
                 ),
-                default=False,
             )
             if answer:
                 data = ask_for_data(
@@ -50,13 +49,12 @@ def get_location_id_or_create_it(
                 )
                 db_connection.commit()
                 result = get_id_of_entry_in_table(
-                    db_cursor, "location", ("name", location_name)
+                    db_cursor, "location", [("name", location_name)]
                 )
                 return result
             else:
                 answer = inquirer.confirm(
                     "Do you want set null instead?",
-                    default=False,
                 )
                 if answer:
                     return None

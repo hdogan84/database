@@ -11,7 +11,7 @@ AudioFileParameters = NamedTuple(
     [
         ("sample_rate", int),
         ("bit_depth", int),
-        ("duration", int),
+        ("duration", float),
         ("channels", int),
         ("mime_type", str),
         ("original_file_name", str),

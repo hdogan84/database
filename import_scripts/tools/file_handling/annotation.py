@@ -8,10 +8,10 @@ AnnotationRaven = NamedTuple(
     [
         ("index", int),
         ("channel", int),
-        ("start_time", int),
-        ("end_time", int),
-        ("start_frequency", int),
-        ("end_frequency", int),
+        ("start_time", float),
+        ("end_time", float),
+        ("start_frequency", float),
+        ("end_frequency", float),
         ("species_code", str),
     ],
 )
@@ -47,6 +47,5 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
     )
     result: List[AnnotationRaven] = []
     for row in annotations.itertuples():
-
         result.append(AnnotationRaven(*row))
     return result

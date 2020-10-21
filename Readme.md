@@ -13,3 +13,7 @@ Naming shema:
 - instance_var_name, 
 - function_parameter_name, 
 - local_var_name.
+
+
+# Database
+Floats are rounded at to 6 decimals and save thow

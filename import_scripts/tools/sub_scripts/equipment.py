@@ -11,7 +11,7 @@ def get_equipment_id_or_create_it(
 ) -> int:
     with db_connection.cursor() as db_cursor:
         result = get_id_of_entry_in_table(
-            db_cursor, "equipment", ("name", equipment_name)
+            db_cursor, "equipment", [("name", equipment_name)]
         )
 
         if result is None:
@@ -19,7 +19,6 @@ def get_equipment_id_or_create_it(
                 "Equipment {name} not found do you want to create it?".format(
                     name=equipment_name
                 ),
-                default=False,
             )
             if answer:
                 data = ask_for_data(
@@ -42,13 +41,12 @@ def get_equipment_id_or_create_it(
                 )
                 db_connection.commit()
                 result = get_id_of_entry_in_table(
-                    db_cursor, "equipment", ("name", equipment_name)
+                    db_cursor, "equipment", [("name", equipment_name)]
                 )
                 return result
             else:
                 answer = inquirer.confirm(
                     "Do you want set null instead?",
-                    default=False,
                 )
                 if answer:
                     return None
