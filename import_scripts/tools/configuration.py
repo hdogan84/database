@@ -1,5 +1,8 @@
 from typedconfig import Config, key, section, group_key
 from typedconfig.source import EnvironmentConfigSource, IniFileConfigSource
+from pathlib import Path
+import errno
+import os
 
 
 @section("database")
@@ -9,7 +12,7 @@ class DatabaseConfig(Config):
     name: str = key(cast=str)
     user: str = key(cast=str)
     password: str = key(cast=str)
-    file_storage_path: str = key(cast=str)
+    file_storage_path: Path = key(cast=Path)
 
 
 @section("record_information")
@@ -32,10 +35,22 @@ class ScriptConfig(Config):
     files: FilesConfig = group_key(FilesConfig)
 
 
+def __validate_database_config(config: DatabaseConfig) -> bool:
+    if config.file_storage_path.exists() is False:
+        raise FileNotFoundError(
+            errno.ENOENT, os.strerror(errno.ENOENT), config.file_storage_path
+        )
+    if config.file_storage_path.is_dir() is False:
+        raise NotADirectoryError(
+            errno.ENOTDIR, os.strerror(errno.ENOTDIR), config.file_storage_path
+        )
+
+
 def parse_config(config_file_path: str, enviroment_prefix: str = None) -> ScriptConfig:
     config = ScriptConfig()
     if enviroment_prefix is not None:
         config.add_source(EnvironmentConfigSource(prefix=enviroment_prefix))
     config.add_source(IniFileConfigSource(config_file_path))
     config.read()
+    __validate_database_config(config.database)
     return config

@@ -2,7 +2,10 @@ from pathlib import Path
 from math import ceil
 from datetime import timedelta
 from mysql.connector import connect
-from tools.file_handling.collect import get_record_annoation_tupels_from_directory
+from tools.file_handling.collect import (
+    get_record_annoation_tupels_from_directory,
+    rename_and_copy_to,
+)
 from tools.file_handling.name import parse_file_name_for_location_date_time
 from tools.file_handling.audio import read_parameters_from_audio_file
 from tools.configuration import parse_config
@@ -12,6 +15,7 @@ from tools.db import get_entry_id_or_create_it, insert_in_table
 
 DATA_PATH = Path("database/data/BD_Background")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+
 
 RECORD_MERGE_STRATEGY = "merge"
 ANOTATION_STRATEGY = "merge"
@@ -90,6 +94,11 @@ with connect(
                 "record",
                 [("md5sum", file_parameters.md5sum)],
                 data=record_data,
+            )
+            rename_and_copy_to(
+                corresponding_files.audio_file,
+                config.database.file_storage_path,
+                file_parameters.md5sum,
             )
 
             annotations = read_raven_file(corresponding_files.annoation_file)

@@ -1,7 +1,7 @@
 from typing import NamedTuple, List
 from pathlib import Path
 from tools.errors import NoAnnoationFileError, ToManyAnnoationFilesError
-
+from shutil import copy
 
 CorespondingFiles = NamedTuple(
     "CorespondingFiles",
@@ -42,3 +42,10 @@ def get_record_annoation_tupels_from_directory(
         )
     )
     return result
+
+
+def rename_and_copy_to(file_path: Path, target_folder: Path, target_name: str):
+    target_file_path = target_folder.joinpath(
+        "{}{}".format(target_name, file_path.suffix)
+    )
+    copy(file_path, target_file_path)
