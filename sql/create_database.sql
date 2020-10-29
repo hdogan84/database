@@ -35,6 +35,16 @@ CREATE TABLE `person` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE
 );
+CREATE TABLE `collection` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(64) NULL,
+  `remarks` TEXT NULL,
+  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE
+);
 CREATE TABLE `location` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(64) NOT NULL,
@@ -61,11 +71,15 @@ CREATE TABLE `equipment` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE
 );
-CREATE TABLE `record_information` (
+CREATE TABLE `derivative` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `sample_rate` INT NULL,
+  `bit_depth` TINYINT NULL,
+  'description' TEXT,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  `name` VARCHAR(64) NOT NULL,
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE
 );
 CREATE TABLE `record` (
@@ -83,16 +97,17 @@ CREATE TABLE `record` (
   `md5sum` VARCHAR(32) NULL,
   `license` VARCHAR(64) NULL,
   `recordist_id` INT NULL,
-  `quality` TINYINT NULL,
   `remarks` TEXT NULL,
   `equipment_id` INT NULL,
   `location_id` INT NULL,
+  `collection_id` INT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`recordist_id`) REFERENCES `person`(`id`),
   FOREIGN KEY (`equipment_id`) REFERENCES `equipment`(`id`),
   FOREIGN KEY (`location_id`) REFERENCES `location`(`id`),
+  FOREIGN KEY (`collection_id`) REFERENCES `collection`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `original_file_name_UNIQUE` (`original_file_name` ASC) VISIBLE
 );
@@ -103,6 +118,7 @@ CREATE TABLE `annotation_of_species` (
   `start_frequency` DECIMAL(12, 6) NULL,
   `end_frequency` DECIMAL(12, 6) NULL,
   `channel` INT NULL,
+  `background` BOOLEAN DEFAULT FALSE,
   `record_id` INT NULL,
   `species_id` INT NULL,
   `annotator_id` INT NULL,
