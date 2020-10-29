@@ -2,6 +2,10 @@ CREATE SCHEMA `libro_cantus` DEFAULT CHARACTER SET utf8;
 USE `libro_cantus`;
 CREATE TABLE `species` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `order` VARCHAR(64) NULL,
+  `family` VARCHAR(64) NULL,
+  `genus` VARCHAR(64) NULL,
+  `species` VARCHAR(64) NULL,
   `latin_name` VARCHAR(64) NULL,
   `german_name` VARCHAR(64) NULL,
   `english_name` VARCHAR(64) NULL,
@@ -75,7 +79,7 @@ CREATE TABLE `derivative` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `sample_rate` INT NULL,
   `bit_depth` TINYINT NULL,
-  'description' TEXT,
+  `description` TEXT,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

@@ -1,4 +1,6 @@
 from typing import List, Tuple, Optional
+from mysql.connector import connect, MySQLConnection
+from tools.configuration import DatabaseConfig
 
 QUERY_FIND_IN_TABLE_BY_VALUES = """
 SELECT id FROM {table} WHERE {condition};
@@ -39,12 +41,13 @@ def insert_in_table(
     Query will not be commited, You have to commit the query by yourself
     """
     keys = ", ".join([x[0] for x in field_value_pairs])
-    values = ", ".join(list(map(lambda x: to_sql(x[1]), field_value_pairs)))
+    values = ", ".join(list(map(lambda x: "%s", field_value_pairs)))
 
     query = QUERY_INSERT_IN_TABLE.format(table=table, keys=keys, values=values)
 
     print("insert in {}".format(table))
-    db_cursor.execute(query)
+    print(query)
+    db_cursor.execute(query, tuple(i[1] for i in field_value_pairs))
 
 
 def get_entry_id_or_create_it(
@@ -95,3 +98,14 @@ SELECT id FROM {table} WHERE {field} = '{field_id}' {querypart}
     )
     result = db_cursor.fetchone()
     return False if result is None else True
+
+
+def connectToDB(config: DatabaseConfig) -> MySQLConnection:
+    return connect(
+        host=config.host,
+        port=config.port,
+        user=config.user,
+        passwd=config.password,
+        database=config.name,
+        auth_plugin="mysql_native_password",
+    )

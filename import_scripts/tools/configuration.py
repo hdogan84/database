@@ -46,7 +46,10 @@ def __validate_database_config(config: DatabaseConfig) -> bool:
         )
 
 
-def parse_config(config_file_path: str, enviroment_prefix: str = None) -> ScriptConfig:
+def parse_config(config_file_path: Path, enviroment_prefix: str = None) -> ScriptConfig:
+    if config_file_path.exists() is False:
+        raise FileNotFoundError(config_file_path)
+
     config = ScriptConfig()
     if enviroment_prefix is not None:
         config.add_source(EnvironmentConfigSource(prefix=enviroment_prefix))
