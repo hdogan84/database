@@ -1,5 +1,6 @@
 from typing import List, Tuple, Optional
 from mysql.connector import connect, MySQLConnection
+from pandas.io.formats.format import common_docstring
 from tools.configuration import DatabaseConfig
 
 QUERY_FIND_IN_TABLE_BY_VALUES = """
@@ -10,8 +11,12 @@ QUERY_INSERT_IN_TABLE = """
 INSERT INTO {table} ({keys}) VALUES ({values})
 """
 
+QUERY_UPDATE_IN_TABLE = """
+UPDATE {table} SET {values} WHERE {condition}; 
+"""
 
-def to_sql(value):
+
+def __to_sql(value):
     if value is None:
         return "null"
     if isinstance(value, int):
@@ -21,15 +26,28 @@ def to_sql(value):
     return "'{}'".format(value)
 
 
-def get_id_of_entry_in_table(
-    db_cursor: any, table: str, field_value_pairs: List[Tuple[str, any]]
-) -> Optional[int]:
+def __to_Condition(field_value_pairs: List[Tuple[str, any]]) -> str:
     condition = " and ".join(
         list(map(lambda x: "`{}`={}".format(x[0], "%s"), field_value_pairs))
     )
-    query = QUERY_FIND_IN_TABLE_BY_VALUES.format(table=table, condition=condition)
-    print(query)
-    db_cursor.execute(query, tuple(to_sql(i[1]) for i in field_value_pairs))
+    return condition
+
+
+def __to_key_equals_values(field_value_pairs: List[Tuple[str, any]]) -> str:
+    condition = " , ".join(
+        list(map(lambda x: "`{}`={}".format(x[0], "%s"), field_value_pairs))
+    )
+    return condition
+
+
+def get_id_of_entry_in_table(
+    db_cursor: any, table: str, field_value_pairs: List[Tuple[str, any]]
+) -> Optional[int]:
+
+    query = QUERY_FIND_IN_TABLE_BY_VALUES.format(
+        table=table, condition=__to_Condition(field_value_pairs)
+    )
+    db_cursor.execute(query, tuple(__to_sql(i[1]) for i in field_value_pairs))
     result = db_cursor.fetchone()
     return None if result is None else result[0]
 
@@ -42,12 +60,23 @@ def insert_in_table(
     """
     keys = ", ".join(["`{}`".format(x[0]) for x in field_value_pairs])
     values = ", ".join(list(map(lambda x: "%s", field_value_pairs)))
-
     query = QUERY_INSERT_IN_TABLE.format(table=table, keys=keys, values=values)
+    db_cursor.execute(query, tuple(i[1] for i in field_value_pairs))
 
-    print("insert in {}".format(table))
-    print(query)
-    db_cursor.execute(query, tuple(to_sql(i[1]) for i in field_value_pairs))
+
+def update_entry(
+    db_cursor: any,
+    table: str,
+    values: List[Tuple[str, any]],
+    condition: List[Tuple[str, any]],
+) -> None:
+    query = QUERY_UPDATE_IN_TABLE.format(
+        table=table,
+        condition=__to_Condition(condition),
+        values=__to_key_equals_values(values),
+    )
+
+    db_cursor.execute(query, tuple(i[1] for i in (values + condition)))
 
 
 def get_entry_id_or_create_it(
@@ -86,7 +115,7 @@ SELECT id FROM {table} WHERE {field} = '{field_id}' {querypart}
         ("end_frequency", end_frequency),
     ]
     querypart = ", ".join(
-        list(map(lambda x: " and {}='{}'".format(x[0], to_sql(x[1])), parts))
+        list(map(lambda x: " and {}='{}'".format(x[0], __to_sql(x[1])), parts))
     )
     db_cursor.execute(
         query.format(

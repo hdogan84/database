@@ -21,24 +21,31 @@ SpeciesRow = NamedTuple(
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 XML_URI = "http://www.worldbirdnames.org/master_ioc-names_xml.xml"
 
-config = parse_config(CONFIG_FILE_PATH)
+config = parse_config(
+    CONFIG_FILE_PATH,
+)
 
 print("Download xml from {}".format(XML_URI))
 var_url = urlopen(XML_URI)
 print("Start parsing XML")
-xmldoc = parse(var_url)
+xmldoc = parse(var_url, process_namespaces=True)
 species_rows: List[SpeciesRow] = []
-print("Start parsing XML")
-for order in xmldoc["ioclist"]["list"]["order"]:
+print("Start generating rows")
+orders = xmldoc["ioclist"]["list"]["order"]
+
+for order in orders:
     order_name = order["latin_name"]
     families = (
         order["family"] if isinstance(order["family"], list) else [order["family"]]
     )
+
     for family in families:
         family_name = family["latin_name"]
         genus_list = (
             family["genus"] if isinstance(family["genus"], list) else [family["genus"]]
         )
+
+        # print(len(genus_list))
         for genus in genus_list:
             genus_name = genus["latin_name"]
             species_list = (
@@ -46,6 +53,7 @@ for order in xmldoc["ioclist"]["list"]["order"]:
                 if isinstance(genus["species"], list)
                 else [genus["species"]]
             )
+            # print(len(species_list))
             for species in species_list:
                 species_name = species["latin_name"]
                 english_name = species["english_name"]
@@ -63,7 +71,6 @@ sorted_species: List[SpeciesRow] = sorted(
         row.order_latin, row.family_latin, row.genus_latin, row.species_latin
     ),
 )
-print(len(sorted_species))
 
 
 with connectToDB(config.database) as db_connection:
@@ -93,4 +100,4 @@ with connectToDB(config.database) as db_connection:
                 ],
                 data=data,
             )
-    db_connection.commit()
+        db_connection.commit()
