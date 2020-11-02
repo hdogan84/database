@@ -25,11 +25,11 @@ def get_id_of_entry_in_table(
     db_cursor: any, table: str, field_value_pairs: List[Tuple[str, any]]
 ) -> Optional[int]:
     condition = " and ".join(
-        list(map(lambda x: "{}={}".format(x[0], to_sql(x[1])), field_value_pairs))
+        list(map(lambda x: "`{}`={}".format(x[0], "%s"), field_value_pairs))
     )
     query = QUERY_FIND_IN_TABLE_BY_VALUES.format(table=table, condition=condition)
     print(query)
-    db_cursor.execute(query)
+    db_cursor.execute(query, tuple(to_sql(i[1]) for i in field_value_pairs))
     result = db_cursor.fetchone()
     return None if result is None else result[0]
 
@@ -40,14 +40,14 @@ def insert_in_table(
     """
     Query will not be commited, You have to commit the query by yourself
     """
-    keys = ", ".join([x[0] for x in field_value_pairs])
+    keys = ", ".join(["`{}`".format(x[0]) for x in field_value_pairs])
     values = ", ".join(list(map(lambda x: "%s", field_value_pairs)))
 
     query = QUERY_INSERT_IN_TABLE.format(table=table, keys=keys, values=values)
 
     print("insert in {}".format(table))
     print(query)
-    db_cursor.execute(query, tuple(i[1] for i in field_value_pairs))
+    db_cursor.execute(query, tuple(to_sql(i[1]) for i in field_value_pairs))
 
 
 def get_entry_id_or_create_it(
