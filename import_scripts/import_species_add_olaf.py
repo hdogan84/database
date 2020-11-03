@@ -22,7 +22,7 @@ with connectToDB(config.database) as db_connection:
             result = update_entry(
                 db_cursor,
                 "species",
-                [("german_name", row[1]), ("olaf_id", row[0])],
+                [("german_name", row[1]), ("olaf6_id", row[0])],
                 [("latin_name", row[2])],
             )
             if db_cursor.rowcount is 0:

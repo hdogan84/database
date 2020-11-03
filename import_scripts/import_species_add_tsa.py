@@ -28,7 +28,7 @@ config = parse_config(CONFIG_FILE_PATH)
 
 # get species list with codes from majo from train_europe table
 SELECT_DISTINCT_SPECIES = """
-SELECT DISTINCT ClassName, ClassId FROM train_europe_v02 
+SELECT DISTINCT * FROM bw_species
 ORDER BY ClassName ASC;
 """
 
@@ -49,9 +49,23 @@ with connectToDB(config.database) as db_connection:
                 [("latin_name", row[0])],
             )
             if db_cursor.rowcount is 0:
-                not_matched.append(row)
+                result = update_entry(
+                    db_cursor,
+                    "species",
+                    [("mario_id", row[1])],
+                    [("english_name", row[2])],
+                )
+                if db_cursor.rowcount is 0:
+                    result = update_entry(
+                        db_cursor,
+                        "species",
+                        [("mario_id", row[1])],
+                        [("german_name", row[3])],
+                    )
+                    if db_cursor.rowcount is 0:
+                        not_matched.append(row)
         db_connection.commit()
 
 for i in not_matched:
-    print(i[0])
+    print(i)
 print("not_matched: {}".format(len(not_matched)))

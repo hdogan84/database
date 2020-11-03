@@ -10,15 +10,13 @@ CREATE TABLE `species` (
   `german_name` VARCHAR(64) NULL,
   `english_name` VARCHAR(64) NULL,
   `ebird_id` VARCHAR(45) NULL,
-  `olaf5_id` VARCHAR(45) NULL,
+  `olaf6_id` VARCHAR(45) NULL,
   `mario_id` VARCHAR(45) NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-  UNIQUE INDEX `latin_name_UNIQUE` (`latin_name` ASC) VISIBLE,
-  UNIQUE INDEX `german_name_UNIQUE` (`german_name` ASC) VISIBLE,
-  UNIQUE INDEX `english_name_UNIQUE` (`english_name` ASC) VISIBLE
+  UNIQUE INDEX `latin_name_UNIQUE` (`latin_name` ASC) VISIBLE
 );
 CREATE TABLE `noise` (
   `id` INT NOT NULL AUTO_INCREMENT,

@@ -10,7 +10,12 @@ from tools.file_handling.audio import read_parameters_from_audio_file
 from tools.configuration import parse_config
 from tools.sub_scripts.record_information import check_get_ids_from_record_informations
 from tools.file_handling.annotation import read_raven_file
-from tools.db import get_entry_id_or_create_it, insert_in_table, connectToDB
+from tools.db import (
+    get_entry_id_or_create_it,
+    insert_in_table,
+    connectToDB,
+    get_id_of_entry_in_table,
+)
 
 DATA_PATH = Path("database/data/BD_Background")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
@@ -91,6 +96,10 @@ with connectToDB(config.database) as db_connection:
             annotations = read_raven_file(corresponding_files.annoation_file)
             for a in annotations:
                 # TODO: get id of species
+                get_id_of_entry_in_table(
+                    db_cursor, "species", [("olaf_id", a.species_code)]
+                )
+
                 annoation_data = [
                     ("record_id", record_id),
                     ("channel", a.channel),
