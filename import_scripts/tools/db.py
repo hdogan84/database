@@ -20,10 +20,12 @@ def __to_sql(value):
     if value is None:
         return "null"
     if isinstance(value, int):
-        return str(value)
+        return value
     if isinstance(value, float):
         return str(round(value, 6))
-    return "'{}'".format(value)
+    if isinstance(value, str):
+        return value
+    return "{}".format(value)
 
 
 def __to_Condition(field_value_pairs: List[Tuple[str, any]]) -> str:
@@ -61,7 +63,7 @@ def insert_in_table(
     keys = ", ".join(["`{}`".format(x[0]) for x in field_value_pairs])
     values = ", ".join(list(map(lambda x: "%s", field_value_pairs)))
     query = QUERY_INSERT_IN_TABLE.format(table=table, keys=keys, values=values)
-    db_cursor.execute(query, tuple(i[1] for i in field_value_pairs))
+    db_cursor.execute(query, tuple(__to_sql(i[1]) for i in field_value_pairs))
 
 
 def update_entry(
@@ -76,7 +78,7 @@ def update_entry(
         values=__to_key_equals_values(values),
     )
 
-    db_cursor.execute(query, tuple(i[1] for i in (values + condition)))
+    db_cursor.execute(query, tuple(__to_sql(i[1]) for i in (values + condition)))
 
 
 def get_entry_id_or_create_it(

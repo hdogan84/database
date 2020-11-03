@@ -17,7 +17,7 @@ from tools.db import (
     get_id_of_entry_in_table,
 )
 
-DATA_PATH = Path("database/data/BD_Background")
+DATA_PATH = Path("database/data/TD_Training")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 
 
@@ -47,6 +47,7 @@ with connectToDB(config.database) as db_connection:
     )
     # start import files
     with db_connection.cursor() as db_cursor:
+        failed_annotations = []
         for corresponding_files in list_of_files:
             file_name_infos = parse_file_name_for_location_date_time(
                 corresponding_files.audio_file.stem
@@ -94,14 +95,19 @@ with connectToDB(config.database) as db_connection:
             )
 
             annotations = read_raven_file(corresponding_files.annoation_file)
+
             for a in annotations:
                 # TODO: get id of species
-                get_id_of_entry_in_table(
-                    db_cursor, "species", [("olaf_id", a.species_code)]
+                species_id = get_id_of_entry_in_table(
+                    db_cursor, "species", [("olaf8_id", a.species_code)]
                 )
+                if species_id is None:
+                    failed_annotations.append(a)
+                    continue
 
                 annoation_data = [
                     ("record_id", record_id),
+                    ("species_id", species_id),
                     ("channel", a.channel),
                     ("start_time", a.start_time),
                     ("end_time", a.end_time),
@@ -117,4 +123,8 @@ with connectToDB(config.database) as db_connection:
                     data=annoation_data,
                 )
             db_connection.commit()
+        print(failed_annotations)
+        print(
+            "Failed annotations not matched species {}".format(len(failed_annotations))
+        )
         # read_raven_file(corresponding_files.annoation_file)

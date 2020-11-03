@@ -13,7 +13,7 @@ CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 config = parse_config(CONFIG_FILE_PATH)
 DF = pd.read_excel(XLSX_FILE_PATH)
 selection = DF[
-    ["6LetterCode_IOC10.1_New", "GermanName_DOG2019", "ScientificName_DOG2019"]
+    ["8LetterCode_IOC10.1_New", "GermanName_DOG2019", "ScientificName_DOG2019"]
 ]
 not_matched = []
 with connectToDB(config.database) as db_connection:
@@ -22,7 +22,7 @@ with connectToDB(config.database) as db_connection:
             result = update_entry(
                 db_cursor,
                 "species",
-                [("german_name", row[1]), ("olaf6_id", row[0])],
+                [("german_name", row[1]), ("olaf8_id", row[0])],
                 [("latin_name", row[2])],
             )
             if db_cursor.rowcount is 0:

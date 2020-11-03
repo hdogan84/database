@@ -21,6 +21,7 @@ class RecordConfig(Config):
     annotator: str = key(cast=str)
     location: str = key(cast=str)
     equipment: str = key(cast=str)
+    collection: str = key(cast=str)
 
 
 @section("files")

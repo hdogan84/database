@@ -4,7 +4,7 @@ from tools.configuration import RecordConfig
 from tools.sub_scripts.equipment import get_equipment_id_or_create_it
 from tools.sub_scripts.location import get_location_id_or_create_it
 from tools.sub_scripts.person import get_person_id_or_create_it
-
+from tools.sub_scripts.collection import get_collection_id_or_create_it
 
 RecordInformaionIds = typing.NamedTuple(
     "RecordInformaionIds",
@@ -13,6 +13,7 @@ RecordInformaionIds = typing.NamedTuple(
         ("recordist_id", int),
         ("equipment_id", int),
         ("location_id", int),
+        ("collection_id", int),
     ],
 )
 
@@ -38,9 +39,14 @@ def check_get_ids_from_record_informations(
         record_information.location,
     )
 
+    collection_id = get_collection_id_or_create_it(
+        db_connection, record_information.collection, "Collection"
+    )
+
     return RecordInformaionIds(
         recordist_id=recordist_id,
         annotator_id=annotator_id,
         equipment_id=equipment_id,
         location_id=location_id,
+        collection_id=collection_id,
     )
