@@ -22,7 +22,7 @@ SpeciesRow = NamedTuple(
 
 
 def import_from_Xml(fileURL: str) -> List[SpeciesRow]:
-    print("Download xml from {}".format(XML_URI))
+    print("Download xml from {}".format(fileURL))
     var_url = urlopen(fileURL)
     print("Start parsing XML")
     xmldoc = parse(var_url, process_namespaces=True)

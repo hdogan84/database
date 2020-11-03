@@ -30,5 +30,5 @@ with connectToDB(config.database) as db_connection:
         db_connection.commit()
 
 for i in not_matched:
-    print(i[2])
+    print((i[2], i[1], i[0]))
 print("not_matched: {}".format(len(not_matched)))
