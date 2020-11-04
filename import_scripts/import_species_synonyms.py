@@ -1,10 +1,6 @@
-from typing import Tuple, List
-
-
 from pathlib import Path
 from tools.configuration import parse_config
 from tools.db import connectToDB, get_entry_id_or_create_it, get_id_of_entry_in_table
-import pandas as pd
 
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 

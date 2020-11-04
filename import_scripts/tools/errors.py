@@ -1,3 +1,6 @@
+from typing import List, Tuple
+
+
 class Error(Exception):
     """Base class for exceptions in this module."""
 
@@ -26,5 +29,13 @@ class EntryNotFoundInDbError(Error):
         self.name = name
         self.message = "{name} found in table {table} of database.".format(
             name=name, table=table
+        )
+        super().__init__(self.message)
+
+
+class MoreThanOneEntryInDbError(Error):
+    def __init__(self, table: str, query: List[Tuple]) -> None:
+        self.message = "{query} found not in table {table} of database.".format(
+            query=query, table=table
         )
         super().__init__(self.message)

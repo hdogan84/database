@@ -1,6 +1,8 @@
 from pathlib import Path
 from math import ceil
 from datetime import timedelta
+from mysql.connector.cursor import MySQLCursor
+from tools.db.queries import get_id_of_entry_in_table
 from tools.file_handling.collect import (
     get_record_annoation_tupels_from_directory,
     rename_and_copy_to,
@@ -10,12 +12,8 @@ from tools.file_handling.audio import read_parameters_from_audio_file
 from tools.configuration import parse_config
 from tools.sub_scripts.record_information import check_get_ids_from_record_informations
 from tools.file_handling.annotation import read_raven_file
-from tools.db import (
-    get_entry_id_or_create_it,
-    insert_in_table,
-    connectToDB,
-    get_id_of_entry_in_table,
-)
+from tools.db import get_entry_id_or_create_it, connectToDB
+from tools.logging import info
 
 DATA_PATH = Path("database/data/TD_Training")
 CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
@@ -47,6 +45,7 @@ with connectToDB(config.database) as db_connection:
     )
     # start import files
     with db_connection.cursor() as db_cursor:
+        db_cursor: MySQLCursor
         failed_annotations = []
         for corresponding_files in list_of_files:
             file_name_infos = parse_file_name_for_location_date_time(
@@ -123,8 +122,12 @@ with connectToDB(config.database) as db_connection:
                     data=annoation_data,
                 )
             db_connection.commit()
-        print(failed_annotations)
-        print(
+
+        # to distinct species values
+        failed_annotations = list(set(list(map(lambda x: x[6], failed_annotations))))
+        info("\n".join(failed_annotations))
+
+        info(
             "Failed annotations not matched species {}".format(len(failed_annotations))
         )
         # read_raven_file(corresponding_files.annoation_file)
