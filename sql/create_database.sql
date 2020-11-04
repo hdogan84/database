@@ -18,6 +18,17 @@ CREATE TABLE `species` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `latin_name_UNIQUE` (`latin_name` ASC) VISIBLE
 );
+CREATE TABLE `species_synonyms` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `species_id` INT NULL,
+  `do-g_to_ioc10.1` VARCHAR(64) NULL,
+  `tsa_to_ioc10.1` VARCHAR(64) NULL,
+  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`species_id`) REFERENCES `species`(`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE
+);
 CREATE TABLE `noise` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(64) NULL,
