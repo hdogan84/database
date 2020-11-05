@@ -96,9 +96,9 @@ def import_from_multilanguage_excel(filePath: Path):
     return selection.sort_values(by=["order", "family", "genus", "species"])
 
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
 # XML_URI = "http://www.worldbirdnames.org/master_ioc-names_xml.xml"
-EXCEL_FILEPATH = Path("database/data/Multiling IOC 10.1.xlsx")
+EXCEL_FILEPATH = Path("data/Multiling IOC 10.1.xlsx")
 
 config = parse_config(CONFIG_FILE_PATH)
 sorted_species = import_from_multilanguage_excel(EXCEL_FILEPATH)

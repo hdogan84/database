@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict
 from math import ceil
 from datetime import timedelta
 from mysql.connector.cursor import MySQLCursor
@@ -15,8 +16,8 @@ from tools.file_handling.annotation import read_raven_file
 from tools.db import get_entry_id_or_create_it, connectToDB
 from tools.logging import info
 
-DATA_PATH = Path("database/data/TD_Training")
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+DATA_PATH = Path("data/TD_Training")
+CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
 
 
 RECORD_MERGE_STRATEGY = "merge"
@@ -101,7 +102,9 @@ with connectToDB(config.database) as db_connection:
                     db_cursor, "species", [("olaf8_id", a.species_code)]
                 )
                 if species_id is None:
-                    failed_annotations.append(a)
+                    failed_annotations.append(
+                        (a[6], file_parameters.original_file_name)
+                    )
                     continue
 
                 annoation_data = [
@@ -124,8 +127,17 @@ with connectToDB(config.database) as db_connection:
             db_connection.commit()
 
         # to distinct species values
-        failed_annotations = list(set(list(map(lambda x: x[6], failed_annotations))))
-        info("\n".join(failed_annotations))
+        labels = {}
+        for fa in failed_annotations:
+            if fa[0] not in labels:
+                labels.update({fa[0]: "\t" + fa[1]})
+            else:
+                labels.update({fa[0]: labels.get(fa[0]) + "\n \t" + fa[1]})
+
+        print(labels)
+        for x in labels:
+            print(x)
+            print(labels[x])
 
         info(
             "Failed annotations not matched species {}".format(len(failed_annotations))

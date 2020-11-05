@@ -65,6 +65,7 @@ CREATE TABLE `location` (
   `habitat` VARCHAR(64) NULL,
   `lat` DECIMAL(13, 10) NULL,
   `lng` DECIMAL(13, 10) NULL,
+  `altitude` DECIMAL(13, 10) NULL,
   `remarks` TEXT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -160,4 +161,13 @@ CREATE TABLE `annotation_of_noise` (
   FOREIGN KEY (`noise_id`) REFERENCES `noise`(`id`),
   FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE
+);
+CREATE TABLE `record_xeno_canto_link`(
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `record_id` INT NOT NULL,
+  `collection_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `collection_id_UNIQUE` (`collection_id` ASC) VISIBLE
 );

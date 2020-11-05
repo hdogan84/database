@@ -11,8 +11,8 @@ from tools.db import (
 from tools.db.queries import get_synonyms_dict
 from tools.logging import debug, info
 
-XLSX_FILE_PATH = "database/AMMOD_AV_20201023_CNN_Training_v4.xlsx"
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+XLSX_FILE_PATH = "AMMOD_AV_20201023_CNN_Training_v4.xlsx"
+CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
 
 config = parse_config(CONFIG_FILE_PATH)
 DF = pd.read_excel(XLSX_FILE_PATH)

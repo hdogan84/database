@@ -9,7 +9,7 @@ from tools.configuration import DatabaseConfig
 import pandas as pd
 
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
 
 TSA_CONFIG = """
 [database]

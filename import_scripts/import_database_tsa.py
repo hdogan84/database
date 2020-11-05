@@ -9,9 +9,9 @@ from tools.configuration import DatabaseConfig
 import pandas as pd
 
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
 
-TSA_CONFIG = Path("database/import_scripts/tsa_connection.cfg")
+TSA_CONFIG = Path("import_scripts/tsa_connection.cfg")
 tsaConfig = DatabaseConfig()
 tsaConfig.add_source(IniFileConfigSource(TSA_CONFIG))
 
