@@ -58,7 +58,7 @@ XenoCantoRow = NamedTuple(
     ],
 )
 
-RecordRowO = NamedTuple(
+RecordRowI = NamedTuple(
     "RecordRowI",
     [
         ("date", date),
@@ -81,9 +81,42 @@ RecordRowO = NamedTuple(
     ],
 )
 
-PersonRowI = NamedTuple(
-    "PersonRowI",
+LocationRowI = NamedTuple(
+    "LocationRowI",
     [
         ("name", str),
+        ("description", str),
+        ("habitat", str),
+        ("lat", float),
+        ("lng", float),
+        ("altitude", float),
+        ("remarks", str),
     ],
+)
+
+CollectionRowI = NamedTuple(
+    "CollectionRowI",
+    [("name", str), ("remarks", str)],
+)
+
+
+EquipmentRowI = NamedTuple(
+    "EquipmentRowI",
+    [("name", str), ("sound_device", str), ("mirophone", str), ("remarks", str)],
+)
+
+AnnotationI = NamedTuple(
+    ("record_id", int),
+    ("species_id", int),
+    ("background", bool),
+    ("individual_id", int),
+    ("group_id", int),
+    ("vocalization_type", str),
+    ("quality_tag", int),
+    ("start_time", float),
+    ("end_time", float),
+    ("start_frequency", int),
+    ("end_frequency", int),
+    ("channel", int),
+    ("annotator_id", int),
 )
