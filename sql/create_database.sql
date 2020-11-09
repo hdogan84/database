@@ -2,10 +2,12 @@ CREATE SCHEMA `libro_cantus` DEFAULT CHARACTER SET utf8;
 USE `libro_cantus`;
 CREATE TABLE `species` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `class` VARCHAR(64) NULL,
   `order` VARCHAR(64) NULL,
   `family` VARCHAR(64) NULL,
   `genus` VARCHAR(64) NULL,
   `species` VARCHAR(64) NULL,
+  `sub_species` VARCHAR(64) NULL,
   `latin_name` VARCHAR(64) NULL,
   `german_name` VARCHAR(64) NULL,
   `english_name` VARCHAR(64) NULL,
@@ -132,6 +134,10 @@ CREATE TABLE `annotation_of_species` (
   `start_frequency` DECIMAL(12, 6) NULL,
   `end_frequency` DECIMAL(12, 6) NULL,
   `channel` INT NULL,
+  `induvidual_id` INT,
+  `group_id` INT,
+  `vocalization_type` VARCHAR(32),
+  `quality_tag` VARCHAR(32),
   `background` BOOLEAN DEFAULT FALSE,
   `record_id` INT NULL,
   `species_id` INT NULL,

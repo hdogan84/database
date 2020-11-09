@@ -108,10 +108,12 @@ with connectToDB(config.database) as db_connection:
         for _, row_data in sorted_species.iterrows():
 
             data = [
+                ("order", "Aves"),
                 ("order", row_data["order"]),
                 ("family", row_data["family"]),
                 ("genus", row_data["genus"]),
                 ("species", row_data["species"]),
+                ("sub_species", None),
                 ("latin_name", row_data["latin_name"]),
                 ("english_name", row_data["english_name"]),
                 ("german_name", row_data["german_name"]),
