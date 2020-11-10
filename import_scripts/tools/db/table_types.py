@@ -106,17 +106,20 @@ EquipmentRowI = NamedTuple(
 )
 
 AnnotationI = NamedTuple(
-    ("record_id", int),
-    ("species_id", int),
-    ("background", bool),
-    ("individual_id", int),
-    ("group_id", int),
-    ("vocalization_type", str),
-    ("quality_tag", int),
-    ("start_time", float),
-    ("end_time", float),
-    ("start_frequency", int),
-    ("end_frequency", int),
-    ("channel", int),
-    ("annotator_id", int),
+    "AnnotationI",
+    [
+        ("record_id", int),
+        ("species_id", int),
+        ("background", bool),
+        ("individual_id", int),
+        ("group_id", int),
+        ("vocalization_type", str),
+        ("quality_tag", int),
+        ("start_time", float),
+        ("end_time", float),
+        ("start_frequency", int),
+        ("end_frequency", int),
+        ("channel", int),
+        ("annotator_id", int),
+    ],
 )

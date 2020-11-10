@@ -16,8 +16,8 @@ from tools.file_handling.annotation import read_raven_file
 from tools.db import get_entry_id_or_create_it, connectToDB
 from tools.logging import info
 
-DATA_PATH = Path("data/TD_Training")
-CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
+DATA_PATH = Path("database/data/TD_Training")
+CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
 
 
 RECORD_MERGE_STRATEGY = "merge"
@@ -72,6 +72,7 @@ with connectToDB(config.database) as db_connection:
                 ),
                 ("sample_rate", file_parameters.sample_rate),
                 ("bit_depth", file_parameters.bit_depth),
+                ("bit_rate", file_parameters.bit_rate),
                 ("channels", file_parameters.channels),
                 ("mime_type", file_parameters.mime_type),
                 ("original_file_name", file_parameters.original_file_name),

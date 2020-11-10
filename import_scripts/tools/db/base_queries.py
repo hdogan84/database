@@ -1,3 +1,4 @@
+from os import WUNTRACED
 from tools.errors import MoreThanOneEntryInDbError
 from typing import List, Tuple
 from mysql.connector.cursor import MySQLCursor
@@ -38,6 +39,11 @@ def get_entries_from_table(
     query = QUERY_SELECT_ENTRY_FROM_TABLE_BY_VALUES.format(
         table=table, fields=",".join(fields), condition=condition
     )
+    debug("get_entries_from_table query: {}".format(query))
+    debug(
+        "get_entries_from_table query parameters:",
+    )
+
     db_cursor.execute(query, to_sql_save_value_list(field_value_pairs))
     results = db_cursor.fetchmany(size=2)
     debug("get_entries_from_table result: {}".format(results))

@@ -1,5 +1,6 @@
 from mysql.connector import connect, MySQLConnection
 from tools.configuration import DatabaseConfig
+from tools.logging import debug
 
 
 def connectToDB(config: DatabaseConfig) -> MySQLConnection:
@@ -14,12 +15,6 @@ def connectToDB(config: DatabaseConfig) -> MySQLConnection:
 
 
 def to_sql_save_value(value):
-    if value is None:
-        return "null"
-    if isinstance(value, int):
-        return value
     if isinstance(value, float):  # round float for fixpoint saving in database
         return str(round(value, 6))
-    if isinstance(value, str):
-        return value
-    return "{}".format(value)
+    return value

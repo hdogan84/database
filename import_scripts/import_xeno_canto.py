@@ -1,33 +1,32 @@
-from _typeshed import NoneType
 from os import name
 from typing import NamedTuple, List
+from datetime import timedelta
 from mysql.connector.cursor import MySQLCursor
 from urllib.request import urlopen
 from xmltodict import parse
-from tools.logging import debug, info
+from tools.logging import debug, info, error
 import csv
+from math import ceil
 from pathlib import Path
 from tools.configuration import parse_config
+from tools.file_handling.audio import read_parameters_from_audio_file
+from datetime import date, datetime
 from tools.db.table_types import (
     XenoCantoRow,
-    PersonRowI,
-    LocationRowI,
-    EquipmentRowI,
-    CollectionRowI,
-    RecordRowI,
-    AnnotationI,
 )
+
 from tools.db import (
     connectToDB,
-    db,
     get_entry_id_or_create_it,
     get_id_of_entry_in_table,
     get_synonyms_dict,
 )
 
-"genus", "species", "ssp", "eng_name", "family", "length_snd", "volume_snd", "speed_snd", "pitch_snd", "number_notes_snd", "variable_snd", "songtype", "song_classification", "quality", "recordist", "olddate", "date", "time", "country", "location", "longitude", "latitude", "elevation", "remarks", "background", "back_nrs", "back_english", "back_latin", "back_families", "back_extra", "path", "species_nr", "order_nr", "dir", "neotropics", "africa", "asia", "europe", "australia", "datetime", "discussed", "license", "snd_nr"
-CONFIG_FILE_PATH = Path("import_scripts/defaultConfig.cfg")
-CSV_FILEPATH = Path("data/birdsounds.csv")
+CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CSV_FILEPATH = Path("database/data/birdsounds.csv")
+FILES_DIRECTORY_PATH = Path(
+    "/home/bewr/external-volumes/stana/mnt/z/AG/TSA/Mario/_Backups/XenoCantoDisk/sounds/"
+)
 config = parse_config(CONFIG_FILE_PATH)
 species_set = set()
 
@@ -51,80 +50,125 @@ with open(CSV_FILEPATH, newline="") as csvfile:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor
 
+            collection_entry = [("name", "xeno-canto"), ("remarks", None)]
             collection_id = get_entry_id_or_create_it(
-                db_cursor, "collection", CollectionRowI(name="xeno-canto", remarks=None)
+                db_cursor, "collection", collection_entry, collection_entry
             )
+            counter = 0
             for row in csv_reader:
-                xeno = XenoCantoRow(*row)
-                xeno: XenoCantoRow
-                species_set.add(
-                    ("{} {}".format(xeno.genus, xeno.species), xeno.eng_name)
-                )
-                synonyms_dict = get_synonyms_dict(db_cursor, "tsa_to_ioc10.1")
-                latin_name = "{} {}".format(xeno.genus, xeno.species)
-                species_id = get_species_id(latin_name, xeno.eng_name)
-                if species_id is None:
-                    missed_imports(row)
-                    continue
-                person_entry = PersonRowI(name=xeno.recordist)
+                try:
+                    counter = counter + 1
+                    if counter > 3:
+                        break
+                    xeno = XenoCantoRow(*row)
+                    xeno: XenoCantoRow
+                    species_set.add(
+                        ("{} {}".format(xeno.genus, xeno.species), xeno.eng_name)
+                    )
+                    synonyms_dict = get_synonyms_dict(db_cursor, "tsa_to_ioc10.1")
+                    latin_name = "{} {}".format(xeno.genus, xeno.species)
+                    species_id = get_species_id(latin_name, xeno.eng_name)
+                    if species_id is None:
+                        missed_imports.append(row)
+                        error(
+                            "Could not identify species{}, {} ".format(
+                                latin_name, xeno.eng_name
+                            )
+                        )
+                        continue
+                    # TODO: get File information
+                    file_path = FILES_DIRECTORY_PATH / Path(xeno.dir) / Path(xeno.path)
+                    if file_path.exists() is False:
+                        error("File does not exhist {}".format(file_path.as_posix()))
+                        continue
 
-                person_id = get_entry_id_or_create_it(db_cursor, "person", person_entry)
+                    audio_file_parameters = read_parameters_from_audio_file(file_path)
+                    person_entry = [("name", xeno.recordist)]
+                    person_id = get_entry_id_or_create_it(
+                        db_cursor, "person", person_entry, person_entry
+                    )
 
-                location_id = get_entry_id_or_create_it(
-                    db_cursor,
-                    "location",
-                    LocationRowI(
-                        name=xeno.location,
-                        description=None,
-                        habitat=None,
-                        lat=xeno.latitude,
-                        lng=xeno.longitude,
-                        altitude=xeno.elevation,
-                        remarks=None,
-                    ),
-                )
-                equipment_id = None
-                # TODO: get File information
-                record_entry = RecordRowI(
-                    date=xeno.date,
-                    start=xeno.time,
-                    end=None,
-                    duration=None,
-                    sample_rate=None,
-                    bit_depth=None,
-                    channels=None,
-                    mime_type=None,
-                    original_file_name=None,
-                    file_name=None,
-                    md5sum=None,
-                    license=xeno.license,
-                    recordist_id=person_id,
-                    equipment_id=None,
-                    location_id=location_id,
-                    collection_id=collection_id,
-                )
+                    location_entry = [
+                        ("name", xeno.location),
+                        ("description", None),
+                        ("habitat", None),
+                        ("lat", xeno.latitude),
+                        ("lng", xeno.longitude),
+                        ("altitude", xeno.elevation),
+                        ("remarks", None),
+                    ]
+                    location_id = get_entry_id_or_create_it(
+                        db_cursor, "location", location_entry, location_entry
+                    )
+                    db_connection.commit()
+                    equipment_id = None
+                    record_start = datetime.strptime(xeno.time, "%H:%M")
+                    record_entry = [
+                        ("date", xeno.date),
+                        ("start", record_start.time()),
+                        (
+                            "end",
+                            (
+                                record_start
+                                + timedelta(
+                                    seconds=ceil(audio_file_parameters.duration)
+                                )
+                            ).time(),
+                        ),
+                        ("duration", audio_file_parameters.duration),
+                        ("sample_rate", audio_file_parameters.sample_rate),
+                        ("bit_depth", audio_file_parameters.bit_depth),
+                        ("bit_rate", audio_file_parameters.bit_rate),
+                        ("channels", audio_file_parameters.channels),
+                        ("mime_type", audio_file_parameters.mime_type),
+                        (
+                            "original_file_name",
+                            audio_file_parameters.original_file_name,
+                        ),
+                        ("file_name", audio_file_parameters.file_name),
+                        ("md5sum", audio_file_parameters.md5sum),
+                        ("license", xeno.license),
+                        ("recordist_id", person_id),
+                        ("equipment_id", None),
+                        ("location_id", location_id),
+                        ("collection_id", collection_id),
+                    ]
 
-                record_id = get_entry_id_or_create_it(db_cursor, "record", record_entry)
-                # create xenocanto link
-                get_entry_id_or_create_it(
-                    db_cursor,
-                    "record_xeno_canto_link",
-                    [("record_id", record_id), ("collection_id", xeno.order_nr)],
-                )
-                # create foreground annoation
+                    record_id = get_entry_id_or_create_it(
+                        db_cursor,
+                        "record",
+                        [
+                            ("md5sum", audio_file_parameters.md5sum),
+                        ],
+                        record_entry,
+                    )
+                    # create xenocanto link
+                    xeno_canto_link_data = [
+                        ("record_id", record_id),
+                        ("collection_id", xeno.order_nr),
+                    ]
+                    get_entry_id_or_create_it(
+                        db_cursor,
+                        "record_xeno_canto_link",
+                        xeno_canto_link_data,
+                        xeno_canto_link_data,
+                    )
+                    # create foreground annoation
 
-                forground_annoation = AnnotationI(
-                    record_id=record_id,
-                    species_id=species_id,
-                    background=False,
-                    individual_id=None,
-                    group_id=None,
-                    vocalization_type=None,
-                    quality_tag=None,
-                    start_time=0,
-                    end_time=None,
-                    start_frequency=None,
-                    end_frequency=None,
-                    channel=None,
-                    annotator_id=person_id,
-                )
+                    forground_annoation = [
+                        ("record_id", record_id),
+                        ("species_id", species_id),
+                        ("background", False),
+                        ("individual_id", None),
+                        ("group_id", None),
+                        ("vocalization_type", None),
+                        ("quality_tag", None),
+                        ("start_time", 0),
+                        ("end_time", None),
+                        ("start_frequency", None),
+                        ("end_frequency", None),
+                        ("channel", None),
+                        ("annotator_id", person_id),
+                    ]
+                except:
+                    break
