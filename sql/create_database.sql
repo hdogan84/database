@@ -62,12 +62,12 @@ CREATE TABLE `collection` (
 );
 CREATE TABLE `location` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(256) NOT NULL,
   `description` TEXT NULL,
   `habitat` VARCHAR(64) NULL,
   `lat` DECIMAL(13, 10) NULL,
   `lng` DECIMAL(13, 10) NULL,
-  `altitude` DECIMAL(13, 10) NULL,
+  `altitude` INT NULL,
   `remarks` TEXT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -125,8 +125,7 @@ CREATE TABLE `record` (
   FOREIGN KEY (`equipment_id`) REFERENCES `equipment`(`id`),
   FOREIGN KEY (`location_id`) REFERENCES `location`(`id`),
   FOREIGN KEY (`collection_id`) REFERENCES `collection`(`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-  UNIQUE INDEX `original_file_name_UNIQUE` (`original_file_name` ASC)
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
 CREATE TABLE `annotation_of_species` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -137,7 +136,7 @@ CREATE TABLE `annotation_of_species` (
   `channel` INT NULL,
   `individual_id` INT,
   `group_id` INT,
-  `vocalization_type` VARCHAR(32),
+  `vocalization_type` VARCHAR(256),
   `quality_tag` VARCHAR(32),
   `background` BOOLEAN DEFAULT FALSE,
   `record_id` INT NULL,
