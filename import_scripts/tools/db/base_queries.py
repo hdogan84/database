@@ -26,6 +26,18 @@ QUERY_SELECT_ENTRY_FROM_TABLE_BY_VALUES = """
 SELECT {fields} FROM {table} WHERE {condition};
 """
 
+QUERY_DELETE_FROM_TABLE = """
+DELETE FROM {table} WHERE {condition};
+"""
+
+
+def delete_from_table(db_cursor: MySQLCursor, table: str, condition: List[str]):
+    query = QUERY_DELETE_FROM_TABLE.format(
+        table=table,
+        condition=to_and_condition(condition),
+    )
+    db_cursor.execute(query, to_sql_save_value_list(condition))
+
 
 def get_entries_from_table(
     db_cursor: MySQLCursor,

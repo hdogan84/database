@@ -13,7 +13,11 @@ from tools.file_handling.audio import read_parameters_from_audio_file
 from tools.configuration import parse_config
 from tools.sub_scripts.record_information import check_get_ids_from_record_informations
 from tools.file_handling.annotation import read_raven_file
-from tools.db import get_entry_id_or_create_it, connectToDB
+from tools.db import (
+    get_entry_id_or_create_it,
+    connectToDB,
+    delete_from_table,
+)
 from tools.logging import info
 
 DATA_PATH = Path("database/data/TD_Training")
@@ -25,6 +29,7 @@ ANOTATION_STRATEGY = "merge"
 ANNOTATION_TABLE = "species"
 LICENSE = None
 
+
 config = parse_config(CONFIG_FILE_PATH)
 list_of_files = get_record_annoation_tupels_from_directory(
     DATA_PATH,
@@ -33,13 +38,14 @@ list_of_files = get_record_annoation_tupels_from_directory(
 )
 
 # check if all filenames are valid
+info("Start checking files")
 for corresponding_files in list_of_files:
 
     _ = parse_file_name_for_location_date_time(corresponding_files.audio_file.stem)
     read_parameters_from_audio_file(corresponding_files.audio_file)
     read_raven_file(corresponding_files.annoation_file)
 
-
+info("Start importing files")
 with connectToDB(config.database) as db_connection:
     import_meta_ids = check_get_ids_from_record_informations(
         db_connection, config.record_information
@@ -48,6 +54,10 @@ with connectToDB(config.database) as db_connection:
     with db_connection.cursor() as db_cursor:
         db_cursor: MySQLCursor
         failed_annotations = []
+        collection_entry = [("name", "ammod_training_set"), ("remarks", None)]
+        collection_id = get_entry_id_or_create_it(
+            db_cursor, "collection", collection_entry, collection_entry
+        )
         for corresponding_files in list_of_files:
             file_name_infos = parse_file_name_for_location_date_time(
                 corresponding_files.audio_file.stem
@@ -81,6 +91,7 @@ with connectToDB(config.database) as db_connection:
                 ("location_id", import_meta_ids.location_id),
                 ("recordist_id", import_meta_ids.recordist_id),
                 ("equipment_id", import_meta_ids.equipment_id),
+                ("collection_id", collection_id),
                 ("license", LICENSE),
             ]
             record_id = get_entry_id_or_create_it(
@@ -89,11 +100,19 @@ with connectToDB(config.database) as db_connection:
                 [("md5sum", file_parameters.md5sum)],
                 data=record_data,
             )
+            db_connection.commit()
+
             rename_and_copy_to(
                 corresponding_files.audio_file,
                 config.database.file_storage_path,
-                file_parameters.md5sum,
+                file_parameters.file_name,
             )
+
+            # remove all old annotations
+            delete_from_table(
+                db_cursor, "annotation_of_species", [("record_id", record_id)]
+            )
+            db_connection.commit()
 
             annotations = read_raven_file(corresponding_files.annoation_file)
 
@@ -111,6 +130,10 @@ with connectToDB(config.database) as db_connection:
                 annoation_data = [
                     ("record_id", record_id),
                     ("species_id", species_id),
+                    ("individual_id", a.individual_id),
+                    ("group_id", a.group_id),
+                    ("vocalization_type", a.vocalization_type),
+                    ("quality_tag", a.quality_tag),
                     ("channel", a.channel),
                     ("start_time", a.start_time),
                     ("end_time", a.end_time),
@@ -135,10 +158,9 @@ with connectToDB(config.database) as db_connection:
             else:
                 labels.update({fa[0]: labels.get(fa[0]) + "\n \t" + fa[1]})
 
-        print(labels)
         for x in labels:
             print(x)
-            print(labels[x])
+            # print(labels[x])
 
         info(
             "Failed annotations not matched species {}".format(len(failed_annotations))

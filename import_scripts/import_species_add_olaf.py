@@ -24,8 +24,8 @@ with connectToDB(config.database) as db_connection:
     with db_connection.cursor() as db_cursor:
         db_cursor: MySQLCursor
         synonyms_dict = get_synonyms_dict(db_cursor, "do-g_to_ioc10.1")
-
         for index, row in selection.iterrows():
+            print("lala", index)
             result = update_entry(
                 db_cursor,
                 "species",
@@ -41,6 +41,7 @@ with connectToDB(config.database) as db_connection:
                         [("german_name", row[1]), ("olaf8_id", row[0])],
                         [("id", species_id)],
                     )
+
                     if db_cursor.rowcount is 0:
                         not_matched.append(row)
         db_connection.commit()

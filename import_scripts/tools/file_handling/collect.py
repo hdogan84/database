@@ -45,7 +45,5 @@ def get_record_annoation_tupels_from_directory(
 
 
 def rename_and_copy_to(file_path: Path, target_folder: Path, target_name: str):
-    target_file_path = target_folder.joinpath(
-        "{}{}".format(target_name, file_path.suffix)
-    )
+    target_file_path = target_folder.joinpath("{}".format(target_name))
     copy(file_path, target_file_path)

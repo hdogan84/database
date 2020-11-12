@@ -15,6 +15,10 @@ from tools.db.table_types import (
     XenoCantoRow,
 )
 
+from tools.file_handling.collect import (
+    rename_and_copy_to,
+)
+
 from tools.db import (
     connectToDB,
     get_entry_id_or_create_it,
@@ -42,19 +46,26 @@ def get_species_id(latin_name: str, english_name: str) -> int:
     return species_id
 
 
-def santize_altitude(value: str):
+def sanitize_altitude(value: str):
     result = value.strip()
     if result.startswith("<"):
         result = result.split("<")[1]
     tmp = result.split("-")
     if len(tmp) > 1:
-        result = int(tmp[0])
+        result = tmp[0]
     if result == "?" or result == "NULL":
         return None
     try:
         return int(result)
     except:
         return None
+
+
+def sanitize_name(value: str, max_length: int):
+    if len(value) <= max_length:
+        return value
+    else:
+        return value[:max_length]
 
 
 with open(CSV_FILEPATH, newline="") as csvfile:
@@ -69,8 +80,12 @@ with open(CSV_FILEPATH, newline="") as csvfile:
             collection_id = get_entry_id_or_create_it(
                 db_cursor, "collection", collection_entry, collection_entry
             )
-
+            counter = 0
             for row in csv_reader:
+                counter = counter + 1
+                if counter % 1000 == 0:
+                    db_connection.commit()
+
                 xeno = XenoCantoRow(*row)
                 xeno: XenoCantoRow
                 species_set.add(
@@ -94,13 +109,13 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     continue
 
                 audio_file_parameters = read_parameters_from_audio_file(file_path)
-                person_entry = [("name", xeno.recordist)]
+                person_entry = [("name", sanitize_name(xeno.recordist, 128))]
                 person_id = get_entry_id_or_create_it(
                     db_cursor, "person", person_entry, person_entry
                 )
 
                 location_entry = [
-                    ("name", xeno.location),
+                    ("name", sanitize_name(xeno.location, 256)),
                     ("description", None),
                     ("habitat", None),
                     (
@@ -117,7 +132,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     ),
                     (
                         "altitude",
-                        santize_altitude(xeno.elevation),
+                        sanitize_altitude(xeno.elevation),
                     ),
                     ("remarks", None),
                 ]
@@ -126,7 +141,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     db_cursor,
                     "location",
                     [
-                        ("name", xeno.location),
+                        ("name", location_entry[0][1]),
                         ("description", None),
                         ("habitat", None),
                         ("remarks", None),
@@ -188,6 +203,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     ],
                     record_entry,
                 )
+
                 # create xenocanto link
                 xeno_canto_link_data = [
                     ("record_id", record_id),
@@ -200,7 +216,11 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     xeno_canto_link_data,
                 )
                 # create foreground annoation
-
+                rename_and_copy_to(
+                    file_path,
+                    config.database.file_storage_path,
+                    audio_file_parameters.file_name,
+                )
                 forground_annoation = [
                     ("record_id", record_id),
                     ("species_id", species_id),
@@ -256,4 +276,4 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                         background_annoation,
                         background_annoation,
                     )
-                # db_connection.commit()
+            db_connection.commit()
