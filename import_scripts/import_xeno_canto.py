@@ -107,8 +107,12 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                 if file_path.exists() is False:
                     error("File does not exhist {}".format(file_path.as_posix()))
                     continue
-
-                audio_file_parameters = read_parameters_from_audio_file(file_path)
+                audio_file_parameters = None
+                try:
+                    audio_file_parameters = read_parameters_from_audio_file(file_path)
+                except:
+                    error("Could not read audio Parameters from {}".format(file_path))
+                    continue
                 person_entry = [("name", sanitize_name(xeno.recordist, 128))]
                 person_id = get_entry_id_or_create_it(
                     db_cursor, "person", person_entry, person_entry
@@ -136,7 +140,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     ),
                     ("remarks", None),
                 ]
-                print(location_entry)
+                # print(location_entry)
                 location_id = get_entry_id_or_create_it(
                     db_cursor,
                     "location",
@@ -150,13 +154,13 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                 )
                 db_connection.commit()
                 equipment_id = None
-                print(xeno.time)
+                # print(xeno.time)
                 record_start = (
                     None
                     if xeno.time == "?" or "?:?"
                     else datetime.strptime(xeno.time, "%H:%M")
                 )
-                print(xeno.date)
+                # print(xeno.date)
                 dateParts = xeno.date.split("-")
                 dateParts[1] = "01" if dateParts[1] == "00" else dateParts[1]
                 dateParts[2] = "01" if dateParts[2] == "00" else dateParts[2]
@@ -236,7 +240,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     ("channel", None),
                     ("annotator_id", person_id),
                 ]
-                print(forground_annoation)
+                # print(forground_annoation)
                 get_entry_id_or_create_it(
                     db_cursor,
                     "annotation_of_species",
