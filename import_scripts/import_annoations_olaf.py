@@ -123,7 +123,7 @@ with connectToDB(config.database) as db_connection:
                 )
                 if species_id is None:
                     failed_annotations.append(
-                        (a[6], file_parameters.original_file_name)
+                        (a.species_code, file_parameters.original_file_name)
                     )
                     continue
 
