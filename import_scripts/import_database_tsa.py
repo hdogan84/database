@@ -47,3 +47,30 @@ with connectToDB(config.database) as db_connection:
 for i in not_matched:
     print(i[0])
 print("not_matched: {}".format(len(not_matched)))
+
+
+(
+    "AVPDPEAT",
+    "AVPIDEMA",
+    "AVPDLOCR",
+    "AVPDPOPA",
+    "AVPDCYCA",
+    "AVPDPAMA",
+    "AVPCPHSI",
+    "AVPCPHTR",
+    "AVSYSYAT",
+    "AVTGTRTR",
+    "AVSISIEU",
+    "AVTUTUME",
+    "AVTUTUPH",
+    "AVTUTUVI",
+    "AVMUMUST",
+    "AVMUERRU",
+    "AVMUFIHY",
+    "AVMUPHPH",
+    "AVMTANTR",
+    "AVFRFRCO",
+    "AVFRCOCO",
+    "AVFRCHCH",
+    "AVFRSPSP",
+)

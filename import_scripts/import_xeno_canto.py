@@ -222,7 +222,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                 # create foreground annoation
                 rename_and_copy_to(
                     file_path,
-                    config.database.file_storage_path,
+                    config.database.get_originals_files_path(),
                     audio_file_parameters.file_name,
                 )
                 forground_annoation = [

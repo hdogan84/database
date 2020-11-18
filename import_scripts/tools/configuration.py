@@ -14,6 +14,12 @@ class DatabaseConfig(Config):
     password: str = key(cast=str)
     file_storage_path: Path = key(cast=Path)
 
+    def get_originals_files_path(self) -> Path:
+        return self.file_storage_path.joinpath("original")
+
+    def get_derivatives_files_path(self) -> Path:
+        return self.file_storage_path.joinpath("derivations")
+
 
 @section("record_information")
 class RecordConfig(Config):
@@ -45,6 +51,11 @@ def __validate_database_config(config: DatabaseConfig) -> bool:
         raise NotADirectoryError(
             errno.ENOTDIR, os.strerror(errno.ENOTDIR), config.file_storage_path
         )
+    else:
+        if config.get_originals_files_path().is_dir() is False:
+            os.mkdir(config.get_originals_files_path())
+        if config.get_derivatives_files_path().is_dir() is False:
+            os.mkdir(config.get_derivatives_files_path())
 
 
 def parse_config(config_file_path: Path, enviroment_prefix: str = None) -> ScriptConfig:

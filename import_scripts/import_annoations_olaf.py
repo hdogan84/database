@@ -54,7 +54,7 @@ with connectToDB(config.database) as db_connection:
     with db_connection.cursor() as db_cursor:
         db_cursor: MySQLCursor
         failed_annotations = []
-        collection_entry = [("name", "ammod_training_set"), ("remarks", None)]
+        collection_entry = [("name", import_meta_ids.collection_id), ("remarks", None)]
         collection_id = get_entry_id_or_create_it(
             db_cursor, "collection", collection_entry, collection_entry
         )
@@ -104,7 +104,7 @@ with connectToDB(config.database) as db_connection:
 
             rename_and_copy_to(
                 corresponding_files.audio_file,
-                config.database.file_storage_path,
+                config.database.get_originals_files_path(),
                 file_parameters.file_name,
             )
 
