@@ -33,6 +33,7 @@ FILES_DIRECTORY_PATH = Path(
 )
 config = parse_config(CONFIG_FILE_PATH)
 species_set = set()
+a = config.record_information
 
 
 def get_species_id(latin_name: str, english_name: str) -> int:

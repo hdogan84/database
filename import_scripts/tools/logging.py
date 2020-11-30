@@ -1,4 +1,4 @@
 import logging
 from logging import *
 
-basicConfig(level=logging.DEBUG)
+basicConfig(level=logging.INFO)

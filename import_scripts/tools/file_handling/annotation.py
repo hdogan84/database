@@ -5,7 +5,7 @@ from math import isnan
 from functools import cmp_to_key
 
 from enum import Enum
-
+from math import isnan
 
 TD_START_END = "TD_Start_End"
 BACKGROUND = "BACKGROUND"
@@ -41,6 +41,7 @@ class AnnotationRaven:
     group_id: int
     vocalization_type: str
     quality_tag: str
+    id_level: int
 
     def __init__(
         self,
@@ -54,6 +55,7 @@ class AnnotationRaven:
         group_id,
         vocalization_type,
         quality_tag,
+        id_level,
     ):
         self.channel = channel
         self.start_time = start_time
@@ -65,6 +67,7 @@ class AnnotationRaven:
         self.group_id = group_id
         self.vocalization_type = vocalization_type
         self.quality_tag = quality_tag
+        self.id_level = id_level
 
 
 def speciesCodeToInt(code: str) -> int:
@@ -117,6 +120,7 @@ raven_columns = [
     "High Freq (Hz)",
     "SpeciesCode",
     "Individual_Group",
+    "ID_level",
     "QualityTag",
     "VocalizationTypeCode",
 ]
@@ -142,6 +146,13 @@ def sanitize_quality(quality) -> str:
         return None
 
 
+def sanitize_id_level(id_level) -> int:
+    if isinstance(id_level, str) and id_level != "NULL":
+        return int(id_level[-1])
+    else:
+        return None
+
+
 def read_raven_file(file: Path) -> List[AnnotationRaven]:
     annotations = read_csv(
         open(file, "rb"),
@@ -159,6 +170,7 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             "Low Freq (Hz)": "start_frequency",
             "High Freq (Hz)": "end_frequency",
             "SpeciesCode": "species_code",
+            "ID_level": "id_level",
             "QualityTag": "quality_tag",
             "VocalizationTypeCode": "vocalization_type",
         }
@@ -175,6 +187,7 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             species_code=row.species_code,
             individual_id=get_group_id(row.Individual_Group, "i"),
             group_id=get_group_id(row.Individual_Group, ["g", "f", "m"]),
+            id_level=sanitize_id_level(row.id_level),
             vocalization_type=row.vocalization_type,
             quality_tag=sanitize_quality(
                 row.quality_tag

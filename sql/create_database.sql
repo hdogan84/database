@@ -138,6 +138,7 @@ CREATE TABLE `annotation_of_species` (
   `group_id` INT,
   `vocalization_type` VARCHAR(256),
   `quality_tag` VARCHAR(32),
+  `id_level` INT,
   `background` BOOLEAN DEFAULT FALSE,
   `record_id` INT NULL,
   `species_id` INT NULL,
