@@ -17,3 +17,8 @@ Naming shema:
 
 # Database
 Floats are rounded at to 6 decimals and save thow
+
+#crontjo jeden Montag
+cronjob -e
+add
+0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import.py
