@@ -19,7 +19,7 @@ CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 TARGET_FILE_PATH = Path("libro_animalis/data/original_v2")
 
 
-def fix_file_path(target_folder: Path, config: Path = CONFIG_FILE_PATH):
+def fix_file_path(target_folder: Path, config: Path = CONFIG_FILE_PATH, source=None):
     config = parse_config(config)
     if target_folder.exists() is False:
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), target_folder)
@@ -56,7 +56,12 @@ def fix_file_path(target_folder: Path, config: Path = CONFIG_FILE_PATH):
             """
             )
             for record in db_cursor.fetchall():
-                src = config.database.file_storage_path.joinpath("original", record[2])
+
+                src = (
+                    config.database.file_storage_path.joinpath("original", record[2])
+                    if source is None
+                    else source.joinpath(record[2])
+                )
                 target = target_folder.joinpath(record[1], record[2])
                 shutil.move(src, target)
 
@@ -70,6 +75,15 @@ parser.add_argument(
     help="target folder",
     default=TARGET_FILE_PATH,
 )
+
+parser.add_argument(
+    "--source",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="target folder",
+    default=None,
+)
 parser.add_argument(
     "--config",
     metavar="path",
@@ -81,6 +95,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 target: Path = args.target
+source: Path = args.source
 config: Path = args.config
 if __name__ == "__main__":
-    fix_file_path(target, config)
+    fix_file_path(target, config, source=source)
