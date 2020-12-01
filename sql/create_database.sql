@@ -110,6 +110,7 @@ CREATE TABLE `record` (
   `channels` TINYINT NULL,
   `mime_type` VARCHAR(45) NULL,
   `original_file_name` VARCHAR(256) NULL,
+  `file_path` VARCHAR(64) NULL,
   `file_name` VARCHAR(45) NULL,
   `md5sum` VARCHAR(32) NULL,
   `license` VARCHAR(64) NULL,
