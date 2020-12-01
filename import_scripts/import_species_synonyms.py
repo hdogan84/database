@@ -2,7 +2,7 @@ from pathlib import Path
 from tools.configuration import parse_config
 from tools.db import connectToDB, get_entry_id_or_create_it, get_id_of_entry_in_table
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 
 config = parse_config(CONFIG_FILE_PATH)
 

@@ -26,8 +26,8 @@ from tools.db import (
     get_synonyms_dict,
 )
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
-CSV_FILEPATH = Path("database/data/birdsounds.csv")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
+CSV_FILEPATH = Path("libro_animalis/data/birdsounds.csv")
 FILES_DIRECTORY_PATH = Path(
     "/home/bewr/external-volumes/stana/mnt/z/AG/TSA/Mario/_Backups/XenoCantoDisk/sounds/"
 )

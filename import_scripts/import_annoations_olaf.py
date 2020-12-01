@@ -20,8 +20,8 @@ from tools.db import (
 )
 from tools.logging import info
 
-DATA_PATH = Path("database/data/TD_Training")
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+DATA_PATH = Path("libro_animalis/data/TD_Training")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 
 
 RECORD_MERGE_STRATEGY = "merge"

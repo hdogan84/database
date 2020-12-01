@@ -11,7 +11,7 @@ from derivates import Standart22khz
 from tools.multilabel import SimpleMultiLabels
 import csv
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 
 config = parse_config(CONFIG_FILE_PATH)
 

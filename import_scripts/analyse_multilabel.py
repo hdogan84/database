@@ -15,7 +15,7 @@ import numpy as np
 import numpy.random as random
 import matplotlib.pyplot as plt
 
-CONFIG_FILE_PATH = Path("database/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 
 config = parse_config(CONFIG_FILE_PATH)
 
