@@ -188,10 +188,10 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                     ("channels", audio_file_parameters.channels),
                     ("mime_type", audio_file_parameters.mime_type),
                     (
-                        "original_file_name",
-                        audio_file_parameters.original_file_name,
+                        "original_filename",
+                        audio_file_parameters.original_filename,
                     ),
-                    ("file_name", audio_file_parameters.file_name),
+                    ("filename", audio_file_parameters.filename),
                     ("md5sum", audio_file_parameters.md5sum),
                     ("license", xeno.license),
                     ("recordist_id", person_id),
@@ -224,7 +224,7 @@ with open(CSV_FILEPATH, newline="") as csvfile:
                 rename_and_copy_to(
                     file_path,
                     config.database.get_originals_files_path(),
-                    audio_file_parameters.file_name,
+                    audio_file_parameters.filename,
                 )
                 forground_annoation = [
                     ("record_id", record_id),

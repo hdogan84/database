@@ -6,7 +6,7 @@ from enum import Enum, IntEnum
 
 class Index(IntEnum):
     LATIN_NAME = 0
-    FILE_NAME = 1
+    FILENAME = 1
     START_TIME = 2
     END_TIME = 3
     QUALITY_TAG = 4
@@ -43,7 +43,7 @@ class LabeGeneratorBaseClass:
 
     def __init__(self, annotations: List[list]):
         """
-        "latin_name","file_name","start_time", "end_time","quality_tag","individual_id","group_id","quality_tag","channel",
+        "latin_name","filename","start_time", "end_time","quality_tag","individual_id","group_id","quality_tag","channel",
         """
         self.annotations = annotations
 
@@ -97,14 +97,14 @@ class LabeGeneratorBaseClass:
 
         annotations = self.annotations
         filebased_annotations: list[list] = []
-        last_file_name: str = None
+        last_filename: str = None
         tmp_group = []
         for annotation in annotations:
-            if annotation[Index.FILE_NAME] != last_file_name:
+            if annotation[Index.FILENAME] != last_filename:
                 if len(tmp_group) > 0:
                     filebased_annotations.append(tmp_group)
                     tmp_group = []
-                last_file_name = annotation[Index.FILE_NAME]
+                last_filename = annotation[Index.FILENAME]
             tmp_group.append(annotation)
         if len(tmp_group) > 0:
             filebased_annotations.append(tmp_group)
@@ -136,8 +136,8 @@ class LabeGeneratorBaseClass:
             start = a[Index.START_TIME]
             stop = a[Index.END_TIME]
             label = a[Index.LATIN_NAME]
-            file_name = a[Index.FILE_NAME]
-            tmp_group.append((duration, start, stop, label, 1, file_name))
+            filename = a[Index.FILENAME]
+            tmp_group.append((duration, start, stop, label, 1, filename))
         return tmp_group
 
 
@@ -152,6 +152,6 @@ class SimpleMultiLabels(LabeGeneratorBaseClass):
             stop,
             labels,
             len(labels_list),
-            annotations[0][Index.FILE_NAME],
+            annotations[0][Index.FILENAME],
         )
         annotations = self.annotations

@@ -10,8 +10,8 @@ FileNameInformations = NamedTuple(
 )
 
 
-def parse_file_name_for_location_date_time(file_name: str) -> FileNameInformations:
-    parts = file_name.split(sep="_", maxsplit=1)
+def parse_filename_for_location_date_time(filename: str) -> FileNameInformations:
+    parts = filename.split(sep="_", maxsplit=1)
     location_name = parts[0]
     record_datetime = datetime.strptime(parts[1], "%Y%m%d_%H%M%S")
     return FileNameInformations(

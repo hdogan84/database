@@ -17,8 +17,8 @@ AudioFileParameters = NamedTuple(
         ("duration", float),
         ("channels", int),
         ("mime_type", str),
-        ("original_file_name", str),
-        ("file_name", str),
+        ("original_filename", str),
+        ("filename", str),
         ("md5sum", str),
     ],
 )
@@ -30,16 +30,16 @@ AudioFileParameters = NamedTuple(
 
 # 'duration':'300.000000'
 def read_parameters_from_audio_file(file: Path) -> AudioFileParameters:
-    original_file_name = file.name
-    file_name = uuid4().hex + file.suffix
+    original_filename = file.name
+    filename = uuid4().hex + file.suffix
     mime_type = guess_type(file.name)[0]
     md5sum = md5(open(file, "rb").read()).hexdigest()
 
     media_info = mediainfo(file)
 
     return AudioFileParameters(
-        original_file_name=original_file_name,
-        file_name=file_name,
+        original_filename=original_filename,
+        filename=filename,
         mime_type=mime_type,
         md5sum=md5sum,
         sample_rate=int(media_info["sample_rate"]),

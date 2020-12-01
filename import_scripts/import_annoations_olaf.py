@@ -8,7 +8,7 @@ from tools.file_handling.collect import (
     get_record_annoation_tupels_from_directory,
     rename_and_copy_to,
 )
-from tools.file_handling.name import parse_file_name_for_location_date_time
+from tools.file_handling.name import parse_filename_for_location_date_time
 from tools.file_handling.audio import read_parameters_from_audio_file
 from tools.configuration import parse_config
 from tools.sub_scripts.record_information import check_get_ids_from_record_informations
@@ -42,7 +42,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
     info("Start checking files")
     for corresponding_files in list_of_files:
 
-        _ = parse_file_name_for_location_date_time(corresponding_files.audio_file.stem)
+        _ = parse_filename_for_location_date_time(corresponding_files.audio_file.stem)
         read_parameters_from_audio_file(corresponding_files.audio_file)
         read_raven_file(corresponding_files.annoation_file)
 
@@ -63,7 +63,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                 db_cursor, "collection", collection_entry, collection_entry
             )
             for corresponding_files in list_of_files:
-                file_name_infos = parse_file_name_for_location_date_time(
+                filename_infos = parse_filename_for_location_date_time(
                     corresponding_files.audio_file.stem
                 )
                 file_parameters = read_parameters_from_audio_file(
@@ -71,12 +71,12 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                 )
 
                 record_data = [
-                    ("date", file_name_infos.record_datetime.strftime("%Y-%m-%d")),
-                    ("start", file_name_infos.record_datetime.time()),
+                    ("date", filename_infos.record_datetime.strftime("%Y-%m-%d")),
+                    ("start", filename_infos.record_datetime.time()),
                     (
                         "end",
                         (
-                            file_name_infos.record_datetime
+                            filename_infos.record_datetime
                             + timedelta(seconds=ceil(file_parameters.duration))
                         ).time(),
                     ),
@@ -89,8 +89,8 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                     ("bit_rate", file_parameters.bit_rate),
                     ("channels", file_parameters.channels),
                     ("mime_type", file_parameters.mime_type),
-                    ("original_file_name", file_parameters.original_file_name),
-                    ("file_name", file_parameters.file_name),
+                    ("original_filename", file_parameters.original_filename),
+                    ("filename", file_parameters.filename),
                     ("md5sum", file_parameters.md5sum),
                     ("location_id", import_meta_ids.location_id),
                     ("recordist_id", import_meta_ids.recordist_id),
@@ -109,7 +109,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                 rename_and_copy_to(
                     corresponding_files.audio_file,
                     config.database.get_originals_files_path(),
-                    file_parameters.file_name,
+                    file_parameters.filename,
                 )
 
                 # remove all old annotations
@@ -127,7 +127,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                     )
                     if species_id is None:
                         failed_annotations.append(
-                            (a.species_code, file_parameters.original_file_name)
+                            (a.species_code, file_parameters.original_filename)
                         )
                         continue
 
