@@ -6,6 +6,7 @@ from urllib.request import urlopen
 from xmltodict import parse
 from tools.logging import debug, info, error
 import csv
+import argparse
 from math import ceil
 from pathlib import Path
 from tools.configuration import parse_config
@@ -33,8 +34,10 @@ FILES_DIRECTORY_PATH = Path(
 )
 
 
-def import_xeno_canto():
-    config = parse_config(CONFIG_FILE_PATH)
+def import_xeno_canto(
+    files=FILES_DIRECTORY_PATH, config_path=CONFIG_FILE_PATH, csv_path=CSV_FILEPATH
+):
+    config = parse_config(config_path)
     species_set = set()
     a = config.record_information
 
@@ -68,7 +71,7 @@ def import_xeno_canto():
         else:
             return value[:max_length]
 
-    with open(CSV_FILEPATH, newline="") as csvfile:
+    with open(csv_path, newline="") as csvfile:
         csv_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
         next(csv_reader)
         missed_imports = []
@@ -103,7 +106,7 @@ def import_xeno_canto():
                         )
                         continue
                     # TODO: get File information
-                    file_path = FILES_DIRECTORY_PATH / Path(xeno.dir) / Path(xeno.path)
+                    file_path = files / Path(xeno.dir) / Path(xeno.path)
                     if file_path.exists() is False:
                         error("File does not exhist {}".format(file_path.as_posix()))
                         continue
@@ -168,7 +171,11 @@ def import_xeno_canto():
                     dateParts = xeno.date.split("-")
                     dateParts[1] = "01" if dateParts[1] == "00" else dateParts[1]
                     dateParts[2] = "01" if dateParts[2] == "00" else dateParts[2]
-
+                    target_record_file_path = "{}/{}/{}".format(
+                        audio_file_parameters.md5sum[0],
+                        audio_file_parameters.md5sum[1],
+                        audio_file_parameters.md5sum[2],
+                    )
                     record_entry = [
                         ("date", "-".join(dateParts)),
                         (
@@ -198,6 +205,7 @@ def import_xeno_canto():
                             "original_filename",
                             audio_file_parameters.original_filename,
                         ),
+                        ("file_path", target_record_file_path),
                         ("filename", audio_file_parameters.filename),
                         ("md5sum", audio_file_parameters.md5sum),
                         ("license", xeno.license),
@@ -207,32 +215,40 @@ def import_xeno_canto():
                         ("collection_id", collection_id),
                     ]
 
-                    record_id = get_entry_id_or_create_it(
+                    (record_id, created) = get_entry_id_or_create_it(
                         db_cursor,
                         "record",
                         [
                             ("md5sum", audio_file_parameters.md5sum),
                         ],
-                        record_entry,
+                        data=record_entry,
+                        info=True,
                     )
-
-                    # create xenocanto link
-                    xeno_canto_link_data = [
-                        ("record_id", record_id),
-                        ("collection_id", xeno.snd_nr),
-                    ]
-                    get_entry_id_or_create_it(
-                        db_cursor,
-                        "record_xeno_canto_link",
-                        xeno_canto_link_data,
-                        xeno_canto_link_data,
-                    )
+                    if created:
+                        # create xenocanto link
+                        xeno_canto_link_data = [
+                            ("record_id", record_id),
+                            ("collection_id", xeno.snd_nr),
+                        ]
+                        get_entry_id_or_create_it(
+                            db_cursor,
+                            "record_xeno_canto_link",
+                            xeno_canto_link_data,
+                            xeno_canto_link_data,
+                        )
+                        # move file to destination
+                        targetDirectory = (
+                            config.database.get_originals_files_path().joinpath(
+                                target_record_file_path
+                            )
+                        )
+                        targetDirectory.mkdir(parents=True, exist_ok=True)
+                        rename_and_copy_to(
+                            file_path,
+                            targetDirectory,
+                            audio_file_parameters.filename,
+                        )
                     # create foreground annoation
-                    rename_and_copy_to(
-                        file_path,
-                        config.database.get_originals_files_path(),
-                        audio_file_parameters.filename,
-                    )
                     forground_annoation = [
                         ("record_id", record_id),
                         ("species_id", species_id),
@@ -248,10 +264,76 @@ def import_xeno_canto():
                         ("channel", None),
                         ("annotator_id", person_id),
                     ]
+                    # print(forground_annoation)
                     get_entry_id_or_create_it(
                         db_cursor,
                         "annotation_of_species",
-                        background_annoation,
-                        background_annoation,
+                        forground_annoation,
+                        forground_annoation,
                     )
-            db_connection.commit()
+
+                    background_species = xeno.background.split(",")
+                    for species in background_species:
+                        back_species_id = get_species_id(latin_name, xeno.eng_name)
+                        if back_species_id is None:
+                            missed_imports.append(row)
+                            error(
+                                "Could not identify species{}, {} ".format(
+                                    latin_name, xeno.eng_name
+                                )
+                            )
+                            continue
+                        background_annoation = [
+                            ("record_id", record_id),
+                            ("species_id", species_id),
+                            ("background", True),
+                            ("individual_id", None),
+                            ("group_id", None),
+                            ("vocalization_type", None),
+                            ("quality_tag", None),
+                            ("start_time", 0),
+                            ("end_time", audio_file_parameters.duration),
+                            ("start_frequency", None),
+                            ("end_frequency", None),
+                            ("channel", None),
+                            ("annotator_id", person_id),
+                        ]
+                        get_entry_id_or_create_it(
+                            db_cursor,
+                            "annotation_of_species",
+                            background_annoation,
+                            background_annoation,
+                        )
+                db_connection.commit()
+
+
+parser = argparse.ArgumentParser(description="")
+parser.add_argument(
+    "--files",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="target folder",
+    default=FILES_DIRECTORY_PATH,
+)
+
+parser.add_argument(
+    "--csv",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="csv file with all entries",
+    default=CSV_FILEPATH,
+)
+parser.add_argument(
+    "--config",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    default=CONFIG_FILE_PATH,
+    help="config file with database credentials",
+)
+
+args = parser.parse_args()
+if __name__ == "__main__":
+    import_xeno_canto(files=args.files, config_path=args.config, csv_path=args.csv)
