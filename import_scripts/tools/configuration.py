@@ -18,7 +18,7 @@ class DatabaseConfig(Config):
         return self.file_storage_path.joinpath("original")
 
     def get_derivatives_files_path(self) -> Path:
-        return self.file_storage_path.joinpath("derivations")
+        return self.file_storage_path.joinpath("derivation")
 
 
 @section("record_information")

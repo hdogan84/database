@@ -3,6 +3,7 @@ from typing import Dict, List
 from math import ceil
 from datetime import timedelta
 from mysql.connector.cursor import MySQLCursor
+from fix_folderstructure import TARGET_FILE_PATH
 from tools.db.queries import get_id_of_entry_in_table
 from tools.file_handling.collect import (
     get_record_annoation_tupels_from_directory,
@@ -19,6 +20,7 @@ from tools.db import (
     delete_from_table,
 )
 from tools.logging import info
+import argparse
 
 DATA_PATH = Path("libro_animalis/data/TD_Training")
 CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
@@ -41,7 +43,6 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
     # check if all filenames are valid
     info("Start checking files")
     for corresponding_files in list_of_files:
-
         _ = parse_filename_for_location_date_time(corresponding_files.audio_file.stem)
         read_parameters_from_audio_file(corresponding_files.audio_file)
         read_raven_file(corresponding_files.annoation_file)
@@ -63,20 +64,24 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                 db_cursor, "collection", collection_entry, collection_entry
             )
             for corresponding_files in list_of_files:
-                filename_infos = parse_filename_for_location_date_time(
+                file_name_infos = parse_filename_for_location_date_time(
                     corresponding_files.audio_file.stem
                 )
                 file_parameters = read_parameters_from_audio_file(
                     corresponding_files.audio_file
                 )
-
+                target_record_file_path = "{}/{}/{}".format(
+                    file_parameters.md5sum[0],
+                    file_parameters.md5sum[1],
+                    file_parameters.md5sum[2],
+                )
                 record_data = [
-                    ("date", filename_infos.record_datetime.strftime("%Y-%m-%d")),
-                    ("start", filename_infos.record_datetime.time()),
+                    ("date", file_name_infos.record_datetime.strftime("%Y-%m-%d")),
+                    ("start", file_name_infos.record_datetime.time()),
                     (
                         "end",
                         (
-                            filename_infos.record_datetime
+                            file_name_infos.record_datetime
                             + timedelta(seconds=ceil(file_parameters.duration))
                         ).time(),
                     ),
@@ -91,6 +96,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                     ("mime_type", file_parameters.mime_type),
                     ("original_filename", file_parameters.original_filename),
                     ("filename", file_parameters.filename),
+                    ("file_path", target_record_file_path),
                     ("md5sum", file_parameters.md5sum),
                     ("location_id", import_meta_ids.location_id),
                     ("recordist_id", import_meta_ids.recordist_id),
@@ -108,9 +114,15 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
 
                 db_connection.commit()
                 if created:
+                    targetDirectory = (
+                        config.database.get_originals_files_path().joinpath(
+                            target_record_file_path
+                        )
+                    )
+                    targetDirectory.mkdir(parents=True, exist_ok=True)
                     rename_and_copy_to(
                         corresponding_files.audio_file,
-                        config.database.get_originals_files_path(),
+                        targetDirectory,
                         file_parameters.filename,
                     )
 
@@ -178,5 +190,23 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
             return labels
 
 
+parser = argparse.ArgumentParser(description="")
+parser.add_argument(
+    "--data",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="target folder",
+    default=DATA_PATH,
+)
+parser.add_argument(
+    "--config",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    default=CONFIG_FILE_PATH,
+    help="config file with database credentials",
+)
+args = parser.parse_args()
 if __name__ == "__main__":
-    import_data()
+    import_data(args.data, args.config)
