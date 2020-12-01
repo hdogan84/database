@@ -10,6 +10,7 @@ from tools.db import (
     update_entry,
     get_synonyms_dict,
 )
+import argparse
 from tools.configuration import parse_config
 from tools.db.queries import get_synonyms_dict
 from tools.logging import debug, info
@@ -60,6 +61,26 @@ def fix_file_path(target_folder: Path, config: Path = CONFIG_FILE_PATH):
                 shutil.move(src, target)
 
 
+parser = argparse.ArgumentParser(description="")
+parser.add_argument(
+    "--target",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="target folder",
+    default=TARGET_FILE_PATH,
+)
+parser.add_argument(
+    "--config",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    default=CONFIG_FILE_PATH,
+    help="config file with database credentials",
+)
+
+args = parser.parse_args()
+target: Path = args.target
+config: Path = args.config
 if __name__ == "__main__":
-    fix_file_path(TARGET_FILE_PATH)
-    pass
+    fix_file_path(target, config)
