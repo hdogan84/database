@@ -98,19 +98,21 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                     ("collection_id", collection_id),
                     ("license", LICENSE),
                 ]
-                record_id = get_entry_id_or_create_it(
+                (record_id, created) = get_entry_id_or_create_it(
                     db_cursor,
                     "record",
                     [("md5sum", file_parameters.md5sum)],
                     data=record_data,
+                    info=True,
                 )
-                db_connection.commit()
 
-                rename_and_copy_to(
-                    corresponding_files.audio_file,
-                    config.database.get_originals_files_path(),
-                    file_parameters.filename,
-                )
+                db_connection.commit()
+                if created:
+                    rename_and_copy_to(
+                        corresponding_files.audio_file,
+                        config.database.get_originals_files_path(),
+                        file_parameters.filename,
+                    )
 
                 # remove all old annotations
                 delete_from_table(

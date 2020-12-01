@@ -32,7 +32,8 @@ def get_entry_id_or_create_it(
     table: str,
     query: List[Tuple[str, any]],
     data: List[Tuple[str, any]],
-) -> int:
+    info: bool = False,
+) -> int or Tuple[int, bool]:
     debug(
         """get_entry_id_or_create_it: table:{} 
     query: {}
@@ -44,7 +45,8 @@ def get_entry_id_or_create_it(
     if result is None:
         insert_in_table(db_cursor, table, data)
         result = get_id_of_entry_in_table(db_cursor, table, query)
-    return result
+        return (result, True) if info else result
+    return (result, False) if info else result
 
 
 def is_annoation_in_database(
