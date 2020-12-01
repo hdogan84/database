@@ -1,0 +1,21 @@
+from pathlib import Path
+from import_annoations_olaf import import_data
+from create_import_report_olaf import create_metrics
+import datetime
+import os
+
+DATA_PATH = Path("libro_animalis/data/TD_Training")
+CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
+
+currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
+missing_species = import_data(DATA_PATH, CONFIG_FILE_PATH)
+now = datetime.date.today().strftime("%Y-%m-%d")
+
+report_path = DATA_PATH.joinpath("report", now)
+report_path.mkdir(parents=True, exist_ok=True)
+create_metrics(
+    Path(DATA_PATH),
+    report_path,
+    Path(CONFIG_FILE_PATH),
+    missing_species=missing_species,
+)

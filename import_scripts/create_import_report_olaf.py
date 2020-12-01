@@ -16,8 +16,9 @@ from tools.db import (
 )
 
 DATA_PATH = Path("libro_animalis/data/TD_Training")
+REPORT_PATH = Path("./")
 CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
-RECORD_MERGE_STRATEGY = "merge"
+RECORD_MERGE_STRATEGY = "replace"
 
 
 def list_to_csv(data: list, file_path: Path, head_row: List[str]):
@@ -57,7 +58,10 @@ def create_merged_raven_files(list_of_files: List[CorespondingFiles]):
 
 
 def create_metrics(
-    data_path=DATA_PATH, report_path=Path("./"), config_path=CONFIG_FILE_PATH
+    data_path=DATA_PATH,
+    report_path=REPORT_PATH,
+    config_path=CONFIG_FILE_PATH,
+    missing_species=None,
 ):
     config = parse_config(config_path)
 
@@ -152,9 +156,14 @@ def create_metrics(
                 ("level_1_annoations_count", level_1_annoations_count),
                 ("length_of_id_level_1_annoations", length_of_id_level_1_annoations),
             ]
-            with open("metrics.txt", "a") as text_file:
+            metrics_filepath = report_path.joinpath("metrics.txt")
+            with open(metrics_filepath, "a") as text_file:
                 for line in lines:
                     text_file.write("{}: {}\n".format(line[0], line[1]))
+            if missing_species is not None:
+                missing_species_filepath = report_path.joinpath("missing_species.txt")
+                with open(missing_species_filepath, "a") as text_file:
+                    text_file.writelines(list(map(lambda x: x + "\n", missing_species)))
 
     # print("End")
 
