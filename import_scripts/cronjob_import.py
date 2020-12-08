@@ -1,11 +1,13 @@
+#!/home/stana/anaconda3/envs/rank/bin/python
+
 from pathlib import Path
 from import_annoations_olaf import import_data
 from create_import_report_olaf import create_metrics
 import datetime
 import os
 
-DATA_PATH = Path("libro_animalis/data/TD_Training")
-CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
+DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/TD_Training")
+CONFIG_FILE_PATH = Path("/home/stana/rankProjekte/libro_animalis/config.cfg")
 
 currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
 missing_species = import_data(DATA_PATH, CONFIG_FILE_PATH)
