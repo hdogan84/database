@@ -75,7 +75,7 @@ def import_xeno_canto(
                     species_set.add(
                         ("{} {}".format(xeno.genus, xeno.species), xeno.eng_name)
                     )
-                    synonyms_dict = get_synonyms_dict(db_cursor, "tsa_to_ioc10.1")
+                    synonyms_dict = get_synonyms_dict(db_cursor, "tsa_to_ioc10_1")
                     latin_name = "{} {}".format(xeno.genus, xeno.species)
                     species_id = get_species_id(latin_name, xeno.eng_name)
                     if species_id is None:

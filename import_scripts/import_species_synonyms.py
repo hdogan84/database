@@ -7,7 +7,7 @@ CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 config = parse_config(CONFIG_FILE_PATH)
 
 dog_to_ioc101 = (
-    "do-g_to_ioc10.1",
+    "do-g_to_ioc10_1",
     [
         ("Columba livia f. domestica", "Columba livia"),
         ("Zapornia parva", "Porzana parva"),
@@ -15,11 +15,12 @@ dog_to_ioc101 = (
     ],
 )
 tsa_to_ioc101 = (
-    "tsa_to_ioc10.1",
+    "tsa_to_ioc10_1",
     [
         ("Apus melba", "Tachymarptis melba"),
         ("Aquila pennata", "Hieraaetus pennatus"),
-        ("Carduelis chloris'", "Chloris chloris "),
+        ("Anthropoides virgo", "Grus virgo"),
+        ("Carduelis chloris", "Chloris chloris "),
         ("Falco pelegrinoides", "Falco peregrinus"),
         ("Larus atricilla", "Leucophaeus atricilla"),
         ("Larus audouinii", "Ichthyaetus audouinii"),

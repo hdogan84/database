@@ -23,7 +23,7 @@ not_matched = []
 with connectToDB(config.database) as db_connection:
     with db_connection.cursor() as db_cursor:
         db_cursor: MySQLCursor
-        synonyms_dict = get_synonyms_dict(db_cursor, "do-g_to_ioc10.1")
+        synonyms_dict = get_synonyms_dict(db_cursor, "do-g_to_ioc10_1")
         for index, row in selection.iterrows():
             result = update_entry(
                 db_cursor,

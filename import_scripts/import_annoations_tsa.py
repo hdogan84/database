@@ -23,6 +23,7 @@ from tools.db import (
     sanitize_name,
     sanitize_altitude,
 )
+from TSA_Species_Translator import TSA_Species_Translator
 
 from tools.logging import info
 import argparse
@@ -103,6 +104,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
     ) as db_connection_la:
         with db_connection_tsa.cursor(buffered=True) as db_cursor_tsa:
             with db_connection_la.cursor(buffered=True) as db_cursor_la:
+                species_translator = TSA_Species_Translator(db_cursor_la)
                 for collection in COLLECTIONS:
                     info("Import collection {}".format(collection))
                     collection_entry = [
@@ -123,6 +125,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                         collection[2],
                         config.database.get_originals_files_path(),
                         failed_species_labels,
+                        species_translator,
                     )
     info(failed_species_labels)
 
@@ -137,24 +140,27 @@ def do_collection_data_import(
     use_src_filename: bool,
     orginal_path: Path,
     failed_species_labels,
+    species_translator: TSA_Species_Translator,
 ):
     db_cursor_tsa.execute(
         """SELECT 
-        Date, /* 0 */
-        Time, /* 1 */ 
-        Duration, /* 2 */ 
-        SrcFileName, /* 3 */ 
-        Recordist, /* 4 */ 
-        Country, /* 5 */ 
-        Locality, /* 6 */ 
-        Latitude, /* 7 */ 
-        Longitude, /* 8 */ 
-        Elevation, /* 9 */
-        Quality, /* 10 */
-        FileName, /* 11 */
-        ClassName, /* 12 */
-        SoundType /* 13 */
-        FROM train_europe_v02 
+        t1.Date, /* 0 */
+        t1.Time, /* 1 */ 
+        t1.Duration, /* 2 */ 
+        t1.SrcFileName, /* 3 */ 
+        t1.Recordist, /* 4 */ 
+        t1.Country, /* 5 */ 
+        t1.Locality, /* 6 */ 
+        t1.Latitude, /* 7 */ 
+        t1.Longitude, /* 8 */ 
+        t1.Elevation, /* 9 */
+        t1.Quality, /* 10 */
+        t1.FileName, /* 11 */
+        t1.ClassName, /* 12 */
+        t1.SoundType, /* 13 */
+        t2.English_Name /*14*/
+        FROM train_europe_v02 as t1
+        LEFT JOIN system as t2 on t1.ClassName = t2.Artname
         WHERE Collection = %s""",
         (collection,),
     )
@@ -264,14 +270,10 @@ def do_collection_data_import(
         #     )
         #     db_connection_la.commit()
 
-        species_id = get_id_of_entry_in_table(
-            db_cursor_la, "species", [("latin_name", row[12])]
-        )
+        species_id = species_translator.get_species_id(db_cursor_la, row[12], row[14])
         if species_id is None:
-            failed_annotations.append(
-                (row[12], audio_file_parameters.original_filename)
-            )
-            info("Missing species {}", row[12])
+            failed_annotations.append(row[12])
+            info("Missing species {}", (row[12]))
             continue
 
         annoation_data = [
@@ -299,12 +301,7 @@ def do_collection_data_import(
         # db_connection_la.commit()
 
     # # to distinct species values
-
-    for fa in failed_annotations:
-        if fa[0] not in failed_species_labels:
-            failed_species_labels.update({fa[0]: "\t" + fa[1]})
-        else:
-            failed_species_labels.update({fa[0]: labels.get(fa[0]) + "\n \t" + fa[1]})
+    failed_species_labels.update(set(failed_annotations))
 
     info("Failed annotations not matched species {}".format(len(failed_annotations)))
     # # read_raven_file(corresponding_files.annoation_file)
