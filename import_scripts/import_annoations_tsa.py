@@ -97,6 +97,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
     config = parse_config(config_file_path)
 
     info("Load Data from database")
+    failed_species_labels = {}
     with connectToDB(tsaConfig) as db_connection_tsa, connectToDB(
         config.database
     ) as db_connection_la:
@@ -112,7 +113,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                         db_cursor_la, "collection", collection_entry, collection_entry
                     )
 
-                    do_collection_data_import(
+                    labels = do_collection_data_import(
                         db_connection_la,
                         db_cursor_tsa,
                         db_cursor_la,
@@ -121,7 +122,9 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                         collection[1],
                         collection[2],
                         config.database.get_originals_files_path(),
+                        failed_species_labels,
                     )
+    info(failed_species_labels)
 
 
 def do_collection_data_import(
@@ -133,6 +136,7 @@ def do_collection_data_import(
     collection_path: str,
     use_src_filename: bool,
     orginal_path: Path,
+    failed_species_labels,
 ):
     db_cursor_tsa.execute(
         """SELECT 
@@ -244,7 +248,7 @@ def do_collection_data_import(
             data=record_data,
             info=True,
         )
-        db_connection_la.commit()
+        # db_connection_la.commit()
         # if created:
         #     targetDirectory = orginal_path.joinpath(target_record_file_path)
         #     targetDirectory.mkdir(parents=True, exist_ok=True)
@@ -295,21 +299,17 @@ def do_collection_data_import(
         # db_connection_la.commit()
 
     # # to distinct species values
-    labels = {}
-    for fa in failed_annotations:
-        if fa[0] not in labels:
-            labels.update({fa[0]: "\t" + fa[1]})
-        else:
-            labels.update({fa[0]: labels.get(fa[0]) + "\n \t" + fa[1]})
 
-    # for x in labels:
-    #     print(x)
-    # print(labels[x])
+    for fa in failed_annotations:
+        if fa[0] not in failed_species_labels:
+            failed_species_labels.update({fa[0]: "\t" + fa[1]})
+        else:
+            failed_species_labels.update({fa[0]: labels.get(fa[0]) + "\n \t" + fa[1]})
 
     info("Failed annotations not matched species {}".format(len(failed_annotations)))
     # # read_raven_file(corresponding_files.annoation_file)
 
-    return
+    return failed_species_labels
 
 
 parser = argparse.ArgumentParser(description="")
