@@ -18,3 +18,25 @@ def to_sql_save_value(value):
     if isinstance(value, float):  # round float for fixpoint saving in database
         return str(round(value, 6))
     return value
+
+
+def sanitize_altitude(value: str):
+    result = value.strip()
+    if result.startswith("<"):
+        result = result.split("<")[1]
+    tmp = result.split("-")
+    if len(tmp) > 1:
+        result = tmp[0]
+    if result == "?" or result == "NULL":
+        return None
+    try:
+        return int(result)
+    except:
+        return None
+
+
+def sanitize_name(value: str, max_length: int):
+    if len(value) <= max_length:
+        return value
+    else:
+        return value[:max_length]

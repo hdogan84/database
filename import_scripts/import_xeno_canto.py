@@ -12,6 +12,7 @@ from pathlib import Path
 from tools.configuration import parse_config
 from tools.file_handling.audio import read_parameters_from_audio_file
 from datetime import date, datetime
+from tools.db import sanitize_name, sanitize_altitude
 from tools.db.table_types import (
     XenoCantoRow,
 )
@@ -50,26 +51,6 @@ def import_xeno_canto(
                 db_cursor, "species", [("english_name", english_name)]
             )
         return species_id
-
-    def sanitize_altitude(value: str):
-        result = value.strip()
-        if result.startswith("<"):
-            result = result.split("<")[1]
-        tmp = result.split("-")
-        if len(tmp) > 1:
-            result = tmp[0]
-        if result == "?" or result == "NULL":
-            return None
-        try:
-            return int(result)
-        except:
-            return None
-
-    def sanitize_name(value: str, max_length: int):
-        if len(value) <= max_length:
-            return value
-        else:
-            return value[:max_length]
 
     with open(csv_path, newline="") as csvfile:
         csv_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
