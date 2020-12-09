@@ -17,11 +17,10 @@ class DerivativeBaseClass:
     sample_rate: int = None
     bit_depth: int = None
     description: str = None
+    overwrite: bool = False
 
-    def __init__(
-        self,
-        config: DatabaseConfig,
-    ):
+    def __init__(self, config: DatabaseConfig, overwrite=False):
+        self.overwrite = overwrite
         for field in ["name", "sample_rate", "bit_depth", "file_ending", "description"]:
             if getattr(self, field) is None:
                 raise ValueError(
@@ -60,7 +59,7 @@ class DerivativeBaseClass:
         target_file_path: Path = self.derivate_folder_path.joinpath(
             source_file_path.stem + "." + self.file_ending
         )
-        if target_file_path.exists() is False:
+        if target_file_path.exists() is False or self.overwrite:
             self.create_derivate(source_file_path, target_file_path)
         return (filename, target_file_path)
 
