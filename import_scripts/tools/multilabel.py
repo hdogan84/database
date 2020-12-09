@@ -6,14 +6,15 @@ from enum import Enum, IntEnum
 
 class Index(IntEnum):
     LATIN_NAME = 0
-    FILENAME = 1
-    START_TIME = 2
-    END_TIME = 3
-    QUALITY_TAG = 4
-    INDIVIDUAL_TAG = 5
-    GROUP_ID = 6
-    VOCALIZATION_TYPE = 7
-    CHANNEL = 8
+    FILE_PATH = 1
+    FILENAME = 2
+    START_TIME = 3
+    END_TIME = 4
+    QUALITY_TAG = 5
+    INDIVIDUAL_TAG = 6
+    GROUP_ID = 7
+    VOCALIZATION_TYPE = 8
+    CHANNELS = 9
 
 
 class Action(Enum):
@@ -132,26 +133,28 @@ class LabeGeneratorBaseClass:
         annotations = self.annotations
         tmp_group = []
         for a in annotations:
+            channels = a[Index.CHANNELS]
             duration = a[Index.END_TIME] - a[Index.START_TIME]
             start = a[Index.START_TIME]
             stop = a[Index.END_TIME]
             label = a[Index.LATIN_NAME]
             filename = a[Index.FILENAME]
-            tmp_group.append((duration, start, stop, label, 1, filename))
+            tmp_group.append((duration, start, stop, label, 1, filename, channels))
         return tmp_group
 
 
 class SimpleMultiLabels(LabeGeneratorBaseClass):
     def create_label(self, start, stop, annotations):
-        length = stop - start
+        duration = stop - start
         labels_list = list(set(map(lambda x: x[Index.LATIN_NAME], annotations)))
         labels = ",".join(labels_list)
         return (
-            length,
+            duration,
             start,
             stop,
             labels,
             len(labels_list),
             annotations[0][Index.FILENAME],
+            annotations[0][Index.CHANNELS],
         )
         annotations = self.annotations

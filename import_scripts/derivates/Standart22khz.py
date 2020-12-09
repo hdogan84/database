@@ -4,17 +4,19 @@ from tools.configuration import DatabaseConfig
 from typing import List, Dict
 from pathlib import Path
 import librosa
+from librosa import resample
 import numpy as np
 import soundfile as sf
 from scipy.signal import butter, sosfilt
 
 sampleRateDst = 32000  # 32000
-resampleType = "kaiser_fast"  # 'kaiser_best'
 
 
 class Standart22khz(DerivativeBaseClass):
     name = "Standart22khzNormalisedHighpassFilter"
+    import_sample_rate: int = 48000
     sample_rate: int = 32000
+    resampleType = "kaiser_fast"  # or use 'kaiser_best'
     bit_depth: int = 16
     file_ending: str = "wav"
     description: str = "Normalised: 0.7071;  Highpass: butter, cutoff 2000Hz; "
@@ -45,17 +47,26 @@ class Standart22khz(DerivativeBaseClass):
         source_file_path: Path,
         target_file_path: Path,
     ) -> None:
+        # resample on load to higher prevent instability of the filter
         y, sr = librosa.load(
-            source_file_path, sr=sampleRateDst, mono=False, res_type=resampleType
+            source_file_path,
+            sr=self.import_sample_rate,
+            mono=False,
+            res_type=self.resampleType,
         )
         # Normalize to -3 dB
         y /= np.max(y)
         y *= 0.7071
 
         y = self.apply_high_pass_filter(y, sr, source_file_path)
-
+        y = librosa.resample(
+            y,
+            self.import_sample_rate,
+            self.sample_rate,
+            res_type=self.resampleType,
+        )
         if len(y.shape) > 1:
             y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
-        sf.write(target_file_path, y, sampleRateDst, "PCM_16")
+        sf.write(target_file_path, y, self.sample_rate, "PCM_16")
 
-        debug("standart22khz {}".format(target_file_path.as_posix()))
+        debug("standart2khz {}".format(target_file_path.as_posix()))

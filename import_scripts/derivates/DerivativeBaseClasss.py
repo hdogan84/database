@@ -49,26 +49,27 @@ class DerivativeBaseClass:
         """Return derivate filePath if exists or create Derivative"""
         raise NotImplementedError
 
-    def add_derivate_to_dict(self, filename: str) -> None:
+    def add_derivate_to_dict(self, filepath: Path) -> None:
         source_file_path: Path = self.db_config.get_originals_files_path().joinpath(
-            filename
+            filepath
         )
         if source_file_path.exists() is False:
             error("File Not found: {}".format(source_file_path.as_posix()))
-            return None
-        target_file_path: Path = self.derivate_folder_path.joinpath(
-            source_file_path.stem + "." + self.file_ending
-        )
+            return (None, None)
+
+        # calculate database files sub folders
+        target_file_path: Path = self.derivate_folder_path.joinpath(filepath)
         if target_file_path.exists() is False or self.overwrite:
+            target_file_path.parent.mkdir(parents=True, exist_ok=True)
             self.create_derivate(source_file_path, target_file_path)
-        return (filename, target_file_path)
+        return (target_file_path.name, target_file_path)
 
     def get_original_derivate_dict(
-        self, filenames: List[str], n_jobs=-1
+        self, filepathes: List[Path], n_jobs=-1
     ) -> Dict[str, Path]:
 
         resultList = Parallel(n_jobs=n_jobs)(
-            delayed(self.add_derivate_to_dict)(filename) for filename in filenames
+            delayed(self.add_derivate_to_dict)(filepath) for filepath in filepathes
         )
 
         return dict(resultList)

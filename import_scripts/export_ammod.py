@@ -9,15 +9,14 @@ from tools.db import (
 )
 from derivates import Standart22khz
 from tools.multilabel import SimpleMultiLabels
+import argparse
 import csv
 
 CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
 
-config = parse_config(CONFIG_FILE_PATH)
-
 query_files = """
 SELECT 
-    distinct(r.filename)
+    distinct(r.filename), r.file_path
 FROM
     annotation_of_species AS a
         LEFT JOIN
@@ -25,7 +24,10 @@ FROM
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
-    s.olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
+    r.collection_id != 1 and
+    s.olaf8_id IN (
+        'AVPDPEAT', 
+        'AVPIDEMA',
         'AVPDLOCR',
         'AVPDPOPA',
         'AVPDCYCA',
@@ -53,6 +55,7 @@ WHERE
 query_annoations = """
 SELECT 
     s.latin_name,
+    r.file_path,
 	r.filename,
     a.start_time,
     a.end_time,
@@ -60,7 +63,7 @@ SELECT
     a.individual_id,
     a.group_id,
     a.vocalization_type,
-    a.`channel`
+    r.`channels`
 FROM
     annotation_of_species AS a
         LEFT JOIN
@@ -68,6 +71,7 @@ FROM
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
+    r.collection_id != 1 and
     s.olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
         'AVPDLOCR',
         'AVPDPOPA',
@@ -100,10 +104,10 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor: MySQLCursor  # set type hint
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
-            filenames = list(map(lambda x: x[0], data))
+            filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
             derivatateCreator = Standart22khz(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
-                filenames
+                filepathes
             )
             return file_derivates_dict
 
@@ -149,22 +153,64 @@ def write_to_csv(data, filename):
         csv_writer.writerows(data)
 
 
-derivates_dict = create_file_derivates(config)
-multi_labels = create_multiabels(config)
-single_labels = create_singleLabels(config)
-pointing_to_derivates_multi_labels = list(
-    map(
-        lambda x: [x[0], x[1], x[2], x[3], x[4], derivates_dict[x[5]].as_posix()],
-        multi_labels,
+def map_filename_to_derivative_filepath(
+    data_row: tuple, filename_index: dict, derivates_dict
+):
+    result = list(data_row)
+    try:
+        result[filename_index] = derivates_dict[result[filename_index]].as_posix()
+    except KeyError as e:
+        print(e)
+        result[filename_index] = None
+    return result
+
+
+def export_data(
+    config_path: Path = CONFIG_FILE_PATH, filename: str = "ammod-train-single-label.csv"
+):
+    config = parse_config(config_path)
+
+    derivates_dict = create_file_derivates(config)
+    # multi_labels = create_multiabels(config)
+    # pointing_to_derivates_multi_labels = list(
+    #     map(
+    #         lambda x: [x[0], x[1], x[2], x[3], x[4], derivates_dict[x[5]].as_posix()],
+    #         multi_labels,
+    #     )
+    # )
+    # write_to_csv(pointing_to_derivates_multi_labels, "ammod-train-multi-label.csv")
+    single_labels = create_singleLabels(config)
+    pointing_to_derivates_single_labels = list(
+        filter(
+            lambda x: x[5] is not None,
+            list(
+                map(
+                    lambda x: map_filename_to_derivative_filepath(x, 5, derivates_dict),
+                    single_labels,
+                )
+            ),
+        )
     )
+    write_to_csv(pointing_to_derivates_single_labels, filename)
+
+
+parser = argparse.ArgumentParser(description="")
+parser.add_argument(
+    "--filename",
+    metavar="string",
+    type=str,
+    nargs="?",
+    default="labels.csv",
+    help="target filename for label csv",
 )
-pointing_to_derivates_single_labels = list(
-    map(
-        lambda x: [x[0], x[1], x[2], x[3], x[4], derivates_dict[x[5]].as_posix()],
-        single_labels,
-    )
+parser.add_argument(
+    "--config",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    default=CONFIG_FILE_PATH,
+    help="config file with database credentials",
 )
-# csv_filename = "ammod-train-multi-label.csv"
-csv_filename = "ammod-train-single-label.csv"
-write_to_csv(pointing_to_derivates_multi_labels, "ammod-train-multi-label.csv")
-write_to_csv(pointing_to_derivates_single_labels, "ammod-train-single-label.csv")
+args = parser.parse_args()
+if __name__ == "__main__":
+    export_data(config_path=args.config, filename=args.filename)
