@@ -254,21 +254,22 @@ def do_collection_data_import(
             data=record_data,
             info=True,
         )
-        # db_connection_la.commit()
-        # if created:
-        #     targetDirectory = orginal_path.joinpath(target_record_file_path)
-        #     targetDirectory.mkdir(parents=True, exist_ok=True)
-        #     rename_and_copy_to(
-        #         audio_filepath,
-        #         targetDirectory,
-        #         audio_file_parameters.filename,
-        #     )
+        if TEST_RUN:
+            db_connection_la.commit()
+            if created:
+                targetDirectory = orginal_path.joinpath(target_record_file_path)
+                targetDirectory.mkdir(parents=True, exist_ok=True)
+                rename_and_copy_to(
+                    audio_filepath,
+                    targetDirectory,
+                    audio_file_parameters.filename,
+                )
 
-        #     # remove all old annotations
-        #     delete_from_table(
-        #         db_cursor_la, "annotation_of_species", [("record_id", record_id)]
-        #     )
-        #     db_connection_la.commit()
+                # remove all old annotations
+                delete_from_table(
+                    db_cursor_la, "annotation_of_species", [("record_id", record_id)]
+                )
+                db_connection_la.commit()
 
         species_id = species_translator.get_species_id(db_cursor_la, row[12], row[14])
         if species_id is None:
