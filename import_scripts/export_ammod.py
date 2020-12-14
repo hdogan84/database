@@ -147,7 +147,8 @@ def write_to_csv(data, filename):
                 "end_time",
                 "labels",
                 "species_count",
-                "filename",
+                "filepath",
+                "channels",
             ]
         )
         csv_writer.writerows(data)
