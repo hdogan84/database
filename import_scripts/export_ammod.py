@@ -97,6 +97,33 @@ WHERE
 ORDER BY r.filename , a.start_time ASC
 """
 
+query_species = """
+SELECT latin_name,english_name,german_name FROM libro_animalis.species where
+    olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
+        'AVPDLOCR',
+        'AVPDPOPA',
+        'AVPDCYCA',
+        'AVPDPAMA',
+        'AVPCPHSI',
+        'AVPCPHTR',
+        'AVSYSYAT',
+        'AVTGTRTR',
+        'AVSISIEU',
+        'AVTUTUME',
+        'AVTUTUPH',
+        'AVTUTUVI',
+        'AVMUMUST',
+        'AVMUERRU',
+        'AVMUFIHY',
+        'AVMUPHPH',
+        'AVMTANTR',
+        'AVFRFRCO',
+        'AVFRCOCO',
+        'AVFRCHCH',
+        'AVFRSPSP')
+        ORDER BY latin_name ASC
+"""
+
 
 def create_file_derivates(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
@@ -135,6 +162,15 @@ def create_singleLabels(config: DatabaseConfig):
             return labels
 
 
+def create_class_list(config: DatabaseConfig):
+    with connectToDB(config.database) as db_connection:
+        with db_connection.cursor() as db_cursor:
+            db_cursor: MySQLCursor  # set type hint
+            db_cursor.execute(query_species)
+            data = db_cursor.fetchall()
+            return data
+
+
 def write_to_csv(data, filename):
     with open(filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(
@@ -167,7 +203,9 @@ def map_filename_to_derivative_filepath(
 
 
 def export_data(
-    config_path: Path = CONFIG_FILE_PATH, filename: str = "ammod-train-single-label.csv"
+    config_path: Path = CONFIG_FILE_PATH,
+    filename_labels: str = "ammod-train-single-label.csv",
+    filename_class_list: str = "ammod-class-list.csv",
 ):
     config = parse_config(config_path)
 
@@ -192,16 +230,26 @@ def export_data(
             ),
         )
     )
-    write_to_csv(pointing_to_derivates_single_labels, filename)
+    write_to_csv(pointing_to_derivates_single_labels, filename_labels)
+    class_list = create_class_list()
+    write_to_csv(class_list, filename_class_list)
 
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument(
-    "--filename",
+    "--filename-labels",
     metavar="string",
     type=str,
     nargs="?",
     default="labels.csv",
+    help="target filename for label csv",
+)
+parser.add_argument(
+    "--filename-class-list",
+    metavar="string",
+    type=str,
+    nargs="?",
+    default="class-list.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -214,4 +262,8 @@ parser.add_argument(
 )
 args = parser.parse_args()
 if __name__ == "__main__":
-    export_data(config_path=args.config, filename=args.filename)
+    export_data(
+        config_path=args.config,
+        filename_labels=args.filename_labels,
+        filename_class_list=args.filename_class_list,
+    )
