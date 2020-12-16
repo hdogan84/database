@@ -231,7 +231,7 @@ def export_data(
         )
     )
     write_to_csv(pointing_to_derivates_single_labels, filename_labels)
-    class_list = create_class_list()
+    class_list = create_class_list(config)
     write_to_csv(class_list, filename_class_list)
 
 
