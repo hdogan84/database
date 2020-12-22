@@ -6,9 +6,7 @@ from datetime import date, timedelta
 from mysql.connector.cursor import MySQLCursor
 from tools.logging import debug, info, error
 from tools.db.queries import get_id_of_entry_in_table
-from tools.file_handling.collect import (
-    rename_and_copy_to,
-)
+from tools.file_handling.collect import rename_and_copy_to
 from datetime import datetime
 from tools.file_handling.name import parse_filename_for_location_date_time
 from tools.file_handling.audio import read_parameters_from_audio_file
@@ -23,7 +21,7 @@ from tools.db import (
     sanitize_name,
     sanitize_altitude,
 )
-from TSA_Species_Translator import TSA_Species_Translator
+from tools.TSA_Species_Translator import TSA_Species_Translator
 
 from tools.logging import info
 import argparse
@@ -60,7 +58,7 @@ TSA_CONFIG = """
 [database]
 user = root
 host = localhost
-port = 3307
+port = 3306
 password = pass2root
 name = tsa_data
 file_storage_path = /tmp/
@@ -71,26 +69,27 @@ tsaConfig.add_source(IniStringConfigSource(TSA_CONFIG))
 DATA_PATH = Path(
     "/home/bewr/external-volumes/stana/mnt/z/AG/TSA/Mario/_Backups/TsaOrgTrainAudioData/"
 )
+TEST_RUN = True
 
 COLLECTIONS = [
-    ("CD014", "VogelCDs", True),
-    ("CD043", "VogelCDs", True),
-    ("CD041", "VogelCDs", True),
-    ("CD058", "VogelCDs", True),
-    ("CD124", "VogelCDs", True),
-    ("CD126", "VogelCDs", True),
-    ("CD127", "VogelCDs", True),
-    ("CD901", "VogelCDs", True),
-    ("CD097", "VogelCDs", True),
-    ("CD123", "VogelCDs", True),
-    ("CD001", "VogelCDs", True),
-    ("CD002", "VogelCDs", True),
-    ("CD003", "VogelCDs", True),
-    ("CD004", "VogelCDs", True),
-    ("Nachtigall01", "Nachtigall01", True),
-    ("TsaJorn", "TsaJorn", True),
-    ("RefSys", "RefSys", False),
     ("TsaShorts", "Shorts", False),
+    # ("CD014", "VogelCDs", False),
+    # ("CD043", "VogelCDs", False),
+    # ("CD041", "VogelCDs", False),
+    # ("CD058", "VogelCDs", False),
+    # ("CD124", "VogelCDs", False),
+    # ("CD126", "VogelCDs", False),
+    # ("CD127", "VogelCDs", False),
+    # ("CD901", "VogelCDs", False),
+    # ("CD097", "VogelCDs", False),
+    # ("CD123", "VogelCDs", False),
+    # ("CD001", "VogelCDs", False),
+    # ("CD002", "VogelCDs", False),
+    # ("CD003", "VogelCDs", False),
+    # ("CD004", "VogelCDs", False),
+    # ("Nachtigall01", "Nachtigall01", False),
+    # ("TsaJorn", "TsaJorn", False),
+    # ("RefSys", "RefSys", False),
 ]
 
 
@@ -126,6 +125,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                         config.database.get_originals_files_path(),
                         failed_species_labels,
                         species_translator,
+                        data_path,
                     )
     info(failed_species_labels)
 
@@ -141,6 +141,7 @@ def do_collection_data_import(
     orginal_path: Path,
     failed_species_labels,
     species_translator: TSA_Species_Translator,
+    data_path: Path,
 ):
     db_cursor_tsa.execute(
         """SELECT 
@@ -172,10 +173,18 @@ def do_collection_data_import(
         if i % 100 == 0:
             info("imported {}/{}".format(i, count))
         i = i + 1
-        audio_filepath = DATA_PATH.joinpath(collection_path).joinpath(row[11] + ".wav")
+
+        if use_src_filename:
+            audio_filepath = data_path.joinpath(collection_path).joinpath(row[3])
+        else:
+            audio_filepath = data_path.joinpath(collection_path).joinpath(
+                row[11] + ".wav"
+            )
+
         if audio_filepath.exists() is False:
             error("File does not exhist {}".format(audio_filepath.as_posix()))
-            return
+            continue
+
         audio_file_parameters = None
         try:
             audio_file_parameters = read_parameters_from_audio_file(audio_filepath)
@@ -224,14 +233,8 @@ def do_collection_data_import(
         record_data = [
             ("date", row[0]),
             ("start", time),
-            (
-                "end",
-                end,
-            ),
-            (
-                "duration",
-                row[2],
-            ),
+            ("end", end,),
+            ("duration", row[2],),
             ("sample_rate", audio_file_parameters.sample_rate),
             ("bit_depth", audio_file_parameters.bit_depth),
             ("bit_rate", audio_file_parameters.bit_rate),
@@ -260,9 +263,7 @@ def do_collection_data_import(
                 targetDirectory = orginal_path.joinpath(target_record_file_path)
                 targetDirectory.mkdir(parents=True, exist_ok=True)
                 rename_and_copy_to(
-                    audio_filepath,
-                    targetDirectory,
-                    audio_file_parameters.filename,
+                    audio_filepath, targetDirectory, audio_file_parameters.filename,
                 )
 
                 # remove all old annotations
@@ -282,7 +283,7 @@ def do_collection_data_import(
             ("species_id", species_id),
             ("individual_id", None),
             ("group_id", None),
-            ("vocalization_type", row[13]),
+            ("vocalization_type", None),
             ("quality_tag", row[10]),
             ("id_level", 1),
             ("channel", audio_file_parameters.channels),
@@ -299,7 +300,8 @@ def do_collection_data_import(
             query=annoation_data,
             data=annoation_data,
         )
-        # db_connection_la.commit()
+        if TEST_RUN:
+            db_connection_la.commit()
 
     # # to distinct species values
     failed_species_labels.update(set(failed_annotations))

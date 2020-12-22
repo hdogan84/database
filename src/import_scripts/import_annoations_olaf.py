@@ -56,7 +56,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
             db_cursor: MySQLCursor
             failed_annotations = []
             collection_entry = [
-                ("name", import_meta_ids.collection_id),
+                ("name", config.record_information.collection),
                 ("remarks", None),
             ]
             collection_id = get_entry_id_or_create_it(
@@ -84,10 +84,7 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
                             + timedelta(seconds=ceil(file_parameters.duration))
                         ).time(),
                     ),
-                    (
-                        "duration",
-                        file_parameters.duration,
-                    ),
+                    ("duration", file_parameters.duration,),
                     ("sample_rate", file_parameters.sample_rate),
                     ("bit_depth", file_parameters.bit_depth),
                     ("bit_rate", file_parameters.bit_rate),
@@ -113,10 +110,8 @@ def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[
 
                 db_connection.commit()
                 if created:
-                    targetDirectory = (
-                        config.database.get_originals_files_path().joinpath(
-                            target_record_file_path
-                        )
+                    targetDirectory = config.database.get_originals_files_path().joinpath(
+                        target_record_file_path
                     )
                     targetDirectory.mkdir(parents=True, exist_ok=True)
                     rename_and_copy_to(

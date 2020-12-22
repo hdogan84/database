@@ -77,8 +77,7 @@ def create_metrics(
 
     # write merged raven file
     all_data.to_csv(
-        report_path.joinpath("merged_raven_annoations.csv"),
-        sep="\t",
+        report_path.joinpath("merged_raven_annoations.csv"), sep="\t",
     )
 
     annotated_segments = len(all_data[all_data["SpeciesCode"] == "TD_Start_End"])
@@ -98,7 +97,7 @@ def create_metrics(
             FROM (annotation_of_species AS a)
                 LEFT JOIN (record AS r) ON r.id = a.record_id
                 LEFT JOIN species AS s ON s.id = a.species_id
-            WHERE r.collection_id = 3 and  a.id_level = 1
+            WHERE r.collection_id = 4 and  a.id_level = 1
             GROUP BY a.species_id
             order by `id_level_1` DESC
             """
@@ -112,7 +111,7 @@ def create_metrics(
             FROM (annotation_of_species AS a)
                 LEFT JOIN (record AS r) ON r.id = a.record_id
                 LEFT JOIN species AS s ON s.id = a.species_id
-            WHERE r.collection_id = 3 and  a.id_level = 1 
+            WHERE r.collection_id = 4 and  a.id_level = 1 
             GROUP BY a.species_id, a.vocalization_type
             order by `latin_name`,vocalization_type DESC
             """
