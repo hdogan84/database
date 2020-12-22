@@ -171,22 +171,12 @@ def create_class_list(config: DatabaseConfig):
             return data
 
 
-def write_to_csv(data, filename):
+def write_to_csv(data, filename, header):
     with open(filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(
             csvfile, delimiter=";", quotechar="|", quoting=csv.QUOTE_MINIMAL
         )
-        csv_writer.writerow(
-            [
-                "duration",
-                "start_time",
-                "end_time",
-                "labels",
-                "species_count",
-                "filepath",
-                "channels",
-            ]
-        )
+        csv_writer.writerow(header)
         csv_writer.writerows(data)
 
 
@@ -230,9 +220,23 @@ def export_data(
             ),
         )
     )
-    write_to_csv(pointing_to_derivates_single_labels, filename_labels)
-    class_list = create_class_list()
-    write_to_csv(class_list, filename_class_list)
+    write_to_csv(
+        pointing_to_derivates_single_labels,
+        filename_labels,
+        [
+            "duration",
+            "start_time",
+            "end_time",
+            "labels",
+            "species_count",
+            "filepath",
+            "channels",
+        ],
+    )
+    class_list = create_class_list(config)
+    write_to_csv(
+        class_list, filename_class_list, ["latin_name", "english_name", "german_name"]
+    )
 
 
 parser = argparse.ArgumentParser(description="")
