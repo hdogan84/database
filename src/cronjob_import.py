@@ -1,7 +1,7 @@
 #!/home/stana/anaconda3/envs/rank/bin/python
 
 from pathlib import Path
-from import_annoations_olaf import import_data
+from import_scripts.import_annoations_olaf import import_data
 from create_import_report_olaf import create_metrics
 import datetime
 import os

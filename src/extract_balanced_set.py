@@ -1,6 +1,8 @@
 import csv
 import random
 
+# This script extract from an exported ammod csv a ballanced dataset,
+# smallest amount samples of a class defines amount for all other classes
 DATA_FILEPATH = (
     "/home/bewr/projects/mfn/audio_classificator/data/ammod-selection/labels.csv"
 )

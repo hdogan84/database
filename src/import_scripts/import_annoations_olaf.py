@@ -3,7 +3,6 @@ from typing import Dict, List
 from math import ceil
 from datetime import timedelta
 from mysql.connector.cursor import MySQLCursor
-from fix_folderstructure import TARGET_FILE_PATH
 from tools.db.queries import get_id_of_entry_in_table
 from tools.file_handling.collect import (
     get_record_annoation_tupels_from_directory,
