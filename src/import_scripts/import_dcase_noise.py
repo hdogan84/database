@@ -14,17 +14,18 @@ from tools.db import (
 from tools.logging import info
 import argparse
 
-DATA_PATH = Path("libro_animalis/data/TD_Training")
-CONFIG_FILEPATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
-CSV_FILEPATH = Path("")
+DATA_PATH = Path("./data/TD_Training")
+CONFIG_FILEPATH = Path("./src/config/defaultConfig.cfg")
+CSV_FILEPATH = Path("../assets/dace-2018/freefield1010.csv")
 
 
-def import_dase_noise(
-    files_path=DATA_PATH,
+def import_dcase_noise(
+    data_path=DATA_PATH,
     config_path=CONFIG_FILEPATH,
     csv_filepath=CSV_FILEPATH,
     collection_name: str = None,
     file_ending="wav",
+    dry_run=True,
 ):
     config = parse_config(config_path)
 
@@ -48,11 +49,12 @@ def import_dase_noise(
                         continue
                     counter = counter + 1
                     if counter % 1000 == 0:
-                        db_connection.commit()
+                        if dry_run is False:
+                            db_connection.commit()
 
                     #
                     species_id = None
-                    filepath = files_path.joinpath("{}.{}".format(row[0], file_ending))
+                    filepath = data_path.joinpath("{}.{}".format(row[0], file_ending))
 
                     if filepath.exists() is False:
                         error("File does not exhist {}".format(filepath.as_posix()))
@@ -80,7 +82,10 @@ def import_dase_noise(
                         ("bit_rate", audio_file_parameters.bit_rate),
                         ("channels", audio_file_parameters.channels),
                         ("mime_type", audio_file_parameters.mime_type),
-                        ("original_filename", audio_file_parameters.original_filename,),
+                        (
+                            "original_filename",
+                            audio_file_parameters.original_filename,
+                        ),
                         ("file_path", target_record_file_path),
                         ("filename", audio_file_parameters.filename),
                         ("md5sum", audio_file_parameters.md5sum),
@@ -90,19 +95,26 @@ def import_dase_noise(
                     (record_id, created) = get_entry_id_or_create_it(
                         db_cursor,
                         "record",
-                        [("md5sum", audio_file_parameters.md5sum),],
+                        [
+                            ("md5sum", audio_file_parameters.md5sum),
+                        ],
                         data=record_entry,
                         info=True,
                     )
                     if created:
                         # move file to destination
-                        targetDirectory = config.database.get_originals_files_path().joinpath(
-                            target_record_file_path
-                        )
-                        targetDirectory.mkdir(parents=True, exist_ok=True)
-                        rename_and_copy_to(
-                            filepath, targetDirectory, audio_file_parameters.filename,
-                        )
+                        if dry_run is False:
+                            targetDirectory = (
+                                config.database.get_originals_data_path().joinpath(
+                                    target_record_file_path
+                                )
+                            )
+                            targetDirectory.mkdir(parents=True, exist_ok=True)
+                            rename_and_copy_to(
+                                filepath,
+                                targetDirectory,
+                                audio_file_parameters.filename,
+                            )
                     # create foreground annoation
                     forground_annoation = [
                         ("record_id", record_id),
@@ -120,18 +132,25 @@ def import_dase_noise(
                         forground_annoation,
                         forground_annoation,
                     )
-
-                db_connection.commit()
+                if dry_run is False:
+                    db_connection.commit()
 
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument(
-    "--files",
+    "--data_path",
     metavar="path",
     type=Path,
     nargs="?",
     help="target folder",
-    default=FILES_DIRECTORY_PATH,
+    default=DATA_PATH,
+)
+parser.add_argument(
+    "--collection",
+    metavar="path",
+    type=str,
+    nargs="?",
+    help="target folder",
 )
 
 parser.add_argument(
@@ -147,10 +166,15 @@ parser.add_argument(
     metavar="path",
     type=Path,
     nargs="?",
-    default=CONFIG_FILE_PATH,
+    default=CONFIG_FILEPATH,
     help="config file with database credentials",
 )
 
 args = parser.parse_args()
 if __name__ == "__main__":
-    import_xeno_canto(files=args.files, config_path=args.config, csv_path=args.csv)
+    import_dcase_noise(
+        collection_name=args.collection,
+        data_path=args.data_path,
+        config_path=args.config,
+        csv_filepath=args.csv,
+    )
