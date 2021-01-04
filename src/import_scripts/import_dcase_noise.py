@@ -14,15 +14,21 @@ from tools.db import (
 from tools.logging import info
 import argparse
 
-DATA_PATH = Path("./data/TD_Training")
+DATA_PATH = Path("/home/bewr/Downloads/ff1010bird/ff1010bird_wav/wav")
 CONFIG_FILEPATH = Path("./src/config/defaultConfig.cfg")
-CSV_FILEPATH = Path("../assets/dace-2018/freefield1010.csv")
+CSV_PATH = Path("./assets/dcase-2018")
+CSV_FILES = ["freefield1010.csv", "warblrb10k.csv", "BirdVox-DCASE-20k.csv"]
+COLLECTIONS = [
+    "dcase-2018-freefield1010",
+    "dcase-2018-warblrb10k",
+    "dcase-2018-BirdVox-DCASE-20k.csv",
+]
 
 
-def import_dcase_noise(
-    data_path=DATA_PATH,
-    config_path=CONFIG_FILEPATH,
-    csv_filepath=CSV_FILEPATH,
+def import_noise(
+    data_path,
+    config_path,
+    csv_filepath,
     collection_name: str = None,
     file_ending="wav",
     dry_run=True,
@@ -132,8 +138,20 @@ def import_dcase_noise(
                         forground_annoation,
                         forground_annoation,
                     )
-                if dry_run is False:
-                    db_connection.commit()
+                    if dry_run is False:
+                        db_connection.commit()
+                    print(filepath)
+
+
+def import_dcase_noise(data_path: Path, csv_path: Path, config_filepath: Path):
+    for collection, csv_file in zip(COLLECTIONS, CSV_FILES):
+        import_noise(
+            data_path,
+            config_filepath,
+            csv_path.joinpath(csv_file),
+            collection_name=collection,
+            dry_run=True,
+        )
 
 
 parser = argparse.ArgumentParser(description="")
@@ -145,21 +163,15 @@ parser.add_argument(
     help="target folder",
     default=DATA_PATH,
 )
-parser.add_argument(
-    "--collection",
-    metavar="path",
-    type=str,
-    nargs="?",
-    help="target folder",
-)
+
 
 parser.add_argument(
-    "--csv",
+    "--csv_path",
     metavar="path",
     type=Path,
     nargs="?",
     help="csv file with all entries",
-    default=CSV_FILEPATH,
+    default=CSV_PATH,
 )
 parser.add_argument(
     "--config",
@@ -172,9 +184,4 @@ parser.add_argument(
 
 args = parser.parse_args()
 if __name__ == "__main__":
-    import_dcase_noise(
-        collection_name=args.collection,
-        data_path=args.data_path,
-        config_path=args.config,
-        csv_filepath=args.csv,
-    )
+    import_dcase_noise(args.data_path, args.csv_path, args.config)
