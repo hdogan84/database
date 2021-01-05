@@ -150,7 +150,7 @@ def import_dcase_noise(data_path: Path, csv_path: Path, config_filepath: Path):
             config_filepath,
             csv_path.joinpath(csv_file),
             collection_name=collection,
-            dry_run=True,
+            dry_run=False,
         )
 
 
@@ -184,4 +184,4 @@ parser.add_argument(
 
 args = parser.parse_args()
 if __name__ == "__main__":
-    import_dcase_noise(args.data_path, args.csv_path, args.config)
+    import_dcase_noise(args.data_path, args.config, args.csv_path)

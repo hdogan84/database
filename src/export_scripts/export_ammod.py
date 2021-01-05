@@ -7,12 +7,12 @@ from tools.configuration import DatabaseConfig, parse_config
 from tools.db import (
     connectToDB,
 )
-from derivates import Standart22khz
+from derivates import Standart32khz
 from tools.multilabel import SimpleMultiLabels
 import argparse
 import csv
 
-CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("src/config/defaultConfig.cfg")
 
 query_files = """
 SELECT 
@@ -132,7 +132,7 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
             filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
-            derivatateCreator = Standart22khz(config.database)
+            derivatateCreator = Standart32khz(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
                 filepathes
             )

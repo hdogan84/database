@@ -12,8 +12,8 @@ from scipy.signal import butter, sosfilt
 sampleRateDst = 32000  # 32000
 
 
-class Standart22khz(DerivativeBaseClass):
-    name = "Standart22khzNormalisedHighpassFilter"
+class Standart32khz(DerivativeBaseClass):
+    name = "Standart32khzNormalisedHighpassFilter"
     import_sample_rate: int = 48000
     sample_rate: int = 32000
     resampleType = "kaiser_fast"  # or use 'kaiser_best'
@@ -22,7 +22,7 @@ class Standart22khz(DerivativeBaseClass):
     description: str = "Normalised: 0.7071;  Highpass: butter, cutoff 2000Hz; "
 
     def __init__(self, config: DatabaseConfig):
-        super(Standart22khz, self).__init__(config)
+        super(Standart32khz, self).__init__(config)
 
     def apply_high_pass_filter(self, input, sample_rate: int, filePath: Path):
         order = 2
