@@ -6,7 +6,7 @@ from tools.configuration import DatabaseConfig, parse_config
 from tools.db import (
     connectToDB,
 )
-from derivates import Standart22khz
+from derivates import Standart32khz
 from tools.multilabel import SimpleMultiLabels
 import csv
 import pandas as pd

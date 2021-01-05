@@ -188,4 +188,4 @@ parser.add_argument(
 
 args = parser.parse_args()
 if __name__ == "__main__":
-    import_dcase_noise(args.data_path, args.csv_path, args.config)
+    import_dcase_noise(args.data_path, args.config, args.csv_path)
