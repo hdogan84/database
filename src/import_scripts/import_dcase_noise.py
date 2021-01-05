@@ -14,15 +14,26 @@ from tools.db import (
 from tools.logging import info
 import argparse
 
-DATA_PATH = Path("/home/bewr/Downloads/ff1010bird/ff1010bird_wav/wav")
-CONFIG_FILEPATH = Path("./src/config/defaultConfig.cfg")
+DATA_PATH = Path(
+    "/mnt/tsa_transfer/TrainData/BAD_Challenge_18/DatasetsOrgDownloads/Development"
+)
+CONFIG_FILEPATH = Path("./config.cfg")
 CSV_PATH = Path("./assets/dcase-2018")
-CSV_FILES = ["freefield1010.csv", "warblrb10k.csv", "BirdVox-DCASE-20k.csv"]
-COLLECTIONS = [
-    "dcase-2018-freefield1010",
-    "dcase-2018-warblrb10k",
-    "dcase-2018-BirdVox-DCASE-20k.csv",
-]
+# CSV_FILES = ["freefield1010.csv"]
+# CSV_FILES = ["warblrb10k.csv"]
+CSV_FILES = ["BirdVox-DCASE-20k.csv"]
+
+# DIRS = ["ff1010bird/wav"]
+# DIRS = ["warblrb10k_public/wav"]
+DIRS = ["BirdVoxDCASE20k/wav"]
+
+# COLLECTIONS = ["dcase-2018-freefield1010"]
+# COLLECTIONS = ["dcase-2018-warblrb10k"]
+COLLECTIONS = ["dcase-2018-BirdVox-DCASE-20k.csv"]
+# ,
+# "dcase-2018-warblrb10k",
+# "dcase-2018-BirdVox-DCASE-20k.csv",
+# ]
 
 
 def import_noise(
@@ -88,10 +99,7 @@ def import_noise(
                         ("bit_rate", audio_file_parameters.bit_rate),
                         ("channels", audio_file_parameters.channels),
                         ("mime_type", audio_file_parameters.mime_type),
-                        (
-                            "original_filename",
-                            audio_file_parameters.original_filename,
-                        ),
+                        ("original_filename", audio_file_parameters.original_filename,),
                         ("file_path", target_record_file_path),
                         ("filename", audio_file_parameters.filename),
                         ("md5sum", audio_file_parameters.md5sum),
@@ -101,19 +109,15 @@ def import_noise(
                     (record_id, created) = get_entry_id_or_create_it(
                         db_cursor,
                         "record",
-                        [
-                            ("md5sum", audio_file_parameters.md5sum),
-                        ],
+                        [("md5sum", audio_file_parameters.md5sum),],
                         data=record_entry,
                         info=True,
                     )
                     if created:
                         # move file to destination
                         if dry_run is False:
-                            targetDirectory = (
-                                config.database.get_originals_data_path().joinpath(
-                                    target_record_file_path
-                                )
+                            targetDirectory = config.database.get_originals_files_path().joinpath(
+                                target_record_file_path
                             )
                             targetDirectory.mkdir(parents=True, exist_ok=True)
                             rename_and_copy_to(
@@ -134,7 +138,7 @@ def import_noise(
                     # print(forground_annoation)
                     get_entry_id_or_create_it(
                         db_cursor,
-                        "annotation_of_species",
+                        "annotation_of_noise",
                         forground_annoation,
                         forground_annoation,
                     )
@@ -144,13 +148,13 @@ def import_noise(
 
 
 def import_dcase_noise(data_path: Path, csv_path: Path, config_filepath: Path):
-    for collection, csv_file in zip(COLLECTIONS, CSV_FILES):
+    for collection, csv_file, dir in zip(COLLECTIONS, CSV_FILES, DIRS):
         import_noise(
-            data_path,
+            data_path.joinpath(dir),
             config_filepath,
             csv_path.joinpath(csv_file),
             collection_name=collection,
-            dry_run=True,
+            dry_run=False,
         )
 
 
