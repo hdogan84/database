@@ -1,19 +1,15 @@
 from typing import Collection, List, Dict
 from mysql.connector.cursor import MySQLCursor
 from pathlib import Path
-import derivates
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
-from tools.db import (
-    connectToDB,
-)
+from tools.db import connectToDB
 from tools.file_handling.csv import write_to_csv
 from derivates import Standart32khz
-from tools.multilabel import SimpleMultiLabels
 import argparse
-import csv
 
-CONFIG_FILE_PATH = Path("src/config/defaultConfig.cfg")
+
+CONFIG_FILE_PATH = Path("config.cfg")
 
 collections = [
     "dcase-2018-freefield1010",
@@ -32,7 +28,7 @@ FROM
     collection AS c ON c.id = r.collection_id
 WHERE c.`name` = %s
 ORDER BY RAND()
-    LIMIT 1;
+    LIMIT 1000;
 
 """
 
@@ -52,7 +48,6 @@ def create_file_derivates(config: DatabaseConfig):
                 filepathes
             )
             return file_derivates_dict
-            return []
 
 
 def map_filename_to_derivative_filepath(
@@ -75,9 +70,8 @@ def export_data(
 
     derivates_dict = create_file_derivates(config)
 
-    # write_to_csv(
-    #     class_list, filename_class_list, ["latin_name", "english_name", "german_name"]
-    # )
+    data = [[x.as_posix()] for x in derivates_dict.values()]
+    write_to_csv(data, "noise.csv", ["filepath"])
 
 
 parser = argparse.ArgumentParser(description="")
@@ -100,6 +94,5 @@ parser.add_argument(
 args = parser.parse_args()
 if __name__ == "__main__":
     export_data(
-        config_path=args.config,
-        csv_filename=args.csv_filename,
+        config_path=args.config, csv_filename=args.csv_filename,
     )

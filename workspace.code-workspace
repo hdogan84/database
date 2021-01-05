@@ -18,5 +18,17 @@
       "--disable=C0115", // (missing-class-docstring)
       "--disable=C0116", // (missing-function-docstring)
     ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Current File",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal"
+      }
+    ]
   }
 }

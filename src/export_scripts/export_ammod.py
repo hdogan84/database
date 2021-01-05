@@ -4,13 +4,11 @@ from pathlib import Path
 import derivates
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
-from tools.db import (
-    connectToDB,
-)
+from tools.db import connectToDB
 from derivates import Standart32khz
 from tools.multilabel import SimpleMultiLabels
 import argparse
-import csv
+from tools.file_handling.csv import write_to_csv
 
 CONFIG_FILE_PATH = Path("src/config/defaultConfig.cfg")
 
@@ -169,15 +167,6 @@ def create_class_list(config: DatabaseConfig):
             db_cursor.execute(query_species)
             data = db_cursor.fetchall()
             return data
-
-
-def write_to_csv(data, filename, header):
-    with open(filename, "w", newline="") as csvfile:
-        csv_writer = csv.writer(
-            csvfile, delimiter=";", quotechar="|", quoting=csv.QUOTE_MINIMAL
-        )
-        csv_writer.writerow(header)
-        csv_writer.writerows(data)
 
 
 def map_filename_to_derivative_filepath(
