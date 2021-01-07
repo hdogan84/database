@@ -85,7 +85,7 @@ def create_metrics(
         'SpeciesCode != "TD_Start_End" & SpeciesCode != "BACKGROUND" '
     ).SpeciesCode.count()
 
-    info("Start queriny database")
+    info("Start querieng database")
     with connectToDB(config.database) as db_connection:
         # start import files
         with db_connection.cursor() as db_cursor:
