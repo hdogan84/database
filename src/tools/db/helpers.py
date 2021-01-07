@@ -21,6 +21,8 @@ def to_sql_save_value(value):
 
 
 def sanitize_altitude(value: str):
+    if value is None:
+        return None
     result = value.strip()
     if result.startswith("<"):
         result = result.split("<")[1]
@@ -36,6 +38,8 @@ def sanitize_altitude(value: str):
 
 
 def sanitize_name(value: str, max_length: int):
+    if value is None:
+        return None
     if len(value) <= max_length:
         return value
     else:

@@ -52,7 +52,7 @@ class TSADB:
 db = TSADB()
 
 
-CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("config.cfg")
 
 TSA_CONFIG = """
 [database]
@@ -66,13 +66,11 @@ file_storage_path = /tmp/
 tsaConfig = DatabaseConfig()
 tsaConfig.add_source(IniStringConfigSource(TSA_CONFIG))
 
-DATA_PATH = Path(
-    "/home/bewr/external-volumes/stana/mnt/z/AG/TSA/Mario/_Backups/TsaOrgTrainAudioData/"
-)
-TEST_RUN = True
-
+DATA_PATH = Path("/mnt/z/AG/TSA/Mario/_Backups/TsaOrgTrainAudioData/")
+TEST_RUN = False
+# CollectionName, SubFolders,
 COLLECTIONS = [
-    ("TsaShorts", "Shorts", False),
+    ("TsaShorts", "ShortsAll", False),
     # ("CD014", "VogelCDs", False),
     # ("CD043", "VogelCDs", False),
     # ("CD041", "VogelCDs", False),
@@ -257,7 +255,7 @@ def do_collection_data_import(
             data=record_data,
             info=True,
         )
-        if TEST_RUN:
+        if TEST_RUN is False:
             db_connection_la.commit()
             if created:
                 targetDirectory = orginal_path.joinpath(target_record_file_path)
@@ -270,6 +268,7 @@ def do_collection_data_import(
                 delete_from_table(
                     db_cursor_la, "annotation_of_species", [("record_id", record_id)]
                 )
+                print("File Copyied {}".format(audio_file_parameters.filename))
                 db_connection_la.commit()
 
         species_id = species_translator.get_species_id(db_cursor_la, row[12], row[14])
@@ -300,7 +299,7 @@ def do_collection_data_import(
             query=annoation_data,
             data=annoation_data,
         )
-        if TEST_RUN:
+        if TEST_RUN is False:
             db_connection_la.commit()
 
     # # to distinct species values
