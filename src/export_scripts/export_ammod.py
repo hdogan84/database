@@ -10,7 +10,7 @@ from tools.multilabel import SimpleMultiLabels
 import argparse
 from tools.file_handling.csv import write_to_csv
 
-CONFIG_FILE_PATH = Path("src/config/defaultConfig.cfg")
+CONFIG_FILE_PATH = Path("config.cfg")
 
 query_files = """
 SELECT 

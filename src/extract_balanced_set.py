@@ -3,24 +3,12 @@ import random
 
 # This script extract from an exported ammod csv a ballanced dataset,
 # smallest amount samples of a class defines amount for all other classes
-DATA_FILEPATH = (
-    "/home/bewr/projects/mfn/audio_classificator/data/ammod-selection/labels.csv"
-)
-CLASS_FILEPATH = (
-    "/home/bewr/projects/mfn/audio_classificator/data/ammod-selection/class-list.csv"
-)
+DATA_FILEPATH = "labels.csv"
+CLASS_FILEPATH = "class-list.csv"
 with open(CLASS_FILEPATH) as classFile, open(DATA_FILEPATH) as dataFile:
-    dataframe = csv.reader(
-        dataFile,
-        delimiter=";",
-        quotechar="|",
-    )
+    dataframe = csv.reader(dataFile, delimiter=";", quotechar="|",)
     fieldnames = dataframe.__next__()
-    classlist = csv.reader(
-        classFile,
-        delimiter=";",
-        quotechar="|",
-    )
+    classlist = csv.reader(classFile, delimiter=";", quotechar="|",)
     classlist.__next__()
     classIds = []
     for x in classlist:
@@ -43,11 +31,7 @@ for key in dictClassIds:
     random.shuffle(dictClassIds[key])
     result.extend(dictClassIds[key][:min_length])
 
-with open("balanced_datas.csv", "w", newline="") as csvfile:
-    writer = csv.writer(
-        csvfile,
-        delimiter=";",
-        quotechar="|",
-    )
+with open("balanced_labels.csv", "w", newline="") as csvfile:
+    writer = csv.writer(csvfile, delimiter=";", quotechar="|",)
     writer.writerow(fieldnames)
     writer.writerows(result)
