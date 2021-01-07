@@ -119,8 +119,10 @@ def create_metrics(
             vocalization_type_count = list(db_cursor.fetchall())
             db_cursor.execute(
                 """
-            SELECT sum(end_time-start_time) as duration 
-            FROM libro_animalis.annotation_of_species where id_level = 1
+            SELECT SUM(a.end_time - a.start_time) AS duration
+            FROM libro_animalis.annotation_of_species AS a
+            LEFT JOIN (record AS r) ON r.id = a.record_id
+            WHERE r.collection_id = 4 AND a.id_level = 1
             """
             )
 
@@ -128,7 +130,11 @@ def create_metrics(
             db_cursor.execute(
                 """
             SELECT count(*) 
-            FROM libro_animalis.annotation_of_species where id_level = 1
+            FROM libro_animalis.annotation_of_species as a
+            LEFT JOIN (record AS r) ON r.id = a.record_id
+            WHERE r.collection_id = 4 AND
+            a.id_level = 1
+
             """
             )
 
