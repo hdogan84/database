@@ -49,17 +49,20 @@ def create_file_derivates(config: DatabaseConfig):
             )
             return file_derivates_dict
 
-
 def map_filename_to_derivative_filepath(
     data_row: tuple, filename_index: dict, derivates_dict
 ):
     result = list(data_row)
     try:
-        result[filename_index] = derivates_dict[result[filename_index]].as_posix()
+        tmp_path = derivates_dict[result[filename_index]]
+        # remove variable path part
+        tmp_path = Path("").joinpath(tmp_path.parts[len(tmp_path.parts) - 6 :])
+        result[filename_index] = tmp_path.as_posix()
     except KeyError as e:
         print(e)
         result[filename_index] = None
     return result
+
 
 
 def export_data(

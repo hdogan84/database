@@ -1,7 +1,6 @@
 from typing import List, Dict
 from mysql.connector.cursor import MySQLCursor
 from pathlib import Path
-import derivates
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
@@ -174,7 +173,8 @@ def map_filename_to_derivative_filepath(
 ):
     result = list(data_row)
     try:
-        result[filename_index] = derivates_dict[result[filename_index]].as_posix()
+        tmp_path = derivates_dict[result[filename_index]]
+        result[filename_index] = tmp_path.as_posix()
     except KeyError as e:
         print(e)
         result[filename_index] = None
