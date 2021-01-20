@@ -33,7 +33,7 @@ ORDER BY RAND()
 """
 
 
-def create_file_derivates(config: DatabaseConfig):
+def create_file_derivates(config: DatabaseConfig) :
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor  # set type hint
@@ -49,32 +49,17 @@ def create_file_derivates(config: DatabaseConfig):
             )
             return file_derivates_dict
 
-def map_filename_to_derivative_filepath(
-    data_row: tuple, filename_index: dict, derivates_dict
-):
-    result = list(data_row)
-    try:
-        tmp_path = derivates_dict[result[filename_index]]
-        # remove variable path part
-        tmp_path = Path("").joinpath(tmp_path.parts[len(tmp_path.parts) - 6 :])
-        result[filename_index] = tmp_path.as_posix()
-    except KeyError as e:
-        print(e)
-        result[filename_index] = None
-    return result
+
+def cut_path_to_essential(filepath: Path) -> str:
+    essential = Path("").joinpath(*filepath.parts[len(filepath.parts) - 6 :])
+    return essential.as_posix()
 
 
-
-def export_data(
-    config_path: Path = CONFIG_FILE_PATH,
-    csv_filename: str = "ammod-train-single-label.csv",
-):
+def export_data(config_path: Path = CONFIG_FILE_PATH,csv_filename="noise.csv"):
     config = parse_config(config_path)
-
     derivates_dict = create_file_derivates(config)
-
-    data = [[x.as_posix()] for x in derivates_dict.values()]
-    write_to_csv(data, "noise.csv", ["filepath"])
+    data = [[cut_path_to_essential(x)] for x in derivates_dict.values()]
+    write_to_csv(data, csv_filename, ["filepath"])
 
 
 parser = argparse.ArgumentParser(description="")
