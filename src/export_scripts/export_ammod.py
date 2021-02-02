@@ -68,7 +68,6 @@ FROM
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
-    r.collection_id != 1 and
     s.olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
         'AVPDLOCR',
         'AVPDPOPA',
