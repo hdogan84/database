@@ -12,6 +12,7 @@ class DerivativeBaseClass:
     id: int
     db_config: DatabaseConfig
     derivate_folder_path: Path
+    realtive_derivative_folder_path: Path
     file_ending: str = None
     name: str = None
     sample_rate: int = None
@@ -39,8 +40,11 @@ class DerivativeBaseClass:
                 ]
                 self.id = get_entry_id_or_create_it(db_cursor, "derivative", data, data)
                 db_connection.commit()
-                self.derivate_folder_path = (
-                    config.get_derivatives_files_path().joinpath(str(self.id))
+                self.derivate_folder_path = config.get_derivatives_files_path().joinpath(
+                    str(self.id)
+                )
+                self.realtive_derivative_folder_path = self.derivate_folder_path.relative_to(
+                    config.file_storage_path
                 )
                 if self.derivate_folder_path.exists() is False:
                     mkdir(self.derivate_folder_path)
@@ -50,19 +54,31 @@ class DerivativeBaseClass:
         raise NotImplementedError
 
     def add_derivate_to_dict(self, filepath: Path) -> None:
+
         source_file_path: Path = self.db_config.get_originals_files_path().joinpath(
-            filepath
+            filepath.as_posix()
         )
         if source_file_path.exists() is False:
             error("File Not found: {}".format(source_file_path.as_posix()))
             return (None, None)
-
+        source_file_name = "{}".format(filepath.name)
+        # Create Ending for wav
         # calculate database files sub folders
-        target_file_path: Path = self.derivate_folder_path.joinpath(filepath)
+        target_file_ending = filepath.with_suffix(".{}".format(self.file_ending))
+        target_file_path: Path = self.derivate_folder_path.joinpath(target_file_ending)
+        realtive_target_file_path = self.realtive_derivative_folder_path.joinpath(
+            target_file_ending
+        )
         if target_file_path.exists() is False or self.overwrite:
             target_file_path.parent.mkdir(parents=True, exist_ok=True)
-            self.create_derivate(source_file_path, target_file_path)
-        return (target_file_path.name, target_file_path)
+            try:
+                self.create_derivate(source_file_path, target_file_path)
+            except:
+                print("Could not convert: {}".format(source_file_path))
+                target_file_path = None
+                target_file_name = None
+
+        return (source_file_name, realtive_target_file_path)
 
     def get_original_derivate_dict(
         self, filepathes: List[Path], n_jobs=-1

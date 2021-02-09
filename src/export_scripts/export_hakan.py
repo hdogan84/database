@@ -22,30 +22,17 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    s.olaf8_id IN (
-        'AVPDPEAT', 
-        'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
+    s.latin_name IN ('Crex crex',
+'Porzana porzana',
+'Fringilla coelebs',
+'Phoenicurus phoenicurus',
+'Turdus philomelos',
+'Dendrocopos major',
+'Dendrocoptes medius',
+'Dryobates minor',
+'Dryocopus martius',
+'Jynx torquilla',
+'Picus viridis')
 
 """
 
@@ -70,55 +57,33 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    s.olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
+    s.latin_name IN ('Crex crex',
+'Porzana porzana',
+'Fringilla coelebs',
+'Phoenicurus phoenicurus',
+'Turdus philomelos',
+'Dendrocopos major',
+'Dendrocoptes medius',
+'Dryobates minor',
+'Dryocopus martius',
+'Jynx torquilla',
+'Picus viridis')
 ORDER BY r.filename , a.start_time ASC
 """
 
 query_species = """
 SELECT latin_name,english_name,german_name FROM libro_animalis.species where
-    olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
+    latin_name IN ('Crex crex',
+'Porzana porzana',
+'Fringilla coelebs',
+'Phoenicurus phoenicurus',
+'Turdus philomelos',
+'Dendrocopos major',
+'Dendrocoptes medius',
+'Dryobates minor',
+'Dryocopus martius',
+'Jynx torquilla',
+'Picus viridis')
         ORDER BY latin_name ASC
 """
 
@@ -177,9 +142,8 @@ def map_filename_to_derivative_filepath(
     try:
         tmp_path = derivates_dict[result[filename_index]]
         result[filename_index] = tmp_path.as_posix()
-
     except KeyError as e:
-        print("KeyError:", e)
+        print("KeyError {}".format(e))
         result[filename_index] = None
     return result
 
@@ -190,7 +154,6 @@ def export_data(
     filename_class_list: str = "ammod-class-list.csv",
 ):
     config = parse_config(config_path)
-
     print("Search an create file derivations")
     derivates_dict = create_file_derivates(config)
     # multi_labels = create_multiabels(config)
@@ -225,6 +188,7 @@ def export_data(
             "species_count",
             "filepath",
             "channels",
+            "collection_id",
         ],
     )
     class_list = create_class_list(config)

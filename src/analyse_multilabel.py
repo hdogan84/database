@@ -3,9 +3,7 @@ from pathlib import Path
 import derivates
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
-from tools.db import (
-    connectToDB,
-)
+from tools.db import connectToDB
 from derivates import Standart32khz
 from tools.multilabel import SimpleMultiLabels
 import csv
@@ -35,9 +33,9 @@ def createDurationHistorgram(df):
     val04 = len([number for number in durations if number < 0.5])
     val05 = len([number for number in durations if number >= 0.5 and number < 1])
     val10 = len([number for number in durations if number >= 1])
-    print(val04)
-    print(val05)
-    print(val10)
+    # print(val04)
+    # print(val05)
+    # print(val10)
     bins = compute_histogram_bins(durations, 0.1)
     plt.figure("Duration Historgram")
     plt.hist(durations, bins=bins)

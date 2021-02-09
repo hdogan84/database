@@ -15,6 +15,7 @@ class Index(IntEnum):
     GROUP_ID = 7
     VOCALIZATION_TYPE = 8
     CHANNELS = 9
+    COLLECTION_ID = 10
 
 
 class Action(Enum):
@@ -28,10 +29,7 @@ class LabelAction:
     index: int
 
     def __init__(
-        self,
-        time: float,
-        type: Action,
-        index: int,
+        self, time: float, type: Action, index: int,
     ):
         self.time = time
         self.type = type
@@ -69,8 +67,7 @@ class LabeGeneratorBaseClass:
         return start_stop_list
 
     def create_raw_label_list(
-        self,
-        start_stop_list: List[Action],
+        self, start_stop_list: List[Action],
     ) -> Tuple[float, float, List[list]]:
         labels_list: list[set] = []
         current_labels = set()
@@ -133,13 +130,16 @@ class LabeGeneratorBaseClass:
         annotations = self.annotations
         tmp_group = []
         for a in annotations:
+            collection_id = a[Index.COLLECTION_ID]
             channels = a[Index.CHANNELS]
             duration = a[Index.END_TIME] - a[Index.START_TIME]
             start = a[Index.START_TIME]
             stop = a[Index.END_TIME]
             label = a[Index.LATIN_NAME]
             filename = a[Index.FILENAME]
-            tmp_group.append((duration, start, stop, label, 1, filename, channels))
+            tmp_group.append(
+                (duration, start, stop, label, 1, filename, channels, collection_id)
+            )
         return tmp_group
 
 

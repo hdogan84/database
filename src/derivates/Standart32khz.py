@@ -8,6 +8,7 @@ from librosa import resample
 import numpy as np
 import soundfile as sf
 from scipy.signal import butter, sosfilt
+import warnings
 
 sampleRateDst = 32000  # 32000
 
@@ -42,31 +43,32 @@ class Standart32khz(DerivativeBaseClass):
 
         return output
 
-    def create_derivate(
-        self,
-        source_file_path: Path,
-        target_file_path: Path,
-    ) -> None:
+    def create_derivate(self, source_file_path: Path, target_file_path: Path,) -> None:
         # resample on load to higher prevent instability of the filter
-        y, sr = librosa.load(
-            source_file_path,
-            sr=self.import_sample_rate,
-            mono=False,
-            res_type=self.resampleType,
-        )
-        # Normalize to -3 dB
-        y /= np.max(y)
-        y *= 0.7071
+        # print("Read: {} \n write to: ".format(source_file_path))
+        y = []
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            y, sr = librosa.load(
+                source_file_path,
+                sr=self.import_sample_rate,
+                mono=False,
+                res_type=self.resampleType,
+            )
+            # Normalize to -3 dB
+            y /= np.max(y)
+            y *= 0.7071
 
-        y = self.apply_high_pass_filter(y, sr, source_file_path)
-        y = librosa.resample(
-            y,
-            self.import_sample_rate,
-            self.sample_rate,
-            res_type=self.resampleType,
-        )
-        if len(y.shape) > 1:
-            y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
+            y = self.apply_high_pass_filter(y, sr, source_file_path)
+            y = librosa.resample(
+                y,
+                self.import_sample_rate,
+                self.sample_rate,
+                res_type=self.resampleType,
+            )
+            if len(y.shape) > 1:
+                y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
+            # print("write to target_file_path: {}".format(target_file_path))
         sf.write(target_file_path, y, self.sample_rate, "PCM_16")
 
         debug("standart2khz {}".format(target_file_path.as_posix()))
