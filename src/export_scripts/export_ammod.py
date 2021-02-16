@@ -10,7 +10,34 @@ import argparse
 from tools.file_handling.csv import write_to_csv
 
 CONFIG_FILE_PATH = Path("config.cfg")
-
+class_list = """
+(
+'AVRACRCR',
+'AVSCSCRU',
+'AVPIDEMA',
+'AVPDPEAT',
+'AVPDLOCR',
+'AVPDPOPA',
+'AVPDCYCA',
+'AVPDPAMA',
+'AVPCPHSI',
+'AVPCPHTR',
+'AVSYSYAT',
+'AVTGTRTR',
+'AVSISIEU',
+'AVTUTUME',
+'AVTUTUPH',
+'AVTUTUVI',
+'AVMUMUST',
+'AVMUERRU',
+'AVMUFIHY',
+'AVMUPHPH',
+'AVMTANTR',
+'AVFRFRCO',
+'AVFRCOCO',
+'AVFRCHCH',
+'AVFRSPSP')
+"""
 query_files = """
 SELECT 
     distinct(r.filename), r.file_path
@@ -22,32 +49,11 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    s.olaf8_id IN (
-        'AVPDPEAT', 
-        'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
+    s.olaf8_id IN {}
 
-"""
+""".format(
+    class_list
+)
 
 query_annoations = """
 SELECT 
@@ -70,57 +76,19 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    s.olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
+    s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC
-"""
+""".format(
+    class_list
+)
 
 query_species = """
 SELECT latin_name,english_name,german_name FROM libro_animalis.species where
-    olaf8_id IN ('AVPDPEAT' , 'AVPIDEMA',
-        'AVPDLOCR',
-        'AVPDPOPA',
-        'AVPDCYCA',
-        'AVPDPAMA',
-        'AVPCPHSI',
-        'AVPCPHTR',
-        'AVSYSYAT',
-        'AVTGTRTR',
-        'AVSISIEU',
-        'AVTUTUME',
-        'AVTUTUPH',
-        'AVTUTUVI',
-        'AVMUMUST',
-        'AVMUERRU',
-        'AVMUFIHY',
-        'AVMUPHPH',
-        'AVMTANTR',
-        'AVFRFRCO',
-        'AVFRCOCO',
-        'AVFRCHCH',
-        'AVFRSPSP')
-        ORDER BY latin_name ASC
-"""
+    olaf8_id IN{}
+ORDER BY latin_name ASC
+""".format(
+    class_list
+)
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -225,6 +193,7 @@ def export_data(
             "species_count",
             "filepath",
             "channels",
+            "collection_id",
         ],
     )
     class_list = create_class_list(config)
