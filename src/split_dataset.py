@@ -6,17 +6,19 @@ import argparse
 # This script split a given csv in train and validation csv
 
 
-def split_dataset(csv_filepath: Path, val_size=0.2, class_index=3):
+def split_dataset(
+    csv_filepath: Path, val_size=0.2, class_index=3, collection_id_index=7
+):
     with open(csv_filepath) as dataFile:
         csv_data = csv.reader(dataFile, delimiter=";", quotechar="|",)
         fieldnames = csv_data.__next__()
 
         values = [i for i in csv_data]
 
-        dictClassIds = {i[class_index]: [] for i in values}
+        dictClassIds = {(i[class_index], i[collection_id_index]): [] for i in values}
 
         for x in values:
-            dictClassIds[x[class_index]].append(x)
+            dictClassIds[(x[class_index], x[collection_id_index])].append(x)
 
         result_val = []
         result_train = []
@@ -39,7 +41,12 @@ def split_dataset(csv_filepath: Path, val_size=0.2, class_index=3):
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument(
-    "--csv", metavar="path", type=Path, nargs="?", help="csv file to split",
+    "--csv",
+    metavar="path",
+    type=Path,
+    nargs="?",
+    help="csv file to split",
+    default="./ammod-labels.csv",
 )
 
 
