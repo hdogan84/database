@@ -84,7 +84,7 @@ ORDER BY r.filename , a.start_time ASC
 
 query_species = """
 SELECT latin_name,english_name,german_name FROM libro_animalis.species where
-    olaf8_id IN{}
+    olaf8_id IN {}
 ORDER BY latin_name ASC
 """.format(
     class_list
@@ -144,7 +144,10 @@ def map_filename_to_derivative_filepath(
     result = list(data_row)
     try:
         tmp_path = derivates_dict[result[filename_index]]
-        result[filename_index] = tmp_path.as_posix()
+        if tmp_path is None:
+            result[filename_index] = None
+        else:
+            result[filename_index] = tmp_path.as_posix()
 
     except KeyError as e:
         print("KeyError:", e)
@@ -208,7 +211,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="labels.csv",
+    default="ammod-labels.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -216,7 +219,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="class-list.csv",
+    default="ammod-class-list.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

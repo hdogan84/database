@@ -58,10 +58,10 @@ class DerivativeBaseClass:
         source_file_path: Path = self.db_config.get_originals_files_path().joinpath(
             filepath.as_posix()
         )
-        if source_file_path.exists() is False:
-            error("File Not found: {}".format(source_file_path.as_posix()))
-            return (None, None)
         source_file_name = "{}".format(filepath.name)
+        if source_file_path.exists() is False:
+            error("File Not found: {}".format(source_file_path))
+            return (source_file_name, None)
         # Create Ending for wav
         # calculate database files sub folders
         target_file_ending = filepath.with_suffix(".{}".format(self.file_ending))
@@ -76,9 +76,11 @@ class DerivativeBaseClass:
             except:
                 print("Could not convert: {}".format(source_file_path))
                 target_file_path = None
-                target_file_name = None
-
-        return (source_file_name, realtive_target_file_path)
+        if target_file_path is None or target_file_path.exists() == False:
+            print("File not found {}".format(target_file_path))
+            return (source_file_name, None)
+        else:
+            return (source_file_name, realtive_target_file_path)
 
     def get_original_derivate_dict(
         self, filepathes: List[Path], n_jobs=-1
