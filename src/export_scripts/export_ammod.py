@@ -185,6 +185,13 @@ def export_data(
             ),
         )
     )
+    #filter file length
+    pointing_to_derivates_single_labels = list(
+        filter(
+            lambda x: x[0] < 120 and x[0] > 0.2,
+            pointing_to_derivates_single_labels
+        )
+    )
     write_to_csv(
         pointing_to_derivates_single_labels,
         filename_labels,

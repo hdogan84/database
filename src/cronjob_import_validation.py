@@ -6,8 +6,8 @@ from create_import_report_olaf import create_metrics
 import datetime
 import os
 
-DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/TD_Training")
-CONFIG_FILE_PATH = Path("/home/stana/rankProjekte/libro_animalis/config.cfg")
+DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/VD_Validierung")
+CONFIG_FILE_PATH = Path("/home/stana/rankProjekte/libro_animalis/config_validation.cfg")
 
 currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
 missing_species = import_data(DATA_PATH, CONFIG_FILE_PATH)
@@ -20,4 +20,5 @@ create_metrics(
     report_path,
     Path(CONFIG_FILE_PATH),
     missing_species=missing_species,
+    collectionId=105,
 )

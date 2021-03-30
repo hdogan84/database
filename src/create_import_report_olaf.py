@@ -58,10 +58,7 @@ def create_merged_raven_files(list_of_files: List[CorespondingFiles]):
 
 
 def create_metrics(
-    data_path=DATA_PATH,
-    report_path=REPORT_PATH,
-    config_path=CONFIG_FILE_PATH,
-    missing_species=None,
+    data_path=None, report_path=None, config_path=None, missing_species=None,collectionId=None,
 ):
     config = parse_config(config_path)
 
@@ -97,10 +94,10 @@ def create_metrics(
             FROM (annotation_of_species AS a)
                 LEFT JOIN (record AS r) ON r.id = a.record_id
                 LEFT JOIN species AS s ON s.id = a.species_id
-            WHERE r.collection_id = 4 and  a.id_level = 1
+            WHERE r.collection_id = {} and  a.id_level = 1
             GROUP BY a.species_id
             order by `id_level_1` DESC
-            """
+            """.format(collectionId)
             )
             id_level_count = list(db_cursor.fetchall())
 
@@ -111,10 +108,10 @@ def create_metrics(
             FROM (annotation_of_species AS a)
                 LEFT JOIN (record AS r) ON r.id = a.record_id
                 LEFT JOIN species AS s ON s.id = a.species_id
-            WHERE r.collection_id = 4 and  a.id_level = 1 
+            WHERE r.collection_id = {} and  a.id_level = 1 
             GROUP BY a.species_id, a.vocalization_type
             order by `latin_name`,vocalization_type DESC
-            """
+            """.format(collectionId)
             )
             vocalization_type_count = list(db_cursor.fetchall())
             db_cursor.execute(
@@ -122,8 +119,8 @@ def create_metrics(
             SELECT SUM(a.end_time - a.start_time) AS duration
             FROM libro_animalis.annotation_of_species AS a
             LEFT JOIN (record AS r) ON r.id = a.record_id
-            WHERE r.collection_id = 4 AND a.id_level = 1
-            """
+            WHERE r.collection_id = {} AND a.id_level = 1
+            """.format(collectionId)
             )
 
             length_of_id_level_1_annoations = list(db_cursor.fetchall())[0][0]
@@ -132,10 +129,10 @@ def create_metrics(
             SELECT count(*) 
             FROM libro_animalis.annotation_of_species as a
             LEFT JOIN (record AS r) ON r.id = a.record_id
-            WHERE r.collection_id = 4 AND
+            WHERE r.collection_id = {} AND
             a.id_level = 1
 
-            """
+            """.format(collectionId)
             )
 
             level_1_annoations_count = list(db_cursor.fetchall())[0][0]

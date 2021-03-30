@@ -31,7 +31,7 @@ ANNOTATION_TABLE = "species"
 LICENSE = None
 
 
-def import_data(data_path=DATA_PATH, config_file_path=CONFIG_FILE_PATH) -> List[str]:
+def import_data(data_path=None, config_file_path=None) -> List[str]:
     config = parse_config(config_file_path)
     list_of_files = get_record_annoation_tupels_from_directory(
         data_path,

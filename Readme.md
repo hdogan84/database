@@ -18,7 +18,16 @@ Naming shema:
 # Database
 Floats are rounded at to 6 decimals and save thow
 
-#crontjo jeden Montag
-cronjob -e
-add
-0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import.py
+# Import olfas annotation crontjob jeden Montag
+
+
+```bash
+# mount samba share  \\naturkundemuseum-berlin.de\MuseumDFSRoot.
+sudo mount -t cifs -o username=user.name //naturkundemuseum-berlin.de/museumdfsroot /mnt/z/ -o vers=2.0
+sudo mount -t cifs -o username=user.name,vers=2.1 //naturkundemuseum-berlin.de/museumdfsroot /mnt/z/
+# add cronjobs
+crontab -e 
+# add jobs to file 
+0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import_training.py
+0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import_validation.py
+```

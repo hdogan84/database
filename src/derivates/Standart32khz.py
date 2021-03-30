@@ -49,13 +49,10 @@ class Standart32khz(DerivativeBaseClass):
         y = []
 
         y, sr = librosa.load(
-            source_file_path,
-            sr=self.import_sample_rate,
-            mono=False,
-            res_type=self.resampleType,
+            source_file_path, sr=None, mono=False, res_type=self.resampleType,
         )
-        if np.isfinite(y).all():
-            raise Exception("Error creating derivative for {}".format(source_file_path)) 
+        if np.isfinite(y).all() is False:
+            raise Exception("Error creating derivative for {}".format(source_file_path))
             return
 
         # Normalize to -3 dB
