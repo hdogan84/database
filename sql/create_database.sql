@@ -144,12 +144,14 @@ CREATE TABLE `annotation_of_species` (
   `record_id` INT NULL,
   `species_id` INT NULL,
   `annotator_id` INT NULL,
+  `annotation_interval_id` INT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
   FOREIGN KEY (`species_id`) REFERENCES `species`(`id`),
   FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
+  FOREIGN KEY (`annotation_interval_id`) REFERENCES `annotation_interval`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
 CREATE TABLE `annotation_of_noise` (
@@ -166,6 +168,7 @@ CREATE TABLE `annotation_of_noise` (
   `channel` INT NULL,
   `record_id` INT NULL,
   `noise_id` INT NULL,
+  `annotation_interval_id` INT NULL,
   `annotator_id` INT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -173,8 +176,23 @@ CREATE TABLE `annotation_of_noise` (
   FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
   FOREIGN KEY (`noise_id`) REFERENCES `noise`(`id`),
   FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
+  FOREIGN KEY (`annotation_interval_id`) REFERENCES `annotation_interval`(`id`),
+ 
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
+
+CREATE TABLE `annotation_interval` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `start_time` DECIMAL(11, 6) NULL,
+  `end_time` DECIMAL(11, 6) NULL,
+  `record_id` INT NULL,
+  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC)
+);
+
 CREATE TABLE `record_xeno_canto_link`(
   `id` INT NOT NULL AUTO_INCREMENT,
   `record_id` INT NOT NULL,
