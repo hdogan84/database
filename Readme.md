@@ -28,6 +28,6 @@ sudo mount -t cifs -o username=user.name,vers=2.1 //naturkundemuseum-berlin.de/m
 # add cronjobs
 crontab -e 
 # add jobs to file 
-0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import_training.py
-0 6 * * 1 /home/stana/rankProjekte/libro_animalis/import_scripts/cronjob_import_validation.py
+0 6 * * 1 /home/stana/rankProjekte/libro_animalis/src/cronjob_import_training.py
+0 6 * * 1 /home/stana/rankProjekte/libro_animalis/src/cronjob_import_validation.py
 ```
