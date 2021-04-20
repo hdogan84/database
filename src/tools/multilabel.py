@@ -47,7 +47,7 @@ class LabeGeneratorBaseClass:
         self.annotations = annotations
 
     def create_label(
-        selg, start: float, stop: float, annotations: List[LabelAction]
+        self, start: float, stop: float, annotations: List[LabelAction]
     ) -> None:
         """Return multi label of all annontations for this time interval """
         raise NotImplementedError
@@ -69,7 +69,7 @@ class LabeGeneratorBaseClass:
     def create_raw_label_list(
         self, start_stop_list: List[Action],
     ) -> Tuple[float, float, List[list]]:
-        labels_list: list[set] = []
+        labels_list: List[set] = []
         current_labels = set()
         last_action_time: float = None
         for action in start_stop_list:
@@ -94,7 +94,7 @@ class LabeGeneratorBaseClass:
     def create_multi_labels(self) -> List[Tuple]:
 
         annotations = self.annotations
-        filebased_annotations: list[list] = []
+        filebased_annotations: List[list] = []
         last_filename: str = None
         tmp_group = []
         for annotation in annotations:
@@ -158,3 +158,21 @@ class SimpleMultiLabels(LabeGeneratorBaseClass):
             annotations[0][Index.CHANNELS],
         )
         annotations = self.annotations
+
+
+class MultiLabels(LabeGeneratorBaseClass):
+    def create_label(self, start, stop, annotations):
+        duration = stop - start
+        labels_list = list(set(map(lambda x: x[Index.LATIN_NAME], annotations)))
+        labels = ",".join(labels_list)
+        return (
+            duration,
+            start,
+            stop,
+            labels,
+            len(labels_list),
+            annotations[0][Index.FILENAME],
+            annotations[0][Index.CHANNELS],
+        )
+        annotations = self.annotations
+

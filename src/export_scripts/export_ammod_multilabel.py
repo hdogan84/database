@@ -9,7 +9,7 @@ from tools.multilabel import SimpleMultiLabels
 import argparse
 from tools.file_handling.csv import write_to_csv
 
-CONFIG_FILE_PATH = Path("config.cfg")
+CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
 'AVRACRCR',
@@ -49,7 +49,8 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    s.olaf8_id IN {}
+    s.olaf8_id IN {} and
+    r.collection_id = 4
 
 """.format(
     class_list
@@ -68,18 +69,16 @@ SELECT
     a.vocalization_type,
     r.`channels`,
     r.collection_id
-    r.duration
 FROM
     annotation_of_species AS a
         LEFT JOIN
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
-        LEFT JOIN
-    annotation_intervall AS i ON i.id = a.annotation_interval_id 
 WHERE
     a.background = 0 and
-    s.olaf8_id IN {}
+    s.olaf8_id IN {} and
+    r.collection_id = 4
 ORDER BY r.filename , a.start_time ASC
 """.format(
     class_list
@@ -108,7 +107,7 @@ def create_file_derivates(config: DatabaseConfig):
             return file_derivates_dict
 
 
-def create_multiabels(config: DatabaseConfig):
+def create_multi_labels(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor  # set type hint
@@ -120,7 +119,7 @@ def create_multiabels(config: DatabaseConfig):
             return labels
 
 
-def create_singleLabels(config: DatabaseConfig):
+def create_Labels(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor  # set type hint
@@ -166,8 +165,8 @@ def export_data(
     config = parse_config(config_path)
 
     print("Search an create file derivations")
-    derivates_dict = create_file_derivates(config)
-    # multi_labels = create_multiabels(config)
+    # derivates_dict = create_file_derivates(config)
+    # multi_labels = create_multi_labels(config)
     # pointing_to_derivates_multi_labels = list(
     #     map(
     #         lambda x: [x[0], x[1], x[2], x[3], x[4], derivates_dict[x[5]].as_posix()],
@@ -175,25 +174,25 @@ def export_data(
     #     )
     # )
     # write_to_csv(pointing_to_derivates_multi_labels, "ammod-train-multi-label.csv")
-    single_labels = create_singleLabels(config)
+    labels = create_multi_labels(config)
     print("Create annoation file")
-    pointing_to_derivates_single_labels = list(
+    pointing_to_derivates_labels = list(
         filter(
             lambda x: x[5] is not None,
             list(
                 map(
                     lambda x: map_filename_to_derivative_filepath(x, 5, derivates_dict),
-                    single_labels,
+                    labels,
                 )
             ),
         )
     )
     # filter file length
-    pointing_to_derivates_single_labels = list(
-        filter(lambda x: x[0] < 120 and x[0] > 0.2, pointing_to_derivates_single_labels)
+    pointing_to_derivates_labels = list(
+        filter(lambda x: x[0] < 120 and x[0] > 0.2, pointing_to_derivates_labels)
     )
     write_to_csv(
-        pointing_to_derivates_single_labels,
+        pointing_to_derivates_labels,
         filename_labels,
         [
             "duration",

@@ -205,9 +205,5 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             else:
                 row.quality_tag = quality
 
-    return list(
-        filter(
-            lambda x: x.species_code != BACKGROUND and x.species_code != TD_START_END,
-            sortedRows,
-        )
-    )
+    return list(filter(lambda x: x.species_code != BACKGROUND, sortedRows,))
+

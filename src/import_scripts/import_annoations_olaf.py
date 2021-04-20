@@ -23,10 +23,10 @@ import argparse
 
 DATA_PATH = Path("libro_animalis/data/TD_Training")
 CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
-
+TD_START_END = "TD_Start_End"
 
 RECORD_MERGE_STRATEGY = "merge"
-ANOTATION_STRATEGY = "merge"
+ANNOTATION_STRATEGY = "merge"
 ANNOTATION_TABLE = "species"
 LICENSE = None
 
@@ -63,6 +63,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                 db_cursor, "collection", collection_entry, collection_entry
             )
             for corresponding_files in list_of_files:
+
                 file_name_infos = parse_filename_for_location_date_time(
                     corresponding_files.audio_file.stem
                 )
@@ -119,7 +120,11 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         targetDirectory,
                         file_parameters.filename,
                     )
-
+                # remove old annotation_intervals
+                delete_from_table(
+                    db_cursor, "annotation_interval", [("record_id", record_id)]
+                )
+                db_connection.commit()
                 # remove all old annotations
                 delete_from_table(
                     db_cursor, "annotation_of_species", [("record_id", record_id)]
@@ -128,8 +133,22 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
 
                 annotations = read_raven_file(corresponding_files.annoation_file)
 
+                interval_id = None
                 for a in annotations:
-                    # TODO: get id of species
+                    if a.species_code == TD_START_END:
+                        interval_data = [
+                            ("record_id", record_id),
+                            ("start_time", a.start_time),
+                            ("end_time", a.end_time),
+                        ]
+
+                        interval_id = get_entry_id_or_create_it(
+                            db_cursor,
+                            "annotation_interval",
+                            query=interval_data,
+                            data=interval_data,
+                        )
+
                     species_id = get_id_of_entry_in_table(
                         db_cursor, "species", [("olaf8_id", a.species_code)]
                     )
@@ -153,6 +172,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("start_frequency", a.start_frequency),
                         ("end_frequency", a.end_frequency),
                         ("annotator_id", import_meta_ids.annotator_id),
+                        ("annotation_interval_id", interval_id),
                     ]
 
                     get_entry_id_or_create_it(
