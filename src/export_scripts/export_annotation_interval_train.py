@@ -52,6 +52,7 @@ FROM
 WHERE
     a.background = 0 and
     r.collection_id != 105 and
+    r.duration < 360 and
     s.olaf8_id IN {}
 
 """.format(
@@ -86,6 +87,7 @@ FROM
 WHERE
     a.background = 0 and
     r.collection_id != 105 and
+    r.duration < 360 and
     s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -246,10 +248,7 @@ def export_data(
             ),
         )
     )
-    # filter file length
-    pointing_to_derivates_single_labels = list(
-        filter(lambda x: x[0] < 360 and x[0] > 0.2, pointing_to_derivates_single_labels)
-    )
+
     write_to_csv(
         pointing_to_derivates_single_labels,
         filename_labels,
@@ -276,7 +275,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-labels.csv",
+    default="ammod-labels-train.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
