@@ -145,7 +145,17 @@ def annotation_to_label(annotation):
     stop = annotation[Index.END_TIME]
     label = annotation[Index.LATIN_NAME]
     filename = annotation[Index.FILENAME]
-    return (duration, start, stop, label, 1, filename, channels, collection_id)
+    # return (duration, start, stop, label, 1, filename, channels, collection_id)
+    return (
+        Path(filename).stem,
+        filename,
+        channels,
+        collection_id,
+        label,
+        start,
+        stop,
+        "",
+    )
 
 
 def create_td_start_label(annotation_list):
@@ -166,7 +176,16 @@ def create_td_start_label(annotation_list):
     )
     label = TD_START_END
     filename = annotation[Index.FILENAME]
-    return (duration, start, stop, label, 1, filename, channels, collection_id)
+    return (
+        Path(filename).stem,
+        filename,
+        channels,
+        collection_id,
+        label,
+        start,
+        stop,
+        "",
+    )
 
 
 def create_labels(config: DatabaseConfig):
@@ -239,10 +258,10 @@ def export_data(
     print("Create annoation file")
     pointing_to_derivates_single_labels = list(
         filter(
-            lambda x: x[5] is not None,
+            lambda x: x[1] is not None,
             list(
                 map(
-                    lambda x: map_filename_to_derivative_filepath(x, 5, derivates_dict),
+                    lambda x: map_filename_to_derivative_filepath(x, 1, derivates_dict),
                     single_labels,
                 )
             ),
@@ -253,14 +272,14 @@ def export_data(
         pointing_to_derivates_single_labels,
         filename_labels,
         [
-            "duration",
+            "file_id",
+            "filepath",
+            "channel_count",
+            "collection_id",
+            "class_id",
             "start_time",
             "end_time",
-            "labels",
-            "species_count",
-            "filepath",
-            "channels",
-            "collection_id",
+            "type",
         ],
     )
     class_list = create_class_list(config)

@@ -14,7 +14,8 @@ Naming shema:
 - function_parameter_name, 
 - local_var_name.
 
-
+# Export CSV files column names
+file_id, filepath, channel_count, collection_id, class_id, start_time, end_time,
 # Database
 Floats are rounded at to 6 decimals and save thow
 
