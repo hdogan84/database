@@ -7,7 +7,7 @@ from functools import cmp_to_key
 from enum import Enum
 from math import isnan
 
-TD_START_END = "TD_Start_End"
+annotation_interval = "annotation_interval"
 BACKGROUND = "BACKGROUND"
 
 
@@ -71,7 +71,7 @@ class AnnotationRaven:
 
 
 def speciesCodeToInt(code: str) -> int:
-    if code == TD_START_END:
+    if code == annotation_interval:
         return 0
     if code == BACKGROUND:
         return 1
@@ -197,7 +197,7 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
     sortedRows = sorted(result, key=cmp_to_key(compareRows))
     quality = None
     for row in sortedRows:  # add quality code
-        if row.species_code == TD_START_END:
+        if row.species_code == annotation_interval:
             quality = None
         else:
             if row.species_code == BACKGROUND:

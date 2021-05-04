@@ -58,7 +58,11 @@ def create_merged_raven_files(list_of_files: List[CorespondingFiles]):
 
 
 def create_metrics(
-    data_path=None, report_path=None, config_path=None, missing_species=None,collectionId=None,
+    data_path=None,
+    report_path=None,
+    config_path=None,
+    missing_species=None,
+    collectionId=None,
 ):
     config = parse_config(config_path)
 
@@ -77,9 +81,9 @@ def create_metrics(
         report_path.joinpath("merged_raven_annoations.csv"), sep="\t",
     )
 
-    annotated_segments = len(all_data[all_data["SpeciesCode"] == "TD_Start_End"])
+    annotated_segments = len(all_data[all_data["SpeciesCode"] == "annotation_interval"])
     sound_signals_total = all_data.query(
-        'SpeciesCode != "TD_Start_End" & SpeciesCode != "BACKGROUND" '
+        'SpeciesCode != "annotation_interval" & SpeciesCode != "BACKGROUND" '
     ).SpeciesCode.count()
 
     info("Start querieng database")
@@ -97,7 +101,9 @@ def create_metrics(
             WHERE r.collection_id = {} and  a.id_level = 1
             GROUP BY a.species_id
             order by `id_level_1` DESC
-            """.format(collectionId)
+            """.format(
+                    collectionId
+                )
             )
             id_level_count = list(db_cursor.fetchall())
 
@@ -111,7 +117,9 @@ def create_metrics(
             WHERE r.collection_id = {} and  a.id_level = 1 
             GROUP BY a.species_id, a.vocalization_type
             order by `latin_name`,vocalization_type DESC
-            """.format(collectionId)
+            """.format(
+                    collectionId
+                )
             )
             vocalization_type_count = list(db_cursor.fetchall())
             db_cursor.execute(
@@ -120,7 +128,9 @@ def create_metrics(
             FROM libro_animalis.annotation_of_species AS a
             LEFT JOIN (record AS r) ON r.id = a.record_id
             WHERE r.collection_id = {} AND a.id_level = 1
-            """.format(collectionId)
+            """.format(
+                    collectionId
+                )
             )
 
             length_of_id_level_1_annoations = list(db_cursor.fetchall())[0][0]
@@ -132,7 +142,9 @@ def create_metrics(
             WHERE r.collection_id = {} AND
             a.id_level = 1
 
-            """.format(collectionId)
+            """.format(
+                    collectionId
+                )
             )
 
             level_1_annoations_count = list(db_cursor.fetchall())[0][0]

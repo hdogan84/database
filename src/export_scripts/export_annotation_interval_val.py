@@ -74,7 +74,8 @@ SELECT
     r.duration,
     i.id,
     i.start_time,
-    i.end_time
+    i.end_time,
+    r.id
 FROM
     annotation_of_species AS a
         LEFT JOIN
@@ -100,7 +101,7 @@ ORDER BY latin_name ASC
     class_list
 )
 
-TD_START_END = "TD_Start_End"
+annotation_interval = "annotation_interval"
 
 
 class Index(IntEnum):
@@ -156,7 +157,7 @@ def annotation_to_label(annotation):
     )
 
 
-def create_td_start_label(annotation_list):
+def create_annoation_interval_label(annotation_list):
     # take first element in list to estimate annoation interval start
     annotation = annotation_list[0]
     collection_id = annotation[Index.COLLECTION_ID]
@@ -172,7 +173,7 @@ def create_td_start_label(annotation_list):
         if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
         else annotation[Index.DURATION]
     )
-    label = TD_START_END
+    label = "annotation_interval"
     filename = annotation[Index.FILENAME]
     return (
         Path(filename).stem,
@@ -195,11 +196,15 @@ def create_labels(config: DatabaseConfig):
             print("Found {} annotations".format(len(data)))
 
             labels = []
-            intervals = {"None": []}
+            intervals = {}
             # Collect Labels of Different record intervalls
             for a in data:
                 if a[12] is None:
-                    intervals["None"].append(a)
+                    if str(a[15]) in intervals:
+
+                        intervals[str(a[15])].append(a)
+                    else:
+                        intervals.update({str(a[15]): [a]})
                 else:
                     if str(a[12]) in intervals:
 
@@ -214,9 +219,8 @@ def create_labels(config: DatabaseConfig):
             labels = []
             for key, values in intervals.items():
                 # only sort real intervals
-
                 values.sort(key=lambda l: (l[3], l[4]), reverse=False)
-                labels.append(create_td_start_label(values))
+                labels.append(create_annoation_interval_label(values))
                 for a in values:
                     labels.append(annotation_to_label(a))
 

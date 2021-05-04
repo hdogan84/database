@@ -23,7 +23,7 @@ import argparse
 
 DATA_PATH = Path("libro_animalis/data/TD_Training")
 CONFIG_FILE_PATH = Path("libro_animalis/import_scripts/defaultConfig.cfg")
-TD_START_END = "TD_Start_End"
+annotation_interval = "annotation_interval"
 
 RECORD_MERGE_STRATEGY = "merge"
 ANNOTATION_STRATEGY = "merge"
@@ -135,7 +135,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
 
                 interval_id = None
                 for a in annotations:
-                    if a.species_code == TD_START_END:
+                    if a.species_code == "TD_Start_End":
                         interval_data = [
                             ("record_id", record_id),
                             ("start_time", a.start_time),
