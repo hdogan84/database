@@ -271,14 +271,14 @@ def export_data(
         pointing_to_derivates_single_labels,
         filename_labels,
         [
-            "duration",
+            "file_id",
+            "filepath",
+            "channel_count",
+            "collection_id",
+            "class_id",
             "start_time",
             "end_time",
-            "labels",
-            "species_count",
-            "filepath",
-            "channels",
-            "collection_id",
+            "type",
         ],
     )
     class_list = create_class_list(config)
