@@ -6,7 +6,7 @@ from create_import_report_olaf import create_metrics
 import datetime
 import os
 
-DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/VD_Validierung")
+DATA_PATH = Path("/home/stana/Documents/Audioannotation/VD_Validierung")
 CONFIG_FILE_PATH = Path("/home/stana/rankProjekte/libro_animalis/config_validation.cfg")
 
 currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
