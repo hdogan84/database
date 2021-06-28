@@ -120,14 +120,15 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         targetDirectory,
                         file_parameters.filename,
                     )
-                # remove old annotation_intervals
-                delete_from_table(
-                    db_cursor, "annotation_interval", [("record_id", record_id)]
-                )
-                db_connection.commit()
+               
                 # remove all old annotations
                 delete_from_table(
                     db_cursor, "annotation_of_species", [("record_id", record_id)]
+                )
+                db_connection.commit()
+                # remove old annotation_intervals
+                delete_from_table(
+                    db_cursor, "annotation_interval", [("record_id", record_id)]
                 )
                 db_connection.commit()
 

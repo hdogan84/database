@@ -78,10 +78,11 @@ def create_metrics(
 
     # write merged raven file
     all_data.to_csv(
-        report_path.joinpath("merged_raven_annoations.csv"), sep="\t",
+        report_path.joinpath("merged_raven_annoations.csv"),
+        sep="\t",
     )
 
-    annotated_segments = len(all_data[all_data["SpeciesCode"] == "annotation_interval"])
+    annotated_segments = len(all_data[all_data["SpeciesCode"] == "TD_Start_End"])
     sound_signals_total = all_data.query(
         'SpeciesCode != "annotation_interval" & SpeciesCode != "BACKGROUND" '
     ).SpeciesCode.count()

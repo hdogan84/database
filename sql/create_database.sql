@@ -1,24 +1,24 @@
-CREATE SCHEMA `libro_animalis` DEFAULT CHARACTER SET utf8;
-USE `libro_animalis`;
+CREATE SCHEMA `libro_animalis_test` DEFAULT CHARACTER SET utf8;
+USE `libro_animalis_test`;
 CREATE TABLE `species` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `class` VARCHAR(64) NULL,
-  `order` VARCHAR(64) NULL,
-  `family` VARCHAR(64) NULL,
-  `genus` VARCHAR(64) NULL,
-  `species` VARCHAR(64) NULL,
-  `sub_species` VARCHAR(64) NULL,
-  `latin_name` VARCHAR(64) NULL,
-  `german_name` VARCHAR(64) NULL,
-  `english_name` VARCHAR(64) NULL,
-  `ebird_id` VARCHAR(45) NULL,
-  `olaf8_id` VARCHAR(45) NULL,
-  `mario_id` VARCHAR(45) NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-  UNIQUE INDEX `latin_name_UNIQUE` (`latin_name` ASC)
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `class` VARCHAR(64) NULL,
+    `order` VARCHAR(64) NULL,
+    `family` VARCHAR(64) NULL,
+    `genus` VARCHAR(64) NULL,
+    `species` VARCHAR(64) NULL,
+    `sub_species` VARCHAR(64) NULL,
+    `latin_name` VARCHAR(64) NULL,
+    `german_name` VARCHAR(64) NULL,
+    `english_name` VARCHAR(64) NULL,
+    `ebird_id` VARCHAR(45) NULL,
+    `olaf8_id` VARCHAR(45) NULL,
+    `mario_id` VARCHAR(45) NULL,
+    `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+    UNIQUE INDEX `latin_name_UNIQUE` (`latin_name` ASC)
 );
 CREATE TABLE `species_synonyms` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -128,32 +128,48 @@ CREATE TABLE `record` (
   FOREIGN KEY (`collection_id`) REFERENCES `collection`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
-CREATE TABLE `annotation_of_species` (
+CREATE TABLE `annotation_interval` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `start_time` DECIMAL(11, 6) NULL,
   `end_time` DECIMAL(11, 6) NULL,
-  `start_frequency` DECIMAL(12, 6) NULL,
-  `end_frequency` DECIMAL(12, 6) NULL,
-  `channel` INT NULL,
-  `individual_id` INT,
-  `group_id` INT,
-  `vocalization_type` VARCHAR(256),
-  `quality_tag` VARCHAR(32),
-  `id_level` INT,
-  `background` BOOLEAN DEFAULT FALSE,
   `record_id` INT NULL,
-  `species_id` INT NULL,
-  `annotator_id` INT NULL,
-  `annotation_interval_id` INT NULL,
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
-  FOREIGN KEY (`species_id`) REFERENCES `species`(`id`),
-  FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
-  FOREIGN KEY (`annotation_interval_id`) REFERENCES `annotation_interval`(`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
+CREATE TABLE `annotation_of_species` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `start_time` DECIMAL(11 , 6 ) NULL,
+    `end_time` DECIMAL(11 , 6 ) NULL,
+    `start_frequency` DECIMAL(12 , 6 ) NULL,
+    `end_frequency` DECIMAL(12 , 6 ) NULL,
+    `channel` INT NULL,
+    `individual_id` INT,
+    `group_id` INT,
+    `vocalization_type` VARCHAR(256),
+    `quality_tag` VARCHAR(32),
+    `id_level` INT,
+    `background` BOOLEAN DEFAULT FALSE,
+    `record_id` INT NULL,
+    `species_id` INT NULL,
+    `annotator_id` INT NULL,
+    `annotation_interval_id` INT NULL,
+    `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`record_id`)
+        REFERENCES `record` (`id`),
+    FOREIGN KEY (`species_id`)
+        REFERENCES `species` (`id`),
+    FOREIGN KEY (`annotator_id`)
+        REFERENCES `person` (`id`),
+    FOREIGN KEY (`annotation_interval_id`)
+        REFERENCES `annotation_interval` (`id`),
+    UNIQUE INDEX `id_UNIQUE` (`id` ASC)
+);
+
 CREATE TABLE `annotation_of_noise` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `start_time` DECIMAL(11, 6) NULL,
@@ -181,17 +197,7 @@ CREATE TABLE `annotation_of_noise` (
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
 );
 
-CREATE TABLE `annotation_interval` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `start_time` DECIMAL(11, 6) NULL,
-  `end_time` DECIMAL(11, 6) NULL,
-  `record_id` INT NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC)
-);
+
 
 CREATE TABLE `record_xeno_canto_link`(
   `id` INT NOT NULL AUTO_INCREMENT,
