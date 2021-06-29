@@ -98,10 +98,14 @@ def compareRows(x: AnnotationRaven, y: AnnotationRaven) -> int:
         return 1
     else:
         if x_end_time < y_end_time:
-            return -1
-        if x_end_time > y_end_time:
             return 1
+        if x_end_time > y_end_time:
+            return -1
         else:
+            if x.species_code == "TD_Start_End":
+                return -1
+            if y.species_code == "TD_Start_End":
+                return 1
             xc = speciesCodeToInt(x.species_code)
             yc = speciesCodeToInt(y.species_code)
             if xc < yc:
@@ -205,5 +209,9 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             else:
                 row.quality_tag = quality
 
-    return list(filter(lambda x: x.species_code != BACKGROUND, sortedRows,))
-
+    return list(
+        filter(
+            lambda x: x.species_code != BACKGROUND,
+            sortedRows,
+        )
+    )
