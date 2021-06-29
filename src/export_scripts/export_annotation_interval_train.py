@@ -1,7 +1,7 @@
 from typing import List, Dict
 from mysql.connector.cursor import MySQLCursor
 from pathlib import Path
-from import_scripts.import_annoations_olaf import ANNOTATION_STRATEGY
+
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB

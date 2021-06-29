@@ -45,5 +45,7 @@ pip3 install mysql-connector-python-rf
 pip3 install typed-config
 pip3 install pydub
 pip install inquirer
+pip install joblib
 conda install pandas
+conda install librosa
 ```
