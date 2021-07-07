@@ -293,7 +293,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-labels-val.csv",
+    default="ammod-multi-val.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

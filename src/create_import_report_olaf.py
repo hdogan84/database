@@ -78,7 +78,7 @@ def create_metrics(
 
     # write merged raven file
     all_data.to_csv(
-        report_path.joinpath("merged_raven_annoations.csv"),
+        report_path.joinpath("merged_raven_annoations.txt"),
         sep="\t",
     )
 

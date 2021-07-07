@@ -47,5 +47,5 @@ pip3 install pydub
 pip install inquirer
 pip install joblib
 conda install pandas
-conda install librosa
+conda install -c conda-forge librosa
 ```
