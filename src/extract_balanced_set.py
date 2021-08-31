@@ -1,10 +1,11 @@
 import csv
 import random
 
+INDEX_CLASS_ID = 4
 # This script extract from an exported ammod csv a ballanced dataset,
 # smallest amount samples of a class defines amount for all other classes
-DATA_FILEPATH = "labels.csv"
-CLASS_FILEPATH = "class-list.csv"
+DATA_FILEPATH = "/home/tsa/projects/libro-animalis/data/exported/210812_AMMOD_25Classes/ammod-multi-val.csv"
+CLASS_FILEPATH = "ammod-class-list.csv"
 with open(CLASS_FILEPATH) as classFile, open(DATA_FILEPATH) as dataFile:
     dataframe = csv.reader(dataFile, delimiter=";", quotechar="|",)
     fieldnames = dataframe.__next__()
@@ -17,15 +18,20 @@ with open(CLASS_FILEPATH) as classFile, open(DATA_FILEPATH) as dataFile:
     dictClassIds = {i: [] for i in classIds}
 
     for x in dataframe:
-        dictClassIds[x[3]].append(x)
-    print(dictClassIds)
+        if(x[INDEX_CLASS_ID] == 'annotation_interval'):
+            continue
+        dictClassIds[x[INDEX_CLASS_ID]].append(x)
+    # print(dictClassIds)
 # get min length of class
 min_length = dataframe.line_num
 for key in dictClassIds:
     if len(dictClassIds[key]) < min_length:
         print(key, "->", len(dictClassIds[key]))
         min_length = len(dictClassIds[key])
-
+counter = 0
+for key in dictClassIds:
+    print('{} {}: {}'.format(counter, key,len(dictClassIds[key])))
+    counter +=1
 result = []
 for key in dictClassIds:
     random.shuffle(dictClassIds[key])
