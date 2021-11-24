@@ -136,8 +136,9 @@ CREATE TABLE `annotation_interval` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`) ON DELETE CASCADE,
   UNIQUE INDEX `id_UNIQUE` (`id` ASC)
+  
 );
 CREATE TABLE `annotation_of_species` (
     `id` INT NOT NULL AUTO_INCREMENT,
@@ -160,7 +161,7 @@ CREATE TABLE `annotation_of_species` (
     `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`record_id`)
-        REFERENCES `record` (`id`),
+        REFERENCES `record` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`species_id`)
         REFERENCES `species` (`id`),
     FOREIGN KEY (`annotator_id`)
@@ -189,7 +190,7 @@ CREATE TABLE `annotation_of_noise` (
   `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`noise_id`) REFERENCES `noise`(`id`),
   FOREIGN KEY (`annotator_id`) REFERENCES `person`(`id`),
   FOREIGN KEY (`annotation_interval_id`) REFERENCES `annotation_interval`(`id`),
@@ -204,7 +205,7 @@ CREATE TABLE `record_xeno_canto_link`(
   `record_id` INT NOT NULL,
   `collection_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`),
+  FOREIGN KEY (`record_id`) REFERENCES `record`(`id`) ON DELETE CASCADE,
   UNIQUE INDEX `id_UNIQUE` (`id` ASC),
   UNIQUE INDEX `collection_id_UNIQUE` (`collection_id` ASC)
 );
