@@ -11,6 +11,7 @@ CONFIG_FILE_PATH = Path("/home/tsa/projects/libro-animalis/config_validation.cfg
 
 currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
 missing_species = import_data(DATA_PATH, CONFIG_FILE_PATH)
+
 now = datetime.date.today().strftime("%Y-%m-%d")
 
 report_path = DATA_PATH.joinpath("report", now)
