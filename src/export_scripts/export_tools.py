@@ -10,7 +10,6 @@ def map_filename_to_derivative_filepath(
             result[filename_index] = tmp_path.as_posix()
 
     except KeyError as e:
-        print("KeyError:", e)
+        print("map_filename_to_derivative_filepath KeyError:", e)
         result[filename_index] = None
     return result
-

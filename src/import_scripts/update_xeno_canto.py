@@ -37,7 +37,7 @@ def import_xeno_canto(
 ):
     config = parse_config(config_path)
     species_set = set()
-
+   
     record_id_map = {}
     file_map = []
     try:
@@ -55,7 +55,7 @@ def import_xeno_canto(
         next(csv_reader)
         missed_imports = []
 
-        print(config.database.host)
+        #print(config.database.host)
         with connectToDB(config.database) as db_connection:
             with db_connection.cursor() as db_cursor:
                 db_cursor: MySQLCursor
@@ -73,28 +73,31 @@ def import_xeno_canto(
                     species_id = species_dict.get(latin_name.lower(), None)
                     if species_id is None:
                         species_id = species_dict.get(english_name.lower(), None)
+                    #print(species_id)
                     return species_id
 
                 missing_fg = []
                 missing_bg = []
-               
+                missing_species = {}
+                #print(species_dict)
                 for row in csv_reader:
                     counter = counter + 1
-                    if counter % 1000 == 0:
-                        write_to_csv(
-                            file_map,
-                            "map_xeno_db_id.csv",
-                            ["path", "db_id", "duration"],
-                        )
-                        write_to_csv(
-                            missing_fg, "missing_fg.csv", ["latin_name", "english_name"]
-                        )
-                        write_to_csv(
-                            missing_bg, "missing_bg.csv", ["latin_name", "english_name"]
-                        )
-                        write_to_csv(missed_imports, "missed_imports.csv", None)
+                    if counter % 10000 == 0:
+                        print('commit next {}',counter)
+                        # write_to_csv(
+                        #     file_map,
+                        #     "map_xeno_db_id.csv",
+                        #     ["path", "db_id", "duration"],
+                        # )
+                        # write_to_csv(
+                        #     missing_fg, "missing_fg.csv", ["latin_name", "english_name"]
+                        # )
+                        # write_to_csv(
+                        #     missing_bg, "missing_bg.csv", ["latin_name", "english_name"]
+                        # )
+                        # write_to_csv(missed_imports, "missed_imports.csv", None)
 
-                    #     db_connection.commit()
+                        db_connection.commit()
 
                     xeno = XenoCantoRow(*row)
                     xeno: XenoCantoRow
@@ -106,73 +109,80 @@ def import_xeno_canto(
                     species_id = get_species_id(latin_name, xeno.eng_name)
                     if species_id is None:
                         missed_imports.append(row)
+                        if latin_name not in missing_species:
+                            missing_species[latin_name]  = True
+
                         missing_fg.append([latin_name, xeno.eng_name])
-                        error(
-                            "{} fg {}, {} ".format(counter, latin_name, xeno.eng_name)
-                        )
+                        # error(
+                        #     "{} fg {}, {} ".format(counter, latin_name, xeno.eng_name)
+                        # )
                         continue
                     # TODO: get File information
-                    record_id = record_id_map.get(
+                    entry = record_id_map.get(
                         (Path(xeno.dir) / Path(xeno.path)).as_posix(), None
                     )
-                    if record_id is None:
 
-                        file_path = files / Path(xeno.dir) / Path(xeno.path)
-                        if file_path.exists() is False:
-                            error(
-                                "File does not exhist {}".format(file_path.as_posix())
-                            )
-                            continue
-                        audio_file_parameters = None
-                        try:
+                    if entry is None:
+                        continue
+                    record_id = entry[1]
+                    duration = entry[2]
+                 
+                        # file_path = files / Path(xeno.dir) / Path(xeno.path)
+                        # if file_path.exists() is False:
+                        #     error(
+                        #         "File does not exhist {}".format(file_path.as_posix())
+                        #     )
+                        #     continue
+                        # audio_file_parameters = None
+                        # try:
                             
-                            audio_file_parameters = read_parameters_from_audio_file(
-                                file_path
-                            )
-                        except:
-                            error(
-                                "Could not read audio Parameters from {}".format(
-                                    file_path
-                                )
-                            )
-                            continue
+                        #     audio_file_parameters = read_parameters_from_audio_file(
+                        #         file_path
+                        #     )
+                        # except:
+                        #     error(
+                        #         "Could not read audio Parameters from {}".format(
+                        #             file_path
+                        #         )
+                        #     )
+                        #     continue
 
-                        result = get_id_of_entry_in_table(
-                            db_cursor,
-                            "record",
-                            [
-                                ("md5sum", audio_file_parameters.md5sum),
-                            ],
-                        )
+                        # result = get_id_of_entry_in_table(
+                        #     db_cursor,
+                        #     "record",
+                        #     [
+                        #         ("md5sum", audio_file_parameters.md5sum),
+                        #     ],
+                        # )
 
-                        record_id = result
-                        if record_id is None:
-                            print("Could not find file for row {}".format(counter))
-                            continue
+                        # record_id = result
+                        # if record_id is None:
+                        #     print("Could not find file for row {}".format(counter))
+                        #     continue
 
-                        file_map.append(
-                            [
-                                (Path(xeno.dir) / Path(xeno.path)).as_posix(),
-                                record_id,
-                                audio_file_parameters.duration,
-                            ]
-                        )
+                        # file_map.append(
+                        #     [
+                        #         (Path(xeno.dir) / Path(xeno.path)).as_posix(),
+                        #         record_id,
+                        #         audio_file_parameters.duration,
+                        #     ]
+                        # )
                     # create foreground annoation
-                    forground_annoation = [
-                        ("record_id", record_id),
-                        ("species_id", species_id),
-                        ("background", False),
-                        ("individual_id", None),
-                        ("group_id", None),
-                        ("vocalization_type", xeno.songtype),
-                        ("quality_tag", None),
-                        ("start_time", 0),
-                        # ("end_time", audio_file_parameters.duration),
-                        ("start_frequency", None),
-                        ("end_frequency", None),
-                        ("channel", None),
-                        # ("annotator_id", person_id),
-                    ]
+                    # forground_annoation = [
+                    #     ("record_id", record_id),
+                    #     ("species_id", species_id),
+                    #     ("background", False),
+                    #     ("individual_id", None),
+                    #     ("group_id", None),
+                    #     ("vocalization_type", xeno.songtype),
+                    #     ("quality_tag", None),
+                    #     ("start_time", 0),
+                    #     ("end_time", duration),
+                    #     ("start_frequency", None),
+                    #     ("end_frequency", None),
+                    #     ("channel", None),
+                    #     # ("annotator_id", person_id),
+                    # ]
                     # print(forground_annoation)
                     # get_entry_id_or_create_it(
                     #     db_cursor,
@@ -183,53 +193,61 @@ def import_xeno_canto(
 
                     background_species = xeno.background.split(",")
                     # print(xeno.background)
+                    bg_species_ids_map ={}
                     for species in background_species:
                         if not species:
                             continue
 
-                        back_species_id = get_species_id(latin_name, xeno.eng_name)
+                        back_species_id = get_species_id(species, species)
                         if back_species_id is None:
                             missed_imports.append(row)
                             missing_bg.append([latin_name, xeno.eng_name])
-                            error(
-                                "{} bg {}, {}".format(
-                                    counter, latin_name, xeno.eng_name
-                                )
-                            )
+                            # error(
+                            #     "{} bg {}".format(
+                            #         counter, species
+                            #     )
+                            # )
                             continue
+                        bg_species_ids_map[back_species_id] = True
+                    # some have english and latin name prevent doubling 
+                      
+                    for species_bg_id in bg_species_ids_map.keys():
                         background_annoation = [
                             ("record_id", record_id),
-                            ("species_id", species_id),
+                            ("species_id", species_bg_id),
                             ("background", True),
                             ("individual_id", None),
                             ("group_id", None),
                             ("vocalization_type", None),
                             ("quality_tag", None),
                             ("start_time", 0),
-                            # ("end_time", audio_file_parameters.duration),
+                            ("end_time", duration),
                             ("start_frequency", None),
                             ("end_frequency", None),
                             ("channel", None),
                             # ("annotator_id", person_id),
                         ]
-                        # get_entry_id_or_create_it(
-                        #     db_cursor,
-                        #     "annotation_of_species",
-                        #     background_annoation,
-                        #     background_annoation,
-                        # )
+                        get_entry_id_or_create_it(
+                            db_cursor,
+                            "annotation_of_species",
+                            background_annoation,
+                            background_annoation,
+                        )
 
-                write_to_csv(
-                    file_map, "map_xeno_db_id.csv", ["path", "db_id", "duration"]
-                )
+                # write_to_csv(
+                #     file_map, "map_xeno_db_id.csv", ["path", "db_id", "duration"]
+                # )
                 write_to_csv(
                     missing_fg, "missing_fg.csv", ["latin_name", "english_name"]
                 )
                 write_to_csv(
-                    missing_bg, "missing_fg.csv", ["latin_name", "english_name"]
+                    missing_species.keys(), "missing_species.csv", ["latin_name"]
+                )
+                write_to_csv(
+                    missing_bg, "missing_bg.csv", ["latin_name", "english_name"]
                 )
                 write_to_csv(missed_imports, "missed_imports.csv", None)
-                # db_connection.commit()
+                db_connection.commit()
 
 
 parser = argparse.ArgumentParser(description="")

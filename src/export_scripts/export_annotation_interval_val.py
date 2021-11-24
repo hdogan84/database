@@ -87,9 +87,10 @@ FROM
 WHERE
     a.background = 0 and
     r.collection_id = 105 and
-    s.olaf8_id IN {}
-ORDER BY r.filename , a.start_time ASC
-""".format(
+    r.channels = 4 and
+    r.original_filename = 'BRITZ02-20210508-134500_S00011350E00022800.wav' or r.original_filename = 'BRITZ02-20210512-090600_S00041250E00051400_viaAudacity.wav'
+ ORDER BY r.filename , a.start_time ASC
+ """.format(
     class_list
 )
 
