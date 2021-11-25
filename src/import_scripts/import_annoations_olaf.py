@@ -76,14 +76,26 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                     file_parameters.md5sum[2],
                 )
                 record_data = [
-                    ("date", file_name_infos.record_datetime.strftime("%Y-%m-%d")),
-                    ("start", file_name_infos.record_datetime.time()),
+                    (
+                        "date",
+                        file_name_infos.record_datetime.strftime("%Y-%m-%d")
+                        if file_name_infos.record_datetime is not None
+                        else None,
+                    ),
+                    (
+                        "start",
+                        file_name_infos.record_datetime.time()
+                        if file_name_infos.record_datetime is not None
+                        else None,
+                    ),
                     (
                         "end",
                         (
                             file_name_infos.record_datetime
                             + timedelta(seconds=ceil(file_parameters.duration))
-                        ).time(),
+                        ).time()
+                        if file_name_infos.record_datetime is not None
+                        else None,
                     ),
                     ("duration", file_parameters.duration,),
                     ("sample_rate", file_parameters.sample_rate),
@@ -120,7 +132,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         targetDirectory,
                         file_parameters.filename,
                     )
-               
+
                 # remove all old annotations
                 delete_from_table(
                     db_cursor, "annotation_of_species", [("record_id", record_id)]
@@ -136,6 +148,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
 
                 interval_id = None
                 for a in annotations:
+
                     if a.species_code == "TD_Start_End":
                         interval_data = [
                             ("record_id", record_id),
@@ -158,7 +171,10 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                             (a.species_code, file_parameters.original_filename)
                         )
                         continue
-
+                    if (
+                        a.channel is not 0
+                    ):  # only use channel 0 to prevent multipling annotations as long annotaions not different on channels
+                        continue
                     annoation_data = [
                         ("record_id", record_id),
                         ("species_id", species_id),
@@ -167,7 +183,10 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("vocalization_type", a.vocalization_type),
                         ("quality_tag", a.quality_tag),
                         ("id_level", a.id_level),
-                        ("channel", a.channel),
+                        (
+                            "channel",
+                            a.best_channel,
+                        ),  # Here best channel is used as channel of annotation
                         ("start_time", a.start_time),
                         ("end_time", a.end_time),
                         ("start_frequency", a.start_frequency),

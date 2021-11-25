@@ -42,6 +42,7 @@ class AnnotationRaven:
     vocalization_type: str
     quality_tag: str
     id_level: int
+    best_channel: int
 
     def __init__(
         self,
@@ -56,6 +57,7 @@ class AnnotationRaven:
         vocalization_type,
         quality_tag,
         id_level,
+        best_channel,
     ):
         self.channel = channel
         self.start_time = start_time
@@ -68,6 +70,7 @@ class AnnotationRaven:
         self.vocalization_type = vocalization_type
         self.quality_tag = quality_tag
         self.id_level = id_level
+        self.best_channel = best_channel
 
 
 def speciesCodeToInt(code: str) -> int:
@@ -77,6 +80,17 @@ def speciesCodeToInt(code: str) -> int:
         return 1
     else:
         return 2
+
+
+def channel_code_to_int(code: str) -> int:
+    if code == "ch1":
+        return 0
+    if code == "ch2":
+        return 1
+    if code == "ch1":
+        return 2
+    if code == "ch1":
+        return 3
 
 
 def compareRows(x: AnnotationRaven, y: AnnotationRaven) -> int:
@@ -127,6 +141,7 @@ raven_columns = [
     "ID_level",
     "QualityTag",
     "VocalizationTypeCode",
+    "BestChannel",
 ]
 
 
@@ -177,13 +192,14 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             "ID_level": "id_level",
             "QualityTag": "quality_tag",
             "VocalizationTypeCode": "vocalization_type",
+            "BestChannel": "best_channel",
         }
     )
 
     result: List[AnnotationRaven] = []
     for row in annotations.itertuples():
         temp = AnnotationRaven(
-            channel=row.channel,
+            channel=row.channel - 1,
             start_time=row.start_time,
             end_time=row.end_time,
             start_frequency=row.start_frequency,
@@ -196,6 +212,7 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             quality_tag=sanitize_quality(
                 row.quality_tag
             ),  # TODO: Ask olaf what format an then fix
+            best_channel=channel_code_to_int(row.best_channel),
         )
         result.append(temp)
     sortedRows = sorted(result, key=cmp_to_key(compareRows))
@@ -209,9 +226,5 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             else:
                 row.quality_tag = quality
 
-    return list(
-        filter(
-            lambda x: x.species_code != BACKGROUND,
-            sortedRows,
-        )
-    )
+    return list(filter(lambda x: x.species_code != BACKGROUND, sortedRows,))
+

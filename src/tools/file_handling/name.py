@@ -27,11 +27,18 @@ def parse_filename_for_location_date_time(filename: str) -> FileNameInformations
 
     if len(parts[1].split(sep="_")) > 2:
         subparts = parts[1].split(sep="_")
-        record_datetime = parse_datetime("{}_{}".format(subparts[0], subparts[1]))
+        try:
+            record_datetime = parse_datetime("{}_{}".format(subparts[0], subparts[1]))
+        except ValueError:
+            print("Warning could not extract datetime from {}".format(filename))
+            record_datetime = None
 
     else:
-        record_datetime = parse_datetime(parts[1])
-
+        try:
+            record_datetime = parse_datetime(parts[1])
+        except ValueError:
+            print("Warning could not extract datetime from {}".format(filename))
+            record_datetime = None
     return FileNameInformations(
         location_name=location_name, record_datetime=record_datetime,
     )

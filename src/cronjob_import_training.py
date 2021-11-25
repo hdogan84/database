@@ -6,7 +6,7 @@ from create_import_report_olaf import create_metrics
 import datetime
 import os
 
-DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/TD_Training")
+DATA_PATH = Path("/mnt/z/Projekte/AMMOD/Audioannotation/TD_Training_ChAll")
 CONFIG_FILE_PATH = Path("/home/tsa/projects/libro-animalis/config_training.cfg")
 
 currentDate = datetime.datetime.strptime("01/08/2015", "%d/%m/%Y").date()
