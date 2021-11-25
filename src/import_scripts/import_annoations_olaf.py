@@ -185,7 +185,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("id_level", a.id_level),
                         (
                             "channel",
-                            a.best_channel,
+                            a.best_channel if a.best_channel is not None else a.channel,
                         ),  # Here best channel is used as channel of annotation
                         ("start_time", a.start_time),
                         ("end_time", a.end_time),

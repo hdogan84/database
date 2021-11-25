@@ -91,6 +91,7 @@ def channel_code_to_int(code: str) -> int:
         return 2
     if code == "ch1":
         return 3
+    return None
 
 
 def compareRows(x: AnnotationRaven, y: AnnotationRaven) -> int:
