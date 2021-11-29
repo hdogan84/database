@@ -68,6 +68,11 @@ QUERY_ANNOTATION_INTERVALL_DURATION = """
 	 LEFT JOIN (record AS r) ON r.id = a.record_id
 	 WHERE r.collection_id = {collection_id}
 """
+QUERY_ANNOTATION_INTERVALL_COUNT = """
+    SELECT COUNT(*) as count FROM libro_animalis.annotation_interval as a
+	 LEFT JOIN (record AS r) ON r.id = a.record_id
+	 WHERE r.collection_id = {collection_id}
+"""
 
 
 def list_to_csv(data: list, file_path: Path, head_row: List[str]):
@@ -143,10 +148,17 @@ def create_metrics(
         report_path.joinpath("merged_raven_annoations.txt"), sep="\t",
     )
 
-    annotated_segments = len(all_data[all_data["SpeciesCode"] == "TD_Start_End"])
+    annotated_segments = all_data.query(
+        "SpeciesCode == 'TD_Start_End' & Channel == 1"
+    ).shape[0]
+
     sound_signals_total = all_data.query(
-        'SpeciesCode != "annotation_interval" & SpeciesCode != "BACKGROUND" '
-    ).SpeciesCode.count()
+        'SpeciesCode != "TD_Start_End" & SpeciesCode != "BACKGROUND" & Channel == 1'
+    ).SpeciesCode.shape[0]
+
+    clicks_count = all_data.query(
+        'SpeciesCode == "ABAR_Click" & Channel == 4'
+    ).SpeciesCode.shape[0]
 
     info("Start querieng database")
     with connectToDB(config.database) as db_connection:
@@ -301,6 +313,7 @@ def create_metrics(
                 ("annotated_segments_min", annotated_segments_min),
                 ("annotated_segments_median", annotated_segments_median),
                 ("sound_signals_total", sound_signals_total),
+                ("click_count", clicks_count),
                 ("level_1_annoations_count", level_1_annoations_count),
                 ("length_of_id_level_1_annoations", length_of_id_level_1_annoations),
                 ("level_2_annoations_count", level_2_annoations_count),
