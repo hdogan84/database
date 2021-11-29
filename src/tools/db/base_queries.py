@@ -63,6 +63,7 @@ def get_entries_from_table(
         if len(results) == 0:
             return None
         if len(results) > 1:
+            print(field_value_pairs)
             raise MoreThanOneEntryInDbError(table, field_value_pairs)
         return results[0]
     return results

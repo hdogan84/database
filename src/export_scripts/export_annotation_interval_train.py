@@ -88,7 +88,7 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     a.background = 0 and
-    r.collection_id != 105 and
+    r.collection_id != 105 and r.collection_id != 155
     r.duration < 360 and
     s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC

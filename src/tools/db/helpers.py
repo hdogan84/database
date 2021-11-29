@@ -4,7 +4,7 @@ from tools.logging import debug
 
 
 def connectToDB(config: DatabaseConfig) -> MySQLConnection:
-
+    print("connect to db " + config.host + ":" + str(config.port) + "/" + config.name)
     return connect(
         host=config.host,
         port=config.port,

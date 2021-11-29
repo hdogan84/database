@@ -11,6 +11,9 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
+COLLECTION_ID = 155
+SET_FILENAME = "xeno-canto-ammod-val.csv"
+CLASS_LIST_FILENAME = "xeno-canto-ammod-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
@@ -51,11 +54,11 @@ FROM
     record AS r ON r.id = a.record_id
 WHERE
     a.background = 0 and
-    r.collection_id = 105 and
+    r.collection_id = {} and
     s.olaf8_id IN {}
 
 """.format(
-    class_list
+    COLLECTION_ID, class_list
 )
 
 query_annoations = """
@@ -86,12 +89,11 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     a.background = 0 and
-    r.collection_id = 105 and
-    r.channels = 4 and
-    r.original_filename = 'BRITZ02-20210508-134500_S00011350E00022800.wav' or r.original_filename = 'BRITZ02-20210512-090600_S00041250E00051400_viaAudacity.wav'
+    r.collection_id = {} and
+    s.olaf8_id IN {} 
  ORDER BY r.filename , a.start_time ASC
  """.format(
-    class_list
+    COLLECTION_ID, class_list
 )
 
 query_species = """
@@ -294,7 +296,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-multi-val.csv",
+    default=SET_FILENAME,
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -302,7 +304,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-class-list.csv",
+    default=CLASS_LIST_FILENAME,
     help="target filename for label csv",
 )
 parser.add_argument(

@@ -17,7 +17,7 @@ class Standart32khz(DerivativeBaseClass):
     name = "Standart32khzNormalisedHighpassFilter"
     import_sample_rate: int = 48000
     sample_rate: int = 32000
-    resampleType = "kaiser_fast"  # or use 'kaiser_best'
+    resampleType = "kaiser_best"  # "kaiser_fast"  # or use
     bit_depth: int = 16
     file_ending: str = "wav"
     description: str = "Normalised: 0.7071;  Highpass: butter, cutoff 2000Hz; "
@@ -43,13 +43,20 @@ class Standart32khz(DerivativeBaseClass):
 
         return output
 
-    def create_derivate(self, source_file_path: Path, target_file_path: Path,) -> None:
+    def create_derivate(
+        self,
+        source_file_path: Path,
+        target_file_path: Path,
+    ) -> None:
         # resample on load to higher prevent instability of the filter
         # print("Read: {} \n write to: ".format(source_file_path))
         y = []
 
         y, sr = librosa.load(
-            source_file_path, sr=None, mono=False, res_type=self.resampleType,
+            source_file_path,
+            sr=None,
+            mono=False,
+            res_type=self.resampleType,
         )
         if np.isfinite(y).all() is False:
             raise Exception("Error creating derivative for {}".format(source_file_path))
@@ -60,12 +67,17 @@ class Standart32khz(DerivativeBaseClass):
         y *= 0.7071
 
         y = self.apply_high_pass_filter(y, sr, source_file_path)
-        y = librosa.resample(
-            y, self.import_sample_rate, self.sample_rate, res_type=self.resampleType,
-        )
+        if sr != self.sample_rate:
+            y = librosa.resample(
+                y,
+                sr,
+                self.sample_rate,
+                res_type=self.resampleType,
+            )
         if len(y.shape) > 1:
             y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
             # print("write to target_file_path: {}".format(target_file_path))
+
         sf.write(target_file_path, y, self.sample_rate, "PCM_16")
 
         debug("standart2khz {}".format(target_file_path.as_posix()))

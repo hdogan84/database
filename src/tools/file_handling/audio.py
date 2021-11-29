@@ -35,7 +35,7 @@ def read_parameters_from_audio_file(file: Path) -> AudioFileParameters:
     mime_type = guess_type(file.name)[0]
     md5sum = md5(open(file, "rb").read()).hexdigest()
 
-    media_info = mediainfo(file)
+    media_info = mediainfo(file.as_posix())
 
     return AudioFileParameters(
         original_filename=original_filename,
