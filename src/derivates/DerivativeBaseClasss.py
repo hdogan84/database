@@ -40,11 +40,11 @@ class DerivativeBaseClass:
                 ]
                 self.id = get_entry_id_or_create_it(db_cursor, "derivative", data, data)
                 db_connection.commit()
-                self.derivate_folder_path = config.get_derivatives_files_path().joinpath(
-                    str(self.id)
+                self.derivate_folder_path = (
+                    config.get_derivatives_files_path().joinpath(str(self.id))
                 )
-                self.realtive_derivative_folder_path = self.derivate_folder_path.relative_to(
-                    config.file_storage_path
+                self.realtive_derivative_folder_path = (
+                    self.derivate_folder_path.relative_to(config.file_storage_path)
                 )
                 if self.derivate_folder_path.exists() is False:
                     mkdir(self.derivate_folder_path)

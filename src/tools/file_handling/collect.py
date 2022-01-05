@@ -27,14 +27,23 @@ def get_record_annoation_tupels_from_directory(
 
     for audio_file in audio_files:
         matching_annotation_files = [
-            f for f in annoation_files if (f.stem.startswith(audio_file.stem))
+            f
+            for f in annoation_files
+            if (
+                f.stem.startswith(audio_file.stem)
+                and not f.stem.startswith(audio_file.stem + "_S")
+            )
         ]
         if len(matching_annotation_files) > 1:
-            #raise ToManyAnnoationFilesError(audio_file, matching_annotation_files)
-            print("To many Annoation files found for {}: {}".format(audio_file, matching_annotation_files))
+            # raise ToManyAnnoationFilesError(audio_file, matching_annotation_files)
+            print(
+                "To many Annoation files found for {}: {}".format(
+                    audio_file, matching_annotation_files
+                )
+            )
             continue
         if len(matching_annotation_files) == 0:
-            #raise NoAnnoationFileError(audio_file)
+            # raise NoAnnoationFileError(audio_file)
             print("No Annoation file found for {}.".format(audio_file))
             continue
         coresponding_files.append((audio_file, matching_annotation_files[0]))

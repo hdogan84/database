@@ -1,7 +1,6 @@
 from typing import List, Dict
 from mysql.connector.cursor import MySQLCursor
 from pathlib import Path
-
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
@@ -12,7 +11,6 @@ from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
 CONFIG_FILE_PATH = Path("config_training.cfg")
-
 class_list = """
 (
 'AVRACRCR',
@@ -51,11 +49,13 @@ FROM
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
-    r.collection_id != 105 and 
-    r.collection_id != 155 and
-    r.duration > 0.2 and
-    r.duration < 360 and
+    a.background = 0 and
+    a.id_level = 1 and
+    r.collection_id = 105 and
+    r.channels = 4 and
+    r.original_filename LIKE '%BRITZ02%'  and
     s.olaf8_id IN {}
+
 """.format(
     class_list
 )
@@ -69,7 +69,7 @@ SELECT
     a.end_time,
     a.quality_tag,
     a.individual_id,
-    a.group_id,
+    a.group_id, 
     a.vocalization_type,
     r.`channels`,
     r.collection_id,
@@ -78,7 +78,6 @@ SELECT
     i.start_time,
     i.end_time,
     r.id
-    
 FROM
     annotation_of_species AS a
         LEFT JOIN
@@ -88,24 +87,26 @@ FROM
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
-    r.collection_id != 105 and 
-    r.collection_id != 155 and
-    r.duration > 0.2 and
-    r.duration < 360 and
+    a.background = 0 and
+    r.collection_id = 105 and
+    r.channels = 4 and 
+    r.original_filename LIKE '%BRITZ02%' and
+    a.id_level=1 and
     s.olaf8_id IN {}
-    ORDER BY r.filename , a.start_time ASC  
-""".format(
+ ORDER BY r.filename , a.start_time ASC
+ """.format(
     class_list
 )
 
-
 query_species = """
-SELECT latin_name,english_name,german_name FROM libro_animalis.species WHERE
+SELECT latin_name,english_name,german_name FROM libro_animalis.species where
     olaf8_id IN {}
 ORDER BY latin_name ASC
 """.format(
     class_list
 )
+
+annotation_interval = "annotation_interval"
 
 
 class Index(IntEnum):
@@ -124,7 +125,6 @@ class Index(IntEnum):
     ANNOTATION_INTERVAL_ID = 12
     ANNOTATION_INTERVAL_START = 13
     ANNOTATION_INTERVAL_END = 14
-    RECORD_ID = 15
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -134,6 +134,8 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
             filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
+            for x in filepathes:
+                print(x.as_posix)
             derivatateCreator = Standart32khz(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
                 filepathes
@@ -204,33 +206,27 @@ def create_labels(config: DatabaseConfig):
             intervals = {}
             # Collect Labels of Different record intervalls
             for a in data:
-                if a[Index.ANNOTATION_INTERVAL_ID] is None:
-                    if str(a[Index.RECORD_ID]) in intervals:
+                if a[12] is None:
+                    if str(a[15]) in intervals:
 
-                        intervals[str(a[Index.RECORD_ID])].append(a)
+                        intervals[str(a[15])].append(a)
                     else:
-                        intervals.update({str(a[Index.RECORD_ID]): [a]})
+                        intervals.update({str(a[15]): [a]})
                 else:
-                    if str(a[Index.ANNOTATION_INTERVAL_ID]) in intervals:
+                    if str(a[12]) in intervals:
 
-                        intervals[str(a[Index.ANNOTATION_INTERVAL_ID])].append(a)
+                        intervals[str(a[12])].append(a)
                     else:
-                        intervals.update({str(a[Index.ANNOTATION_INTERVAL_ID]): [a]})
+                        intervals.update({str(a[12]): [a]})
             # sort every key by start -, stop time
             for k, v in intervals.items():
                 # only sort real intervals
                 if k is not "None":
-                    v.sort(
-                        key=lambda l: (l[Index.START_TIME], l[Index.END_TIME]),
-                        reverse=False,
-                    )
+                    v.sort(key=lambda l: (l[3], l[4]), reverse=False)
             labels = []
             for key, values in intervals.items():
                 # only sort real intervals
-                values.sort(
-                    key=lambda l: (l[Index.START_TIME], l[Index.END_TIME]),
-                    reverse=False,
-                )
+                values.sort(key=lambda l: (l[3], l[4]), reverse=False)
                 labels.append(create_annoation_interval_label(values))
                 for a in values:
                     labels.append(annotation_to_label(a))
@@ -304,7 +300,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-multi-train.csv",
+    default="ammod-multi-dspec-val.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -312,7 +308,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-class-list.csv",
+    default="ammod-class-dspec-list.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

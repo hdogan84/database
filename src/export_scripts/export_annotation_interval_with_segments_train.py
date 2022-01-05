@@ -11,7 +11,31 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
+
 CONFIG_FILE_PATH = Path("config_training.cfg")
+SEGMENT_LENGTH = 20
+ANNOTATION_FILE_NAME = "ammod-start-end-segment-train.csv"
+CLASS_LIST_NAME = "ammod-class-list.csv"
+
+
+class Index(IntEnum):
+    LATIN_NAME = 0
+    FILE_PATH = 1
+    FILENAME = 2
+    START_TIME = 3
+    END_TIME = 4
+    QUALITY_TAG = 5
+    INDIVIDUAL_TAG = 6
+    GROUP_ID = 7
+    VOCALIZATION_TYPE = 8
+    CHANNELS = 9
+    COLLECTION_ID = 10
+    DURATION = 11
+    ANNOTATION_INTERVAL_ID = 12
+    ANNOTATION_INTERVAL_START = 13
+    ANNOTATION_INTERVAL_END = 14
+    RECORD_ID = 15
+
 
 class_list = """
 (
@@ -108,25 +132,6 @@ ORDER BY latin_name ASC
 )
 
 
-class Index(IntEnum):
-    LATIN_NAME = 0
-    FILE_PATH = 1
-    FILENAME = 2
-    START_TIME = 3
-    END_TIME = 4
-    QUALITY_TAG = 5
-    INDIVIDUAL_TAG = 6
-    GROUP_ID = 7
-    VOCALIZATION_TYPE = 8
-    CHANNELS = 9
-    COLLECTION_ID = 10
-    DURATION = 11
-    ANNOTATION_INTERVAL_ID = 12
-    ANNOTATION_INTERVAL_START = 13
-    ANNOTATION_INTERVAL_END = 14
-    RECORD_ID = 15
-
-
 def create_file_derivates(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
@@ -198,18 +203,46 @@ def create_labels(config: DatabaseConfig):
             db_cursor: MySQLCursor  # set type hint
             db_cursor.execute(query_annoations)
             data = db_cursor.fetchall()
-            print("Found {} annotations".format(len(data)))
+            print("Found {} annotations.".format(len(data)))
 
             labels = []
             intervals = {}
             # Collect Labels of Different record intervalls
             for a in data:
-                if a[Index.ANNOTATION_INTERVAL_ID] is None:
-                    if str(a[Index.RECORD_ID]) in intervals:
 
-                        intervals[str(a[Index.RECORD_ID])].append(a)
+                if a[Index.ANNOTATION_INTERVAL_ID] is None:
+                    # annotation has no segment -> it is for the whole file
+                    if a[Index.DURATION] > 2 * SEGMENT_LENGTH:
+                        start_segment = [*a]
+                        start_segment[Index.DURATION] = SEGMENT_LENGTH
+                        start_segment[Index.END_TIME] = SEGMENT_LENGTH
+                        end_segment = [*a]
+                        end_segment[Index.START_TIME] = (
+                            end_segment[Index.END_TIME] - SEGMENT_LENGTH
+                        )
+                        end_segment[Index.END_TIME] = SEGMENT_LENGTH
+                        if str(a[Index.RECORD_ID]) in intervals:
+
+                            intervals[str(a[Index.RECORD_ID]) + "_start"].append(
+                                *start_segment
+                            )
+                            intervals[str(a[Index.RECORD_ID]) + "_end"].append(
+                                *end_segment
+                            )
+                        else:
+                            intervals.update(
+                                {str(a[Index.RECORD_ID]) + "_start": [start_segment]}
+                            )
+                            intervals.update(
+                                {str(a[Index.RECORD_ID]) + "_end": [end_segment]}
+                            )
                     else:
-                        intervals.update({str(a[Index.RECORD_ID]): [a]})
+                        if str(a[Index.RECORD_ID]) in intervals:
+
+                            intervals[str(a[Index.RECORD_ID])].append(a)
+                        else:
+
+                            intervals.update({str(a[Index.RECORD_ID]): [a]})
                 else:
                     if str(a[Index.ANNOTATION_INTERVAL_ID]) in intervals:
 
@@ -304,7 +337,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-multi-train.csv",
+    default=ANNOTATION_FILE_NAME,
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -312,7 +345,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-class-list.csv",
+    default=CLASS_LIST_NAME,
     help="target filename for label csv",
 )
 parser.add_argument(

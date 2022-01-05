@@ -23,7 +23,9 @@
             "**/node_modules/*/**": true,
             "**/logs/*/**": true,
             "**/lightning_logs/*/**": true,
-            "**/data/*/**": true
+            "**/data/*/**": true,
+            "**/downloads/*/**": true
+
         },
     },
     "launch": {

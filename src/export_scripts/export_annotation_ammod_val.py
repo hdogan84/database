@@ -1,7 +1,7 @@
 from typing import List, Dict
 from mysql.connector.cursor import MySQLCursor
 from pathlib import Path
-
+from import_scripts.import_annoations_olaf import ANNOTATION_STRATEGY
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
@@ -11,8 +11,10 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
+COLLECTION_ID = 105  # 155
+SET_FILENAME = "ammod-val.csv"
+CLASS_LIST_FILENAME = "ammod-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
-
 class_list = """
 (
 'AVRACRCR',
@@ -51,13 +53,12 @@ FROM
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
-    r.collection_id != 105 and 
-    r.collection_id != 155 and
-    r.duration > 0.2 and
-    r.duration < 360 and
+    a.background = 0 and
+    r.collection_id = {} and
     s.olaf8_id IN {}
+
 """.format(
-    class_list
+    COLLECTION_ID, class_list
 )
 
 query_annoations = """
@@ -74,38 +75,33 @@ SELECT
     r.`channels`,
     r.collection_id,
     r.duration,
-    i.id,
-    i.start_time,
-    i.end_time,
+  
     r.id
-    
 FROM
     annotation_of_species AS a
         LEFT JOIN
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
-        LEFT JOIN
-    annotation_interval AS i ON i.id = a.annotation_interval_id 
+   
 WHERE
-    r.collection_id != 105 and 
-    r.collection_id != 155 and
-    r.duration > 0.2 and
-    r.duration < 360 and
-    s.olaf8_id IN {}
-    ORDER BY r.filename , a.start_time ASC  
-""".format(
-    class_list
+    a.background = 0 and
+    r.collection_id = {} and
+    s.olaf8_id IN {} 
+ ORDER BY r.filename , a.start_time ASC
+ """.format(
+    COLLECTION_ID, class_list
 )
 
-
 query_species = """
-SELECT latin_name,english_name,german_name FROM libro_animalis.species WHERE
+SELECT latin_name,english_name,german_name FROM libro_animalis.species where
     olaf8_id IN {}
 ORDER BY latin_name ASC
 """.format(
     class_list
 )
+
+annotation_interval = "annotation_interval"
 
 
 class Index(IntEnum):
@@ -124,7 +120,6 @@ class Index(IntEnum):
     ANNOTATION_INTERVAL_ID = 12
     ANNOTATION_INTERVAL_START = 13
     ANNOTATION_INTERVAL_END = 14
-    RECORD_ID = 15
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -168,16 +163,10 @@ def create_annoation_interval_label(annotation_list):
     collection_id = annotation[Index.COLLECTION_ID]
     channels = annotation[Index.CHANNELS]
     duration = annotation[Index.DURATION]
-    start = (
-        annotation[Index.ANNOTATION_INTERVAL_START]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.START_TIME]
-    )
-    stop = (
-        annotation[Index.ANNOTATION_INTERVAL_END]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.DURATION]
-    )
+    start = 0
+
+    stop = annotation[Index.DURATION]
+
     label = "annotation_interval"
     filename = annotation[Index.FILENAME]
     return (
@@ -204,33 +193,27 @@ def create_labels(config: DatabaseConfig):
             intervals = {}
             # Collect Labels of Different record intervalls
             for a in data:
-                if a[Index.ANNOTATION_INTERVAL_ID] is None:
-                    if str(a[Index.RECORD_ID]) in intervals:
+                if a[12] is None:
+                    if str(a[15]) in intervals:
 
-                        intervals[str(a[Index.RECORD_ID])].append(a)
+                        intervals[str(a[15])].append(a)
                     else:
-                        intervals.update({str(a[Index.RECORD_ID]): [a]})
+                        intervals.update({str(a[15]): [a]})
                 else:
-                    if str(a[Index.ANNOTATION_INTERVAL_ID]) in intervals:
+                    if str(a[12]) in intervals:
 
-                        intervals[str(a[Index.ANNOTATION_INTERVAL_ID])].append(a)
+                        intervals[str(a[12])].append(a)
                     else:
-                        intervals.update({str(a[Index.ANNOTATION_INTERVAL_ID]): [a]})
+                        intervals.update({str(a[12]): [a]})
             # sort every key by start -, stop time
             for k, v in intervals.items():
                 # only sort real intervals
                 if k is not "None":
-                    v.sort(
-                        key=lambda l: (l[Index.START_TIME], l[Index.END_TIME]),
-                        reverse=False,
-                    )
+                    v.sort(key=lambda l: (l[3], l[4]), reverse=False)
             labels = []
             for key, values in intervals.items():
                 # only sort real intervals
-                values.sort(
-                    key=lambda l: (l[Index.START_TIME], l[Index.END_TIME]),
-                    reverse=False,
-                )
+                values.sort(key=lambda l: (l[3], l[4]), reverse=False)
                 labels.append(create_annoation_interval_label(values))
                 for a in values:
                     labels.append(annotation_to_label(a))
@@ -304,7 +287,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-multi-train.csv",
+    default=SET_FILENAME,
     help="target filename for label csv",
 )
 parser.add_argument(
@@ -312,7 +295,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ammod-class-list.csv",
+    default=CLASS_LIST_FILENAME,
     help="target filename for label csv",
 )
 parser.add_argument(

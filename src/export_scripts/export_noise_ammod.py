@@ -9,7 +9,7 @@ from derivates import Standart32khz
 import argparse
 
 
-CONFIG_FILE_PATH = Path("config.cfg")
+CONFIG_FILE_PATH = Path("src/config/config_crawled.cfg")
 
 collections = [
     "dcase-2018-freefield1010",
@@ -33,7 +33,7 @@ ORDER BY RAND()
 """
 
 
-def create_file_derivates(config: DatabaseConfig) :
+def create_file_derivates(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor  # set type hint
@@ -55,7 +55,7 @@ def cut_path_to_essential(filepath: Path) -> str:
     return essential.as_posix()
 
 
-def export_data(config_path: Path = CONFIG_FILE_PATH,csv_filename="noise.csv"):
+def export_data(config_path: Path = CONFIG_FILE_PATH, csv_filename="noise.csv"):
     config = parse_config(config_path)
     derivates_dict = create_file_derivates(config)
     data = [[cut_path_to_essential(x)] for x in derivates_dict.values()]
@@ -82,5 +82,6 @@ parser.add_argument(
 args = parser.parse_args()
 if __name__ == "__main__":
     export_data(
-        config_path=args.config, csv_filename=args.csv_filename,
+        config_path=args.config,
+        csv_filename=args.csv_filename,
     )

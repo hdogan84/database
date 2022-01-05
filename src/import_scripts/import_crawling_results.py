@@ -14,6 +14,14 @@ from tools.db import (
     connectToDB,
     delete_from_table,
 )
+
+import sys
+
+if not sys.warnoptions:
+    import warnings
+
+    warnings.simplefilter("ignore")
+
 from tools.logging import info, progbar
 import argparse
 
