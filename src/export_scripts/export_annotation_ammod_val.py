@@ -144,6 +144,7 @@ def annotation_to_label(annotation):
     stop = annotation[Index.END_TIME]
     label = annotation[Index.LATIN_NAME]
     filename = annotation[Index.FILENAME]
+    calltype = annotation[Index.VOCALIZATION_TYPE]
     # return (duration, start, stop, label, 1, filename, channels, collection_id)
     return (
         Path(filename).stem,
@@ -153,7 +154,7 @@ def annotation_to_label(annotation):
         label,
         start,
         stop,
-        "",
+        calltype,
     )
 
 

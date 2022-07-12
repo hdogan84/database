@@ -195,6 +195,8 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("annotation_interval_id", interval_id),
                     ]
 
+                    print(annoation_data)
+                    print("------")
                     get_entry_id_or_create_it(
                         db_cursor,
                         "annotation_of_species",

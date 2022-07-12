@@ -67,7 +67,7 @@ tsaConfig = DatabaseConfig()
 tsaConfig.add_source(IniStringConfigSource(TSA_CONFIG))
 
 DATA_PATH = Path("/mnt/z/AG/TSA/Mario/_Backups/TsaOrgTrainAudioData/")
-TEST_RUN = False
+TEST_RUN = True
 # CollectionName, SubFolders,
 COLLECTIONS = [
     ("TsaShorts", "ShortsAll", False),

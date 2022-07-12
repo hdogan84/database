@@ -209,7 +209,7 @@ def read_raven_file(file: Path) -> List[AnnotationRaven]:
             individual_id=get_group_id(row.Individual_Group, "i"),
             group_id=get_group_id(row.Individual_Group, ["g", "f", "m"]),
             id_level=sanitize_id_level(row.id_level),
-            vocalization_type=row.vocalization_type,
+            vocalization_type=sanitize_quality(row.vocalization_type),
             quality_tag=sanitize_quality(
                 row.quality_tag
             ),  # TODO: Ask olaf what format an then fix

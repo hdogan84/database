@@ -11,9 +11,9 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
-COLLECTION_ID = 105
-SET_FILENAME = "ammod-valuation-d5.csv"
-CLASS_LIST_FILENAME = "xeno-canto-ammod-class-list.csv"
+COLLECTION_ID = 155  # 155
+SET_FILENAME = "xeno-canto(155)-val(derivation-5).csv"
+CLASS_LIST_FILENAME = "ammod-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
@@ -75,9 +75,7 @@ SELECT
     r.`channels`,
     r.collection_id,
     r.duration,
-    i.id,
-    i.start_time,
-    i.end_time,
+  
     r.id
 FROM
     annotation_of_species AS a
@@ -85,8 +83,7 @@ FROM
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
-        LEFT JOIN
-    annotation_interval AS i ON i.id = a.annotation_interval_id 
+   
 WHERE
     a.background = 0 and
     r.collection_id = {} and
@@ -166,16 +163,10 @@ def create_annoation_interval_label(annotation_list):
     collection_id = annotation[Index.COLLECTION_ID]
     channels = annotation[Index.CHANNELS]
     duration = annotation[Index.DURATION]
-    start = (
-        annotation[Index.ANNOTATION_INTERVAL_START]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.START_TIME]
-    )
-    stop = (
-        annotation[Index.ANNOTATION_INTERVAL_END]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.DURATION]
-    )
+    start = 0
+
+    stop = annotation[Index.DURATION]
+
     label = "annotation_interval"
     filename = annotation[Index.FILENAME]
     return (

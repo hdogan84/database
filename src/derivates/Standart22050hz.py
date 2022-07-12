@@ -10,20 +10,20 @@ import soundfile as sf
 from scipy.signal import butter, sosfilt
 import warnings
 
-sampleRateDst = 32000  # 32000
+sampleRateDst = 22050
 
 
-class Standart32khz(DerivativeBaseClass):
-    name = "Standart32khzNormalisedHighpassFilter"
-    import_sample_rate: int = 48000
-    sample_rate: int = 32000
+class Standart22050hz(DerivativeBaseClass):
+    name = "Standart22.050khzNormalisedHighpassFilter"
+
+    sample_rate: int = sampleRateDst
     resampleType = "kaiser_best"  # "kaiser_fast"  # or use
     bit_depth: int = 16
     file_ending: str = "wav"
     description: str = "Normalised: 0.7071;  Highpass: butter, cutoff 2000Hz; "
 
     def __init__(self, config: DatabaseConfig):
-        super(Standart32khz, self).__init__(config)
+        super(Standart22050hz, self).__init__(config)
 
     def apply_high_pass_filter(self, input, sample_rate: int, filePath: Path):
         order = 2
@@ -43,13 +43,20 @@ class Standart32khz(DerivativeBaseClass):
 
         return output
 
-    def create_derivate(self, source_file_path: Path, target_file_path: Path,) -> None:
+    def create_derivate(
+        self,
+        source_file_path: Path,
+        target_file_path: Path,
+    ) -> None:
         # resample on load to higher prevent instability of the filter
         # print("Read: {} \n write to: ".format(source_file_path))
         y = []
 
         y, sr = librosa.load(
-            source_file_path, sr=None, mono=False, res_type=self.resampleType,
+            source_file_path,
+            sr=None,
+            mono=False,
+            res_type=self.resampleType,
         )
         if np.isfinite(y).all() is False:
             raise Exception("Error creating derivative for {}".format(source_file_path))
@@ -61,7 +68,12 @@ class Standart32khz(DerivativeBaseClass):
 
         y = self.apply_high_pass_filter(y, sr, source_file_path)
         if sr != self.sample_rate:
-            y = librosa.resample(y, sr, self.sample_rate, res_type=self.resampleType,)
+            y = librosa.resample(
+                y,
+                sr,
+                self.sample_rate,
+                res_type=self.resampleType,
+            )
         if len(y.shape) > 1:
             y = np.transpose(y)  # [nFrames x nChannels] --> [nChannels x nFrames]
             # print("write to target_file_path: {}".format(target_file_path))

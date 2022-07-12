@@ -31,7 +31,7 @@ COLLECTION_IDS = [
     84,
     87,
 ]  # 155
-SET_FILENAME = "ammod-augemntation.csv"
+SET_FILENAME = "ammod-augmentation.csv"
 CLASS_LIST_FILENAME = "ammod-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """

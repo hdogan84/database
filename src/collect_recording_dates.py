@@ -79,10 +79,10 @@ def collect_data(folder_path, output_file):
     write_results_to_file(output_file, headline, result)
 
 
-collect_data("/mnt/z/Projekte/AMMOD/AudioData/BRITZ02/", "BRITZ02_overview.csv")
+# collect_data("/mnt/z/Projekte/AMMOD/AudioData/BRITZ02/", "BRITZ02_overview.csv")
 
 # collect_data("/mnt/z/Projekte/AMMOD/AudioData/BRITZ01/", "BRITZ01_overview.csv")
 # collect_data("/mnt/z/Projekte/AMMOD/AudioData/BRITZ03/", "BRITZ03_overview.csv")
 # collect_data("/mnt/z/Projekte/AMMOD/AudioData/Schoenow01/", "Schoenow01_overview.csv")
-# collect_data("/mnt/z/Projekte/AMMOD/AudioData/MGB01/", "MGB01_overview.csv")
+collect_data("/mnt/z/Projekte/AMMOD/AudioData/MGB01/", "MGB01_overview.csv")
 # collect_data("dummy", "dummy.csv")

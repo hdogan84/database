@@ -16,8 +16,8 @@ def connectToDB(config: DatabaseConfig) -> MySQLConnection:
 
 
 def to_sql_save_value(value):
-    if isinstance(value, float):  # round float for fixpoint saving in database
-        return str(round(value, 6))
+    # if isinstance(value, float):  # round float for fixpoint saving in database
+    #     return str(round(value, 6))
     return value
 
 

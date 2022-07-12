@@ -5,43 +5,63 @@ from import_scripts.import_annoations_olaf import ANNOTATION_STRATEGY
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
-from derivates import Standart22050hz
+from derivates import Standart32khz as Derivative
 import argparse
 from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
-COLLECTION_ID = 105
-SET_FILENAME = "ammod-valuation-d5.csv"
-CLASS_LIST_FILENAME = "xeno-canto-ammod-class-list.csv"
+COLLECTION_ID = 87  # 155
+SET_FILENAME = "ammod-tsa_short-26-to-60.csv"
+CLASS_LIST_FILENAME = "ammod-class-list-26-to-60.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
-(
-'AVRACRCR',
-'AVSCSCRU',
-'AVPIDEMA',
-'AVPDPEAT',
-'AVPDLOCR',
-'AVPDPOPA',
-'AVPDCYCA',
-'AVPDPAMA',
-'AVPCPHSI',
-'AVPCPHTR',
-'AVSYSYAT',
-'AVTGTRTR',
-'AVSISIEU',
-'AVTUTUME',
-'AVTUTUPH',
-'AVTUTUVI',
-'AVMUMUST',
-'AVMUERRU',
-'AVMUFIHY',
-'AVMUPHPH',
-'AVMTANTR',
-'AVFRFRCO',
-'AVFRCOCO',
-'AVFRCHCH',
-'AVFRSPSP')
+( 'AVACACGE',
+ 'AVAEAECA',
+ 'AVAUALAR',
+ 'AVANANPL',
+ 'AVANARAN',
+ 'AVMTANPR',
+ 'AVARBOST',
+ 'AVFRCACA',
+ 'AVCECEBR',
+ 'AVCECEFA',
+ 'AVLACHRI',
+ 'AVCVCEMO',
+ 'AVCOCOPA',
+ 'AVCVCOCO',
+ 'AVCVCOCX',
+ 'AVCUCUCA',
+ 'AVHIDEUR',
+ 'AVPIDRMA',
+ 'AVEMEMCT',
+ 'AVEMEMSC',
+ 'AVFRFRMO',
+ 'AVRAFUAT',
+ 'AVRAGACH',
+ 'AVCVGAGL',
+ 'AVGUGRGR',
+ 'AVHIHIRU',
+ 'AVAULUAR',
+ 'AVMULUME',
+ 'AVMTMOAL',
+ 'AVPAPADO',
+ 'AVPAPAMO',
+ 'AVPCPHCO',
+ 'AVCVPIPI',
+ 'AVPDPOMO',
+ 'AVPRPRMO',
+ 'AVFRPYPY',
+ 'AVRGREIG',
+ 'AVRGRERE',
+ 'AVFRSESE',
+ 'AVCOSTDE',
+ 'AVSRSTVU',
+ 'AVSYSYCO',
+ 'AVSCTROC',
+ 'AVTUTUIL',
+ 'AVTUTUPI'
+)
 """
 query_files = """
 SELECT 
@@ -55,6 +75,8 @@ FROM
 WHERE
     a.background = 0 and
     r.collection_id = {} and
+    r.duration > 5 and
+    r.duration < 30.1 and
     s.olaf8_id IN {}
 
 """.format(
@@ -75,9 +97,7 @@ SELECT
     r.`channels`,
     r.collection_id,
     r.duration,
-    i.id,
-    i.start_time,
-    i.end_time,
+  
     r.id
 FROM
     annotation_of_species AS a
@@ -85,12 +105,14 @@ FROM
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
-        LEFT JOIN
-    annotation_interval AS i ON i.id = a.annotation_interval_id 
+   
 WHERE
     a.background = 0 and
     r.collection_id = {} and
+     r.duration > 5 and
+    r.duration < 30.1 and
     s.olaf8_id IN {} 
+   
  ORDER BY r.filename , a.start_time ASC
  """.format(
     COLLECTION_ID, class_list
@@ -132,7 +154,7 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
             filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
-            derivatateCreator = Standart22050hz(config.database)
+            derivatateCreator = Derivative(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
                 filepathes
             )
@@ -166,16 +188,10 @@ def create_annoation_interval_label(annotation_list):
     collection_id = annotation[Index.COLLECTION_ID]
     channels = annotation[Index.CHANNELS]
     duration = annotation[Index.DURATION]
-    start = (
-        annotation[Index.ANNOTATION_INTERVAL_START]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.START_TIME]
-    )
-    stop = (
-        annotation[Index.ANNOTATION_INTERVAL_END]
-        if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
-        else annotation[Index.DURATION]
-    )
+    start = 0
+
+    stop = annotation[Index.DURATION]
+
     label = "annotation_interval"
     filename = annotation[Index.FILENAME]
     return (
