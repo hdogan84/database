@@ -49,3 +49,42 @@ pip install joblib
 conda install pandas
 conda install -c conda-forge librosa
 ```
+
+# common import csv structure
+
+- start_time,
+- end_time,
+- start_frequency,
+- end_frequency,
+- channel_ix,
+- individual_id,
+- group_id,
+- vocalization_type,
+- quality_tag,
+- id_level,
+- background_level, #0 none; 1 little; 2 a lot;
+- xeno_canto_background,
+- species_latin_name,
+- annotator_name,
+- annotation_interval_start
+- annotation_interval_end
+- record_date,
+- record_start,
+- record_end,
+- record_filepath,
+- record_license,
+- record_remarks,
+- recordist_name,
+- equipment_name,
+- equipment_sound_device,
+- equipment_microphone,
+- equipment_remarks,
+- location_name,
+- location_description,
+- location_habitat,
+- location_lat,
+- location_lng,
+- location_altitude,
+- location_remarks,
+- collection_name,
+- collection_remarks,
