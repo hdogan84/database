@@ -32,11 +32,27 @@ def read_and_process_flac_files(path):
     path_new = path[:-5] + '_c' + str(channel_ix) + '.wav'
     #sf.write(path_new, audio_data[:,channel_ix], samplerate, subtype)
 
-
-
 src_dir = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2021/'
 path = src_dir + 'Devise03_2021-05-31T21-24-55.flac'
 #path = src_dir + 'Devise04_2021-05-21T22-01-03_VP4_2_2.flac'
+path = src_dir + 'Devise07_2021-06-17T22-44-13.flac'
+#path = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2022/Devise03_2022-06-02T22-02-00.flac'
 read_and_process_flac_files(path)
+
+def parse_date_in_filename(path):
+
+    # AMMOD style (new)
+    #filename_without_ext = os.path.splitext(os.path.basename(path))[0]
+    filename = os.path.basename(path)
+    parts = filename.split('_')
+    print(parts)
+    for part in parts:
+        if len(part) == 8 and part[:2] == '20':
+            print('date string', part)
+    
+
+#path = '/mnt/z/Projekte/AMMOD/AudioData/BRITZ01/BRITZ01_201903/BRITZ01_190313_104500.wav'
+path = '/mnt/z/Projekte/AMMOD/AudioData/BRITZ01/BRITZ01_202206/BRITZ01_20220601_000000.wav'
+parse_date_in_filename(path)
 
 print('Done.')
