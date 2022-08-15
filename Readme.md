@@ -52,6 +52,7 @@ conda install -c conda-forge librosa
 
 # common import csv structure
 
+- filename
 - start_time,
 - end_time,
 - start_frequency,
@@ -65,11 +66,12 @@ conda install -c conda-forge librosa
 - background_level, #0 none; 1 little; 2 a lot;
 - xeno_canto_background,
 - species_latin_name,
+- noise_name, # if noise_name --> insert in annotation_of_noise
 - annotator_name,
 - annotation_interval_start
 - annotation_interval_end
 - record_date,
-- record_start,
+- record_start, # --> record_time?
 - record_end,
 - record_filepath,
 - record_license,
