@@ -287,10 +287,10 @@ def process_ARSU_2022():
     df_list = df_list.reindex(columns=key_names_final)
 
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx"
-    df_list.to_excel(outpul_excel_file, index=False)
+    # df_list.to_excel(outpul_excel_file, index=False)
 
 
-process_ARSU_2022()
+# process_ARSU_2022()
 
 
 def process_ARSU_2021():
@@ -313,6 +313,25 @@ def process_ARSU_2021():
     ### filename,channel_ix,start_time,end_time,start_frequency,end_frequency,vocalization_type,
     ### id_level,species_latin_name,annotator_name,recordist_name,location_name,record_date,
     ### record_time,collection_name,record_filepath
+
+    key_names_final = [
+        "filename",
+        "channel_ix",
+        "start_time",
+        "end_time",
+        "start_frequency",
+        "end_frequency",
+        "vocalization_type",
+        "id_level",
+        "species_latin_name",
+        "annotator_name",
+        "recordist_name",
+        "location_name",
+        "record_date",
+        "record_time",
+        "collection_name",
+        "record_filepath",
+    ]
 
     # Search for audacity label track txt files
     root_src_dir = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2021/"
@@ -347,13 +366,22 @@ def process_ARSU_2021():
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
     df_list["location_name"] = ""
+
+    df_list = df_list.rename(
+        columns={
+            "species": "species_latin_name",
+            "start_freq": "start_frequency",
+            "end_freq": "end_frequency",
+        }
+    )
+    df_list = df_list.drop(columns=["comment"])
+    df_list = df_list.reindex(columns=key_names_final)
     df_list = df_list.sort_values(["filename", "start_time"])
-    # print(type(df_list.iloc[5]["start_time"]))
-    outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2021.xlsx"
+    outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx"
     df_list.to_excel(outpul_excel_file, index=False)
 
 
-# process_ARSU_2021()
+process_ARSU_2021()
 
 # Crex_crex_Unteres_Odertal_2017
 def process_collection(id):
