@@ -274,7 +274,8 @@ def process_ARSU_2022():
     df_list["start_freq"] = df_list["start_freq"].replace([-1], 0)
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
-    df_list["location_name"] = ""
+    df_list["location_name"] = "Gellener Torfmöörte"
+    df_list["collection_name"] = "devise_test"
     df_list = df_list.rename(
         columns={
             "species": "species_latin_name",
@@ -287,10 +288,10 @@ def process_ARSU_2022():
     df_list = df_list.reindex(columns=key_names_final)
 
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx"
-    # df_list.to_excel(outpul_excel_file, index=False)
+    #df_list.to_excel(outpul_excel_file, index=False)
 
 
-# process_ARSU_2022()
+#process_ARSU_2022()
 
 
 def process_ARSU_2021():
@@ -309,10 +310,6 @@ def process_ARSU_2021():
     ]
 
     df_list = pd.DataFrame(columns=key_names)
-
-    ### filename,channel_ix,start_time,end_time,start_frequency,end_frequency,vocalization_type,
-    ### id_level,species_latin_name,annotator_name,recordist_name,location_name,record_date,
-    ### record_time,collection_name,record_filepath
 
     key_names_final = [
         "filename",
@@ -365,7 +362,8 @@ def process_ARSU_2021():
     df_list["start_freq"] = df_list["start_freq"].replace([-1], 0)
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
-    df_list["location_name"] = ""
+    df_list["location_name"] = "Gellener Torfmöörte"
+    df_list["collection_name"] = "devise_test"
 
     df_list = df_list.rename(
         columns={
@@ -381,7 +379,124 @@ def process_ARSU_2021():
     df_list.to_excel(outpul_excel_file, index=False)
 
 
-process_ARSU_2021()
+#process_ARSU_2021()
+
+def process_ARSU_segments():
+
+    # Collect annotations from excel files
+    xlsx_files = [
+        "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
+        #"Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
+    ]
+
+    df_list= []
+    for file in xlsx_files:
+        path = ARSU_dir + file
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+
+        df = pd.read_excel(path, engine="openpyxl")
+        #print(df)
+        #return
+        df_list.append(df)
+        print('n_rows', len(df))
+        
+    df = pd.concat(df_list).reset_index(drop=True)
+
+    # Get unique audio files
+    files = list(df["filename"].unique())
+    n_files = len(files)
+    # print(files)
+    print("n_files", n_files)    
+
+    # Create merged table
+    df_merged_list = []
+
+    df_merged_list = {}
+    df_merged_list['filename'] = []
+    df_merged_list['start_time'] = []
+    df_merged_list['end_time'] = []
+
+    filename = df.filename.values[0]
+    start_time = df.start_time.values[0]
+    end_time = df.end_time.values[0]
+    print(filename, start_time, end_time)
+
+    max_time_without_annotation = 5  # 4
+
+    for ix, row in df.iterrows():
+
+        if (
+            row["filename"] != filename
+            or row["start_time"] - end_time > max_time_without_annotation
+        ):
+            # Add current values to df_merged_list
+            df_merged_list["filename"].append(filename)
+            df_merged_list["start_time"].append(start_time)
+            df_merged_list["end_time"].append(end_time)
+            # Init new
+            filename = row["filename"]
+            start_time = row["start_time"]
+            end_time = row["end_time"]
+        else:
+            end_time = row["end_time"]
+
+    # Add last row
+    df_merged_list["filename"].append(filename)
+    df_merged_list["start_time"].append(start_time)
+    df_merged_list["end_time"].append(end_time)
+
+    df_merged = pd.DataFrame.from_dict(df_merged_list)
+    # print(df_merged)
+
+    # Rename files according to annotation interval
+    for ix, row in df_merged.iterrows():
+        filename_new = row["filename"] + create_postfix_str(
+            row["start_time"], row["end_time"]
+        )
+        df_merged.at[ix, "filename_new"] = filename_new
+    # print(df_merged)
+
+    # Create df with annotation times relative to cuttet parts
+    df_new = df.copy()
+    print(df_new)
+    for ix, row in df.iterrows():
+        filename = row["filename"]
+        channel_ix = row["channel_ix"]
+        start_time = row["start_time"]
+        end_time = row["end_time"]
+        # print(start_time.dtype)
+
+        # Find corresponding row in df_merged
+        # df_merged_row = df_merged[df_merged.filename == filename & df_merged.start_time <= start_time & df_merged.end_time >= end_time]
+        # df_merged_row = df_merged[df_merged.filename == filename & int(df_merged.start_time) <= start_time]
+
+        df_merged_row = df_merged.loc[
+            (df_merged["filename"] == filename)
+            & (df_merged["start_time"] <= start_time)
+            & (df_merged["end_time"] >= end_time)
+        ].reset_index(drop=True)
+
+        assert len(df_merged_row.index) == 1
+
+        filename_new = df_merged_row.at[0, "filename_new"]
+        start_time_new = start_time - df_merged_row.at[0, "start_time"]
+        end_time_new = end_time - df_merged_row.at[0, "start_time"]
+
+        # print(filename, start_time, end_time, channel_ix,  filename_new, df_merged_row.at[0, 'start_time'], df_merged_row.at[0, 'end_time'], start_time_new, end_time_new)
+
+        df_new.at[ix, "filename"] = filename_new
+        df_new.at[ix, "start_time"] = start_time_new
+        df_new.at[ix, "end_time"] = end_time_new
+
+    #print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
+    outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
+    df_new.to_excel(outpul_excel_file, index=False)
+
+
+process_ARSU_segments()
+
 
 # Crex_crex_Unteres_Odertal_2017
 def process_collection(id):
