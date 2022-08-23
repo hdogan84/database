@@ -4,6 +4,7 @@
 import os
 import pandas as pd
 import soundfile as sf
+import librosa
 
 root_dir = "/mnt/z/Projekte/DeViSe/"
 metadata_dir = root_dir + "Annotationen/"
@@ -234,7 +235,10 @@ def process_ARSU_2022():
         "start_frequency",
         "end_frequency",
         "vocalization_type",
+        "quality",
         "id_level",
+        "has_background",
+        "comment",
         "species_latin_name",
         "annotator_name",
         "recordist_name",
@@ -254,6 +258,7 @@ def process_ARSU_2022():
             if file.endswith(".txt"):
                 path = os.path.join(root, file)
                 df = read_audacity_label_file(path, ignore_freq_range=False)
+                #print(path)
                 df = process_audacity_label_data(df)
                 df = df.rename(columns={"call_type": "vocalization_type"})
                 df["filename"] = file[:-15]
@@ -263,6 +268,7 @@ def process_ARSU_2022():
 
     # some numerical entries are somehow in str format. There is prob. a better way of dealing with this somewhere
     # else in the code
+    
     for ix in range(len(df_list)):
         df_list["start_time"][ix] = float(df_list["start_time"][ix])
         df_list["end_freq"][ix] = float(df_list["end_freq"][ix])
@@ -272,10 +278,12 @@ def process_ARSU_2022():
         df_list["has_background"][ix] = int(df_list["has_background"][ix])
 
     df_list["start_freq"] = df_list["start_freq"].replace([-1], 0)
+    df_list["vocalization_type"] = df_list["vocalization_type"].replace("gr", "grunt")
+    df_list["vocalization_type"] = df_list["vocalization_type"].replace("sq","squeak")
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
     df_list["location_name"] = "Gellener Torfmöörte"
-    df_list["collection_name"] = "devise_test"
+    df_list["collection_name"] = "devise"
     df_list = df_list.rename(
         columns={
             "species": "species_latin_name",
@@ -283,15 +291,15 @@ def process_ARSU_2022():
             "end_freq": "end_frequency",
         }
     )
-    df_list = df_list.drop(columns=["quality", "has_background", "comment"])
+    #df_list = df_list.drop(columns=["quality", "has_background", "comment"])
     df_list = df_list.sort_values(["filename", "start_time"])
     df_list = df_list.reindex(columns=key_names_final)
 
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx"
-    #df_list.to_excel(outpul_excel_file, index=False)
+    df_list.to_excel(outpul_excel_file, index=False)
 
 
-#process_ARSU_2022()
+process_ARSU_2022()
 
 
 def process_ARSU_2021():
@@ -385,8 +393,8 @@ def process_ARSU_segments():
 
     # Collect annotations from excel files
     xlsx_files = [
-        "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
         #"Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
+        "Scolopax_rusticola_Devise_ARSU_2022_part2_v1.xlsx",
     ]
 
     df_list= []
@@ -423,7 +431,7 @@ def process_ARSU_segments():
     end_time = df.end_time.values[0]
     print(filename, start_time, end_time)
 
-    max_time_without_annotation = 5  # 4
+    max_time_without_annotation = 4  # 4
 
     for ix, row in df.iterrows():
 
@@ -492,10 +500,91 @@ def process_ARSU_segments():
 
     #print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
-    df_new.to_excel(outpul_excel_file, index=False)
+    #df_new.to_excel(outpul_excel_file, index=False)
+
+#process_ARSU_segments()
+
+def process_ARSU_audiofiles(id):
+
+    write_audio_files = True  # True False
+
+    audio_root_src_dir = (
+        ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022/"
+    )
+    audio_root_dst_dir = ARSU_dir + "_Segments/"
+
+    # Read excel file
+    path = ARSU_dir + id + ".xlsx"
+
+    if not os.path.isfile(path):
+        print("Error: File not found", path)
+
+    df = pd.read_excel(path, engine="openpyxl")
+    #print(df)
+    print("n_rows", len(df))
+
+    filenames = df["filename"].unique()
+    n_filenames = len(filenames)
+    #print(filenames)
+    print("n_filenames", n_filenames)
+
+    df_new=df.copy()
+
+    for filename in filenames:
+
+        df_sub=df[df["filename"]==filename]
+        print(df_sub[["filename","start_time","end_time"]])
+
+        path = audio_root_src_dir + "/" + filename[:-11] + ".flac"
+
+        start_time = min(df_sub["start_time"])
+        end_time = max(df_sub["end_time"])
+        channel_ix = 0 #df_sub["channel_ix"]
+        #print(start_time,end_time)
+
+        # convert ms to sec
+        time_offset=float(filename[-9:-2])/1000.0
+        #print(time_offset)
+
+        start_time+=time_offset
+        end_time+=time_offset
+        end_time = int(end_time)+1 # ceil the end time
+
+        #print(start_time,end_time)
+
+        if os.path.isfile(path):
+            # Get audio file infos
+            with sf.SoundFile(path) as f:
+                samplerate = f.samplerate
+                n_channels = f.channels
+
+            start_ix = int(start_time * samplerate)
+            end_ix = int(end_time * samplerate)
+            if end_ix > f.frames: end_ix=f.frames
+
+            #print(start_ix,end_ix,f.frames)
+
+            filename_new = filename+'_c'+str(channel_ix)
+            path_new = audio_root_dst_dir + "/" + filename_new + ".wav"
+
+            data, samplerate = sf.read(
+                path, start=start_ix, stop=end_ix, always_2d=True
+            )
+            if write_audio_files:
+                sf.write(path_new, data[:, channel_ix], samplerate)
+
+            #data, _ = librosa.load(path,sr=f.samplerate)
+
+            #print(filename+'  done')
+
+        else:
+            print("Missing", path)
 
 
-process_ARSU_segments()
+    #excel_path = audio_root_dst_dir + "test01.xlsx"
+    #df_new.to_excel(excel_path, index=False, engine="openpyxl")
+
+#process_ARSU_audiofiles('Scolopax_rusticola_Devise_ARSU_2022_v3')
 
 
 # Crex_crex_Unteres_Odertal_2017
