@@ -33,10 +33,12 @@ def read_and_process_flac_files(path):
     #sf.write(path_new, audio_data[:,channel_ix], samplerate, subtype)
 
 src_dir = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2021/'
-path = src_dir + 'Devise03_2021-05-31T21-24-55.flac'
+#path = src_dir + 'Devise03_2021-05-31T21-24-55.flac'
 #path = src_dir + 'Devise04_2021-05-21T22-01-03_VP4_2_2.flac'
 path = src_dir + 'Devise07_2021-06-17T22-44-13.flac'
 #path = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2022/Devise03_2022-06-02T22-02-00.flac'
+path = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2022/Devise10_2022-05-25T20-58-22.flac'
+
 read_and_process_flac_files(path)
 
 def parse_date_in_filename(path):
