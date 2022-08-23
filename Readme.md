@@ -52,7 +52,7 @@ conda install -c conda-forge librosa
 
 # common import csv structure
 
-- filename
+- filename,
 - start_time,
 - end_time,
 - start_frequency,
