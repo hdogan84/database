@@ -28,7 +28,7 @@ def create_postfix_str(start_time, end_time, style="ms", include_end_time=True):
         + "ms"
     )
 
-    postfix_str = "_S" + str(int(1000 * start_time)).zfill(7) + "ms"
+    postfix_str = "_s" + str(int(1000 * round(start_time,3))).zfill(8) + "ms"
 
     # Olaf style Shhmmss.ssEhhmmss.ss
 
@@ -365,13 +365,13 @@ def process_ARSU_2021():
         df_list["start_time"][ix] = float(df_list["start_time"][ix])
         df_list["end_freq"][ix] = float(df_list["end_freq"][ix])
 
-    df_list["vocalization_type"] = df_list["vocalization_type"].replace(["g"], "gr")
-    df_list["vocalization_type"] = df_list["vocalization_type"].replace(["s"], "sq")
+    df_list["vocalization_type"] = df_list["vocalization_type"].replace(["g"], "grunt")
+    df_list["vocalization_type"] = df_list["vocalization_type"].replace(["s"], "squeak")
     df_list["start_freq"] = df_list["start_freq"].replace([-1], 0)
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
     df_list["location_name"] = "Gellener Torfmöörte"
-    df_list["collection_name"] = "devise_test"
+    df_list["collection_name"] = "devise"
 
     df_list = df_list.rename(
         columns={
@@ -380,7 +380,7 @@ def process_ARSU_2021():
             "end_freq": "end_frequency",
         }
     )
-    df_list = df_list.drop(columns=["comment"])
+    #df_list = df_list.drop(columns=["comment"])
     df_list = df_list.reindex(columns=key_names_final)
     df_list = df_list.sort_values(["filename", "start_time"])
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx"
@@ -393,9 +393,11 @@ def process_ARSU_segments():
 
     # Collect annotations from excel files
     xlsx_files = [
-        #"Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
+        #"Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx",
         "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
     ]
+    # output should be consistent with the above input file
+    outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
 
     df_list= []
     for file in xlsx_files:
@@ -456,7 +458,7 @@ def process_ARSU_segments():
     df_merged_list["end_time"].append(end_time)
 
     df_merged = pd.DataFrame.from_dict(df_merged_list)
-    # print(df_merged)
+    #print(df_merged)
 
     # Rename files according to annotation interval
     for ix, row in df_merged.iterrows():
@@ -464,7 +466,7 @@ def process_ARSU_segments():
             row["start_time"], row["end_time"]
         )
         df_merged.at[ix, "filename_new"] = filename_new
-    # print(df_merged)
+    #print(df_merged)
 
     # Create df with annotation times relative to cuttet parts
     df_new = df.copy()
@@ -499,19 +501,37 @@ def process_ARSU_segments():
         df_new.at[ix, "start_time"] = start_time_new
         df_new.at[ix, "end_time"] = end_time_new
 
-    #print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
-    outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
-    df_new.to_excel(outpul_excel_file, index=False)
+    print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
 
-process_ARSU_segments()
+    # create a new df for audio segment extraction that starts a few seconds early
+    df_new2 = df_new.copy()
+    time_offset=4.0
 
-def process_ARSU_audiofiles(id):
+    for ix, row in df_new.iterrows():
+        new_time =float(row["filename"][-10:-2])-time_offset*1000
+        if new_time < 0.0:
+            # print("Error: Start time will take negative value ", row["filename"])
+            continue
+            
+        filename_new = row["filename"][:-10]+str(int(new_time)).zfill(8)+"ms"
+        start_time_new = row["start_time"]+time_offset
+        end_time_new = row["end_time"]+time_offset
+        # print(start_time.dtype)
+
+        df_new2.at[ix, "filename"] = filename_new
+        df_new2.at[ix, "start_time"] = start_time_new
+        df_new2.at[ix, "end_time"] = end_time_new
+
+
+    df_new2.to_excel(outpul_excel_file, index=False)
+
+# process_ARSU_segments()
+
+def process_ARSU_audiofiles(id, audio_sub_dir):
 
     write_audio_files = True  # True False
 
-    audio_root_src_dir = (
-        ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022/"
-    )
+    audio_root_src_dir = ARSU_dir + audio_sub_dir
     audio_root_dst_dir = ARSU_dir + "_Segments/"
 
     # Read excel file
@@ -529,29 +549,22 @@ def process_ARSU_audiofiles(id):
     #print(filenames)
     print("n_filenames", n_filenames)
 
-    df_new=df.copy()
 
     for filename in filenames:
 
         df_sub=df[df["filename"]==filename]
-        print(df_sub[["filename","start_time","end_time"]])
+        # print(df_sub[["filename","start_time","end_time"]])
 
-        path = audio_root_src_dir + "/" + filename[:-11] + ".flac"
+        path = audio_root_src_dir + "/" + filename[:-12] + ".flac"
 
-        start_time = min(df_sub["start_time"])
-        end_time = max(df_sub["end_time"])
+        start_time = float(filename[-10:-2])/1000.0 # convert ms to sec
+        end_time = start_time + max(df_sub["end_time"])
+        end_time = int(end_time) + 1 # ceil the end time 
+
         channel_ix = 0 #df_sub["channel_ix"]
-        #print(start_time,end_time)
-
-        # convert ms to sec
-        time_offset=float(filename[-9:-2])/1000.0
-        #print(time_offset)
-
-        start_time+=time_offset
-        end_time+=time_offset
-        end_time = int(end_time)+1 # ceil the end time
-
-        #print(start_time,end_time)
+        
+        # print(path)
+        # print(start_time,end_time)
 
         if os.path.isfile(path):
             # Get audio file infos
@@ -575,17 +588,13 @@ def process_ARSU_audiofiles(id):
                 sf.write(path_new, data[:, channel_ix], samplerate)
 
             #data, _ = librosa.load(path,sr=f.samplerate)
-
             #print(filename+'  done')
 
         else:
             print("Missing", path)
 
-
-    #excel_path = audio_root_dst_dir + "test01.xlsx"
-    #df_new.to_excel(excel_path, index=False, engine="openpyxl")
-
-#process_ARSU_audiofiles('Scolopax_rusticola_Devise_ARSU_2022_v3')
+# input form: xlsx file, audio_sub_dir
+process_ARSU_audiofiles('Scolopax_rusticola_Devise_ARSU_2022_v3',"Scolopax_rusticola_Devise_ARSU_2022/")
 
 
 # Crex_crex_Unteres_Odertal_2017
