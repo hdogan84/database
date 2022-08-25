@@ -296,10 +296,10 @@ def process_ARSU_2022():
     df_list = df_list.reindex(columns=key_names_final)
 
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx"
-    df_list.to_excel(outpul_excel_file, index=False)
+    #df_list.to_excel(outpul_excel_file, index=False)
 
 
-process_ARSU_2022()
+#process_ARSU_2022()
 
 
 def process_ARSU_2021():
@@ -394,7 +394,7 @@ def process_ARSU_segments():
     # Collect annotations from excel files
     xlsx_files = [
         #"Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
-        "Scolopax_rusticola_Devise_ARSU_2022_part2_v1.xlsx",
+        "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
     ]
 
     df_list= []
@@ -429,9 +429,9 @@ def process_ARSU_segments():
     filename = df.filename.values[0]
     start_time = df.start_time.values[0]
     end_time = df.end_time.values[0]
-    print(filename, start_time, end_time)
+    # print(filename, start_time, end_time)
 
-    max_time_without_annotation = 4  # 4
+    max_time_without_annotation = 5  # 4
 
     for ix, row in df.iterrows():
 
@@ -468,7 +468,8 @@ def process_ARSU_segments():
 
     # Create df with annotation times relative to cuttet parts
     df_new = df.copy()
-    print(df_new)
+    #print(df_new)
+
     for ix, row in df.iterrows():
         filename = row["filename"]
         channel_ix = row["channel_ix"]
@@ -500,9 +501,9 @@ def process_ARSU_segments():
 
     #print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
-    #df_new.to_excel(outpul_excel_file, index=False)
+    df_new.to_excel(outpul_excel_file, index=False)
 
-#process_ARSU_segments()
+process_ARSU_segments()
 
 def process_ARSU_audiofiles(id):
 
