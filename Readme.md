@@ -54,7 +54,7 @@ conda install -c conda-forge librosa
 
 - start_time,
 - end_time,
-- start_frequency,
+- start_frequency,  
 - end_frequency,
 - channel_ix,
 - individual_id,
