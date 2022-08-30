@@ -4,7 +4,6 @@
 import os
 import pandas as pd
 import soundfile as sf
-import librosa
 
 root_dir = "/mnt/z/Projekte/DeViSe/"
 metadata_dir = root_dir + "Annotationen/"
@@ -28,7 +27,7 @@ def create_postfix_str(start_time, end_time, style="ms", include_end_time=True):
         + "ms"
     )
 
-    postfix_str = "_s" + str(int(1000 * round(start_time,3))).zfill(8) + "ms"
+    postfix_str = "_s" + str(int(1000 * round(start_time, 3))).zfill(8) + "ms"
 
     # Olaf style Shhmmss.ssEhhmmss.ss
 
@@ -258,7 +257,7 @@ def process_ARSU_2022():
             if file.endswith(".txt"):
                 path = os.path.join(root, file)
                 df = read_audacity_label_file(path, ignore_freq_range=False)
-                #print(path)
+                # print(path)
                 df = process_audacity_label_data(df)
                 df = df.rename(columns={"call_type": "vocalization_type"})
                 df["filename"] = file[:-15]
@@ -268,7 +267,7 @@ def process_ARSU_2022():
 
     # some numerical entries are somehow in str format. There is prob. a better way of dealing with this somewhere
     # else in the code
-    
+
     for ix in range(len(df_list)):
         df_list["start_time"][ix] = float(df_list["start_time"][ix])
         df_list["end_freq"][ix] = float(df_list["end_freq"][ix])
@@ -279,7 +278,7 @@ def process_ARSU_2022():
 
     df_list["start_freq"] = df_list["start_freq"].replace([-1], 0)
     df_list["vocalization_type"] = df_list["vocalization_type"].replace("gr", "grunt")
-    df_list["vocalization_type"] = df_list["vocalization_type"].replace("sq","squeak")
+    df_list["vocalization_type"] = df_list["vocalization_type"].replace("sq", "squeak")
     df_list["annotator_name"] = "Steinkamp, Tim"
     df_list["recordist_name"] = "Steinkamp, Tim"
     df_list["location_name"] = "Gellener Torfmöörte"
@@ -291,15 +290,15 @@ def process_ARSU_2022():
             "end_freq": "end_frequency",
         }
     )
-    #df_list = df_list.drop(columns=["quality", "has_background", "comment"])
+    # df_list = df_list.drop(columns=["quality", "has_background", "comment"])
     df_list = df_list.sort_values(["filename", "start_time"])
     df_list = df_list.reindex(columns=key_names_final)
 
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx"
-    #df_list.to_excel(outpul_excel_file, index=False)
+    # df_list.to_excel(outpul_excel_file, index=False)
 
 
-#process_ARSU_2022()
+# process_ARSU_2022()
 
 
 def process_ARSU_2021():
@@ -380,26 +379,27 @@ def process_ARSU_2021():
             "end_freq": "end_frequency",
         }
     )
-    #df_list = df_list.drop(columns=["comment"])
+    # df_list = df_list.drop(columns=["comment"])
     df_list = df_list.reindex(columns=key_names_final)
     df_list = df_list.sort_values(["filename", "start_time"])
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx"
     df_list.to_excel(outpul_excel_file, index=False)
 
 
-#process_ARSU_2021()
+# process_ARSU_2021()
+
 
 def process_ARSU_segments():
 
     # Collect annotations from excel files
     xlsx_files = [
-        #"Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx",
+        # "Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx",
         "Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
     ]
     # output should be consistent with the above input file
     outpul_excel_file = ARSU_dir + "Scolopax_rusticola_Devise_ARSU_2022_v3.xlsx"
 
-    df_list= []
+    df_list = []
     for file in xlsx_files:
         path = ARSU_dir + file
 
@@ -407,26 +407,26 @@ def process_ARSU_segments():
             print("Error: File not found", path)
 
         df = pd.read_excel(path, engine="openpyxl")
-        #print(df)
-        #return
+        # print(df)
+        # return
         df_list.append(df)
-        print('n_rows', len(df))
-        
+        print("n_rows", len(df))
+
     df = pd.concat(df_list).reset_index(drop=True)
 
     # Get unique audio files
     files = list(df["filename"].unique())
     n_files = len(files)
     # print(files)
-    print("n_files", n_files)    
+    print("n_files", n_files)
 
     # Create merged table
     df_merged_list = []
 
     df_merged_list = {}
-    df_merged_list['filename'] = []
-    df_merged_list['start_time'] = []
-    df_merged_list['end_time'] = []
+    df_merged_list["filename"] = []
+    df_merged_list["start_time"] = []
+    df_merged_list["end_time"] = []
 
     filename = df.filename.values[0]
     start_time = df.start_time.values[0]
@@ -458,7 +458,7 @@ def process_ARSU_segments():
     df_merged_list["end_time"].append(end_time)
 
     df_merged = pd.DataFrame.from_dict(df_merged_list)
-    #print(df_merged)
+    # print(df_merged)
 
     # Rename files according to annotation interval
     for ix, row in df_merged.iterrows():
@@ -466,11 +466,11 @@ def process_ARSU_segments():
             row["start_time"], row["end_time"]
         )
         df_merged.at[ix, "filename_new"] = filename_new
-    #print(df_merged)
+    # print(df_merged)
 
     # Create df with annotation times relative to cuttet parts
     df_new = df.copy()
-    #print(df_new)
+    # print(df_new)
 
     for ix, row in df.iterrows():
         filename = row["filename"]
@@ -505,27 +505,28 @@ def process_ARSU_segments():
 
     # create a new df for audio segment extraction that starts a few seconds early
     df_new2 = df_new.copy()
-    time_offset=4.0
+    time_offset = 4.0
 
     for ix, row in df_new.iterrows():
-        new_time =float(row["filename"][-10:-2])-time_offset*1000
+        new_time = float(row["filename"][-10:-2]) - time_offset * 1000
         if new_time < 0.0:
             # print("Error: Start time will take negative value ", row["filename"])
             continue
-            
-        filename_new = row["filename"][:-10]+str(int(new_time)).zfill(8)+"ms"
-        start_time_new = row["start_time"]+time_offset
-        end_time_new = row["end_time"]+time_offset
+
+        filename_new = row["filename"][:-10] + str(int(new_time)).zfill(8) + "ms"
+        start_time_new = row["start_time"] + time_offset
+        end_time_new = row["end_time"] + time_offset
         # print(start_time.dtype)
 
         df_new2.at[ix, "filename"] = filename_new
         df_new2.at[ix, "start_time"] = start_time_new
         df_new2.at[ix, "end_time"] = end_time_new
 
-
     df_new2.to_excel(outpul_excel_file, index=False)
 
+
 # process_ARSU_segments()
+
 
 def process_ARSU_audiofiles(id, audio_sub_dir):
 
@@ -541,28 +542,27 @@ def process_ARSU_audiofiles(id, audio_sub_dir):
         print("Error: File not found", path)
 
     df = pd.read_excel(path, engine="openpyxl")
-    #print(df)
+    # print(df)
     print("n_rows", len(df))
 
     filenames = df["filename"].unique()
     n_filenames = len(filenames)
-    #print(filenames)
+    # print(filenames)
     print("n_filenames", n_filenames)
-
 
     for filename in filenames:
 
-        df_sub=df[df["filename"]==filename]
+        df_sub = df[df["filename"] == filename]
         # print(df_sub[["filename","start_time","end_time"]])
 
         path = audio_root_src_dir + "/" + filename[:-12] + ".flac"
 
-        start_time = float(filename[-10:-2])/1000.0 # convert ms to sec
+        start_time = float(filename[-10:-2]) / 1000.0  # convert ms to sec
         end_time = start_time + max(df_sub["end_time"])
-        end_time = int(end_time) + 1 # ceil the end time 
+        end_time = int(end_time) + 1  # ceil the end time
 
-        channel_ix = 0 #df_sub["channel_ix"]
-        
+        channel_ix = 0  # df_sub["channel_ix"]
+
         # print(path)
         # print(start_time,end_time)
 
@@ -574,11 +574,12 @@ def process_ARSU_audiofiles(id, audio_sub_dir):
 
             start_ix = int(start_time * samplerate)
             end_ix = int(end_time * samplerate)
-            if end_ix > f.frames: end_ix=f.frames
+            if end_ix > f.frames:
+                end_ix = f.frames
 
-            #print(start_ix,end_ix,f.frames)
+            # print(start_ix,end_ix,f.frames)
 
-            filename_new = filename+'_c'+str(channel_ix)
+            filename_new = filename + "_c" + str(channel_ix)
             path_new = audio_root_dst_dir + "/" + filename_new + ".wav"
 
             data, samplerate = sf.read(
@@ -587,247 +588,18 @@ def process_ARSU_audiofiles(id, audio_sub_dir):
             if write_audio_files:
                 sf.write(path_new, data[:, channel_ix], samplerate)
 
-            #data, _ = librosa.load(path,sr=f.samplerate)
-            #print(filename+'  done')
+            # data, _ = librosa.load(path,sr=f.samplerate)
+            # print(filename+'  done')
 
         else:
             print("Missing", path)
+
 
 # input form: xlsx file, audio_sub_dir
-process_ARSU_audiofiles('Scolopax_rusticola_Devise_ARSU_2022_v3',"Scolopax_rusticola_Devise_ARSU_2022/")
+process_ARSU_audiofiles(
+    "Scolopax_rusticola_Devise_ARSU_2022_v3", "Scolopax_rusticola_Devise_ARSU_2022/"
+)
 
-
-# Crex_crex_Unteres_Odertal_2017
-def process_collection(id):
-
-    write_audio_files = False  # True False
-
-    audio_root_src_dir = (
-        root_dir + "Crex_crex_annotated/Crex_crex_Unteres_Odertal_2017_annotated/"
-    )
-    audio_root_dst_dir = root_dir + "Annotationen/_Segments/"
-
-    # Read excel file
-    path = metadata_dir + id + ".xlsx"
-
-    if not os.path.isfile(path):
-        print("Error: File not found", path)
-
-    df = pd.read_excel(path, engine="openpyxl")
-    # print(df)
-    print("n_rows", len(df))
-
-    filenames = df["filename"].unique()
-    n_filenames = len(filenames)
-    # print(filenames)
-    print("n_filenames", n_filenames)
-
-    # df_new stuff
-    df_new_dict = {}
-    keys = [
-        "filename",
-        "class",
-        "collection_id",
-        "channel_ix",
-        "start_time",
-        "end_time",
-        "sub_dir",
-    ]
-    for key in keys:
-        df_new_dict[key] = []
-
-    for ix, row in df.iterrows():
-
-        # if ix > 10: break
-
-        # print(ix, row['filename'])
-
-        filename = row["filename"]
-        start_time = row["start_time"]
-        end_time = row["end_time"]
-        channel_ix = row["channel_ix"]
-
-        path = audio_root_src_dir + row["sub_dir"] + "/" + filename + ".wav"
-
-        if os.path.isfile(path):
-            # Get audio file infos
-            with sf.SoundFile(path) as f:
-                samplerate = f.samplerate
-                n_channels = f.channels
-
-            start_ix = int(start_time * samplerate)
-            end_ix = int(end_time * samplerate)
-            data, samplerate = sf.read(
-                path, start=start_ix, stop=end_ix, always_2d=True
-            )
-
-            filename_new = (
-                filename
-                + "_"
-                + str(int(1000 * start_time))
-                + "To"
-                + str(int(1000 * end_time))
-                + "ms"
-            )
-
-            if row["class"] == "Crex crex":
-                class_new = "Crex_crex"
-            if row["class"] == "BG":
-                class_new = "Crex_crex_BG"
-
-            path_new = audio_root_dst_dir + class_new + "/" + filename_new + ".wav"
-
-            if write_audio_files:
-                sf.write(path_new, data[:, channel_ix], samplerate)
-
-            df_new_dict["filename"].append(filename_new + ".wav")
-            df_new_dict["class"].append(class_new)
-            df_new_dict["collection_id"].append(row["collection_id"])
-            df_new_dict["channel_ix"].append(None)
-            df_new_dict["start_time"].append(None)
-            df_new_dict["end_time"].append(None)
-            df_new_dict["sub_dir"].append(None)
-
-            print(filename, data.shape, path_new)
-
-        else:
-            print("Missing", path)
-
-    df_new = pd.DataFrame.from_dict(df_new_dict)
-    print(df_new)
-
-    excel_path = audio_root_dst_dir + "test01.xlsx"
-    df_new.to_excel(excel_path, index=False, engine="openpyxl")
-
-
-# process_collection('Crex_crex_Unteres_Odertal_2017')
-
-# fva_test()
-
-
-def process_hakan_schoenow():
-
-    # Collect annotations from excel files
-    xlsx_files = [
-        "Scolopax_rusticola_MfN_Schoenow_2007.xlsx",
-        "Scolopax_rusticola_MfN_Schoenow_2008.xlsx",
-        "Scolopax_rusticola_MfN_Schoenow_2009.xlsx",
-        "Scolopax_rusticola_MfN_Peenemuende_2014.xlsx",
-    ]
-
-    df_list = []
-    for file in xlsx_files:
-        path = metadata_dir + file
-
-        if not os.path.isfile(path):
-            print("Error: File not found", path)
-
-        df = pd.read_excel(path, engine="openpyxl")
-        # print(df)
-        # print('n_rows', len(df))
-        df_list.append(df)
-
-    # Concat and sort
-    df = pd.concat(df_list).reset_index(drop=True)
-    df = df.sort_values(["filename", "start_time"]).reset_index(drop=True)
-    print(df)
-
-    # Get unique audio files
-    files = list(df["filename"].unique())
-    n_files = len(files)
-    # print(files)
-    print("n_files", n_files)
-
-    # Sanity checks (end_time - start_time = 5s)
-    for ix, row in df.iterrows():
-        if row["end_time"] - row["start_time"] != 5:
-            print("Warning end_time-start_time != 5", ix)
-
-    # Create merged table
-
-    df_merged_list = []
-
-    df_merged_list = {}
-    df_merged_list["filename"] = []
-    df_merged_list["start_time"] = []
-    df_merged_list["end_time"] = []
-
-    filename = df.filename.values[0]
-    start_time = df.start_time.values[0]
-    end_time = df.end_time.values[0]
-    # print(filename, start_time, end_time)
-
-    max_time_without_annotation = 2  # 4
-
-    for ix, row in df.iterrows():
-
-        if (
-            row["filename"] != filename
-            or row["start_time"] - end_time > max_time_without_annotation
-        ):
-            # Add current values to df_merged_list
-            df_merged_list["filename"].append(filename)
-            df_merged_list["start_time"].append(start_time)
-            df_merged_list["end_time"].append(end_time)
-            # Init new
-            filename = row["filename"]
-            start_time = row["start_time"]
-            end_time = row["end_time"]
-        else:
-            end_time = row["end_time"]
-
-    # Add last row
-    df_merged_list["filename"].append(filename)
-    df_merged_list["start_time"].append(start_time)
-    df_merged_list["end_time"].append(end_time)
-
-    df_merged = pd.DataFrame.from_dict(df_merged_list)
-    # print(df_merged)
-
-    # Rename files according to annotation interval
-    for ix, row in df_merged.iterrows():
-        filename_new = row["filename"] + create_postfix_str(
-            row["start_time"], row["end_time"]
-        )
-        df_merged.at[ix, "filename_new"] = filename_new
-    # print(df_merged)
-
-    # Create df with annotation times relative to cuttet parts
-    df_new = df.copy()
-    print(df_new)
-    for ix, row in df.iterrows():
-        filename = row["filename"]
-        channel_ix = row["channel_ix"]
-        start_time = row["start_time"]
-        end_time = row["end_time"]
-        # print(start_time.dtype)
-
-        # Find corresponding row in df_merged
-        # df_merged_row = df_merged[df_merged.filename == filename & df_merged.start_time <= start_time & df_merged.end_time >= end_time]
-        # df_merged_row = df_merged[df_merged.filename == filename & int(df_merged.start_time) <= start_time]
-
-        df_merged_row = df_merged.loc[
-            (df_merged["filename"] == filename)
-            & (df_merged["start_time"] <= start_time)
-            & (df_merged["end_time"] >= end_time)
-        ].reset_index(drop=True)
-
-        assert len(df_merged_row.index) == 1
-
-        filename_new = df_merged_row.at[0, "filename_new"]
-        start_time_new = start_time - df_merged_row.at[0, "start_time"]
-        end_time_new = end_time - df_merged_row.at[0, "start_time"]
-
-        # print(filename, start_time, end_time, channel_ix,  filename_new, df_merged_row.at[0, 'start_time'], df_merged_row.at[0, 'end_time'], start_time_new, end_time_new)
-
-        df_new.at[ix, "filename"] = filename_new
-        df_new.at[ix, "start_time"] = start_time_new
-        df_new.at[ix, "end_time"] = end_time_new
-
-    print(df_new[["filename", "channel_ix", "start_time", "end_time"]])
-
-
-# process_hakan_schoenow()
 
 print("Done.")
 
