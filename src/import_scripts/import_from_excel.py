@@ -205,7 +205,7 @@ def import_from_excel(path, dry_run=False):
                 ('md5sum', audio_file_parameters.md5sum),
                 
                 ('date', val['record_date']),
-                ('start', val['record_time']),
+                ('time', val['record_time']),
                 ('end', None),
                 ('license', val['record_license']),
                 ('remarks',val['record_remarks']),
@@ -216,7 +216,7 @@ def import_from_excel(path, dry_run=False):
                 ('location_id', location_id),
             ]
 
-            # Get record_id or create it and insert recording
+            # Get record_id or create it and insert recording data
             (record_id, created) = get_entry_id_or_create_it(
                 db_cursor,
                 'record',
@@ -226,7 +226,7 @@ def import_from_excel(path, dry_run=False):
             )
 
 
-            # Get annotator_id or create it and insert person
+            # Get annotator_id or create it and insert person data
             annotator_id = None
             if val['annotator_name']:
                 annotator_entry = [('name', val['annotator_name'])]
@@ -243,10 +243,17 @@ def import_from_excel(path, dry_run=False):
             #print('species_id', species_id, 'species_latin_name', val['species_latin_name'])
 
             if not species_id:
-                print('Species not found in db', val['species_latin_name'])
+                print('Species name not found in db', val['species_latin_name'])
 
             # Get noise_id or create it (insert currently not allowed)
             noise_id = None
+            if val['noise_name']:
+                noise_entry = [('name', val['name'])]
+                #species_id = get_entry_id_or_create_it(db_cursor, 'noise', noise_entry, noise_entry)
+                noise_id = get_id_of_entry_in_table(db_cursor, 'noise', noise_entry)
+
+            if not species_id and not noise_id:
+                print('Noise name not found in db', val['noise_name'])
 
             # if created:
             #     # move file to destination
@@ -270,9 +277,16 @@ def import_from_excel(path, dry_run=False):
             if not val['start_time']: val['start_time'] = 0.0
             if not val['end_time']: val['end_time'] = audio_file_parameters.duration
 
+            # To check if already in DB --> convert float to decimal with 6 digits (see db format)
+            val['start_time'] = '%.6f' % val['start_time']
+            val['end_time'] = '%.6f' % val['end_time']
+            val['start_frequency'] = '%.6f' % val['start_frequency']
+            val['end_frequency'] = '%.6f' % val['end_frequency']
+
 
             annotation = [
                 ('record_id', record_id),
+
                 ('start_time', val['start_time']),
                 ('end_time', val['end_time']),
                 ('start_frequency', val['start_frequency']),
@@ -286,7 +300,7 @@ def import_from_excel(path, dry_run=False):
                 ('quality_tag', val['quality_tag']),
 
                 ('id_level', val['id_level']),
-                ('background', 0),
+                ('xeno_canto_background', 0),
                 
                 ('annotator_id', annotator_id),
             ]
@@ -294,25 +308,33 @@ def import_from_excel(path, dry_run=False):
             print(annotation)
 
 
-            annotation_table = None
-
-            if species_id:
-                annotation_table = 'annotation_of_species'
-                annotation.append(('species_id', species_id))
             
-            if noise_id:
-                annotation_table = 'annotation_of_noise'
-                annotation.append(('noise_id', noise_id))
 
-            if annotation_table:
-                get_entry_id_or_create_it(
-                    db_cursor,
-                    annotation_table,
-                    annotation,
-                    annotation,
-                )
+            if species_id and noise_id:
+                print('Error, only species or noise accepted but not both!')
             else:
-                print('Warning no annotation tabel match')
+
+                # Insert annotation data
+                annotation_table = None
+
+                if species_id:
+                    annotation_table = 'annotation_of_species'
+                    annotation.append(('species_id', species_id))
+                
+                if noise_id:
+                    annotation_table = 'annotation_of_noise'
+                    annotation.append(('noise_id', noise_id))  
+
+                if annotation_table:
+                    annotation_id = get_entry_id_or_create_it(
+                        db_cursor,
+                        annotation_table,
+                        annotation,
+                        annotation,
+                    )
+                    print('annotation_id', annotation_id)
+                else:
+                    print('Warning no annotation tabel match')
 
 
 
@@ -321,8 +343,6 @@ def import_from_excel(path, dry_run=False):
 
             print(ix, row['filename'])
             #print(ix, row['filename'], record_entry)
-
-    
 
 
 
@@ -337,8 +357,7 @@ parser.add_argument(
     default=EXCEL_PATH,
 )
 
-
 args = parser.parse_args()
+
 if __name__ == '__main__':
-    #import_dcase_noise(args.data_path, args.config, args.csv_path)
     import_from_excel(args.path)
