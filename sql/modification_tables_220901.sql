@@ -7,7 +7,9 @@ AFTER `annotation_interval_id`,
   ADD COLUMN `remarks` TEXT NULL DEFAULT NULL
 AFTER `background_level`,
   CHANGE COLUMN `channel` `channel_ix` INT NULL DEFAULT NULL,
-  CHANGE COLUMN `background` `xeno_canto_background` TINYINT(1) NULL DEFAULT '0';
+  CHANGE COLUMN `background` `xeno_canto_background` TINYINT(1) NULL DEFAULT '0',
+  ADD UNIQUE INDEX `filename_UNIQUE` (`filename` ASC) VISIBLE,
+  ADD UNIQUE INDEX `md5sum_UNIQUE` (`md5sum` ASC) VISIBLE;
 -- Changes to table annotation_of_noise
 ALTER TABLE `libro_animalis`.`annotation_of_noise`
 ADD COLUMN `background_level` TINYINT(1) NULL DEFAULT NULL
