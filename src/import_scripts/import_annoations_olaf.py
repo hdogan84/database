@@ -83,17 +83,8 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         else None,
                     ),
                     (
-                        "start",
+                        "time",
                         file_name_infos.record_datetime.time()
-                        if file_name_infos.record_datetime is not None
-                        else None,
-                    ),
-                    (
-                        "end",
-                        (
-                            file_name_infos.record_datetime
-                            + timedelta(seconds=ceil(file_parameters.duration))
-                        ).time()
                         if file_name_infos.record_datetime is not None
                         else None,
                     ),
@@ -184,7 +175,7 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("quality_tag", a.quality_tag),
                         ("id_level", a.id_level),
                         (
-                            "channel",
+                            "channel_ix",
                             a.best_channel if a.best_channel is not None else a.channel,
                         ),  # Here best channel is used as channel of annotation
                         ("start_time", a.start_time),
@@ -195,8 +186,8 @@ def import_data(data_path=None, config_file_path=None) -> List[str]:
                         ("annotation_interval_id", interval_id),
                     ]
 
-                    print(annoation_data)
-                    print("------")
+                    #print(annoation_data)
+                    #print("------")
                     get_entry_id_or_create_it(
                         db_cursor,
                         "annotation_of_species",
