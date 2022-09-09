@@ -17,6 +17,27 @@ AFTER `annotation_interval_id`,
   ADD COLUMN `remarks` TEXT NULL DEFAULT NULL
 AFTER `background_level`,
   CHANGE COLUMN `channel` `channel_ix` INT NULL DEFAULT NULL;
+-- Remove Hakan Inserts
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '160');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '161');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '162');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '163');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '164');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '165');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '170');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '171');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '172');
+DELETE FROM `libro_animalis`.`collection`
+WHERE (`id` = '173');
 /* ToDo's
  - drop end col in records table
  - reorder cols of annotation_of_species, annotation_of_noise

@@ -276,7 +276,6 @@ def process_Criewen_2022_05_15():
 
 def process_Crex_crex_Unteres_Odertal_2017():
 
-    # ToDo: df_new_dict in new format, save metadata like schoenow and maybe separate for Crex crex vs BG
 
     write_audio_files = False # True False
     write_metadata = True
@@ -327,7 +326,7 @@ def process_Crex_crex_Unteres_Odertal_2017():
         if row['class'] == 'BG':
             dst_sub_dir = 'Crex_crex_BG'
             df_new_dict['species_latin_name'].append(None)
-            df_new_dict['noise_name'].append('Crex crex BG')
+            df_new_dict['noise_name'].append('Crex crex absent')
 
         path = audio_root_src_dir + row['sub_dir'] + '/' + filename + '.wav'
 

@@ -18,9 +18,9 @@ from mysql.connector import connect, MySQLConnection
 ROOT_DIR = '/mnt/z/Projekte/DeViSe/'
 
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_MfN_Peenemuende+Schoenow_v04.xlsx'
-#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_2021_v05.xlsx'
-#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_2022_v05.xlsx'
-EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Unteres_Odertal_2017_v01.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_2021_v06.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_2022_v06.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Unteres_Odertal_2017_v02.xlsx'
 
 
 audio_root_dir = '/net/mfnstore-lin/export/tsa_transfer/TrainData/libro_animalis/temp/'
