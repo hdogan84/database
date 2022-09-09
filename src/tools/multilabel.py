@@ -42,7 +42,7 @@ class LabeGeneratorBaseClass:
 
     def __init__(self, annotations: List[list]):
         """
-        "latin_name","filename","start_time", "end_time","quality_tag","individual_id","group_id","quality_tag","channel",
+        "latin_name","filename","start_time", "end_time","quality_tag","individual_id","group_id","quality_tag","channel_ix",
         """
         self.annotations = annotations
 

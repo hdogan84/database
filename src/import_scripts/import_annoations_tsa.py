@@ -230,8 +230,8 @@ def do_collection_data_import(
 
         record_data = [
             ("date", row[0]),
-            ("start", time),
-            ("end", end,),
+            ("time", time),
+            #("end", end,),
             ("duration", row[2],),
             ("sample_rate", audio_file_parameters.sample_rate),
             ("bit_depth", audio_file_parameters.bit_depth),
@@ -285,7 +285,7 @@ def do_collection_data_import(
             ("vocalization_type", None),
             ("quality_tag", row[10]),
             ("id_level", 1),
-            ("channel", audio_file_parameters.channels),
+            ("channel_ix", audio_file_parameters.channels),
             ("start_time", 0),
             ("end_time", row[2]),
             ("start_frequency", None),

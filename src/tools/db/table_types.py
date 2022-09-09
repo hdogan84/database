@@ -62,8 +62,8 @@ RecordRowI = NamedTuple(
     "RecordRowI",
     [
         ("date", date),
-        ("start", time),
-        ("end", time),
+        ("time", time),
+        #("end", time),
         ("duration", float),
         ("sample_rate", int),
         ("bit_depth", int),
@@ -119,7 +119,7 @@ AnnotationI = NamedTuple(
         ("end_time", float),
         ("start_frequency", int),
         ("end_frequency", int),
-        ("channel", int),
+        ("channel_ix", int),
         ("annotator_id", int),
     ],
 )

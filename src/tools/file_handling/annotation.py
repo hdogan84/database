@@ -16,7 +16,7 @@ from decimal import Decimal, ROUND_HALF_EVEN
 # AnnotationRaven = NamedTuple(
 #     "AnnotationRaven",
 #     [
-#         ("channel: int),
+#         ("channel_ix: int),
 #         ("start_time", float),
 #         ("end_time", float),
 #         ("start_frequency", float),
