@@ -132,7 +132,7 @@ def import_noise(
                         ("end_time", audio_file_parameters.duration),
                         ("start_frequency", None),
                         ("end_frequency", None),
-                        ("channel", None),
+                        ("channel_ix", None),
                         ("annotator_id", None),
                     ]
                     # print(forground_annoation)

@@ -55,7 +55,7 @@ conda install -c conda-forge librosa
 - filename,
 - start_time,
 - end_time,
-- start_frequency,  
+- start_frequency,
 - end_frequency,
 - channel_ix,
 - individual_id,
@@ -64,9 +64,10 @@ conda install -c conda-forge librosa
 - quality_tag,
 - id_level,
 - background_level, #0 none; 1 little; 2 a lot;
-- xeno_canto_background,
-- species_latin_name,
+- xeno_canto_background, # Only for xeno_canto files if species is annotated as background species
+- species_latin_name, # if species_latin_name --> insert in annotation_of_species
 - noise_name, # if noise_name --> insert in annotation_of_noise
+- remarks,
 - annotator_name,
 - annotation_interval_start
 - annotation_interval_end

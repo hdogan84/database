@@ -180,7 +180,7 @@ def import_xeno_canto(
                     #     ("end_time", duration),
                     #     ("start_frequency", None),
                     #     ("end_frequency", None),
-                    #     ("channel", None),
+                    #     ("channel_ix", None),
                     #     # ("annotator_id", person_id),
                     # ]
                     # print(forground_annoation)
@@ -224,7 +224,7 @@ def import_xeno_canto(
                             ("end_time", duration),
                             ("start_frequency", None),
                             ("end_frequency", None),
-                            ("channel", None),
+                            ("channel_ix", None),
                             # ("annotator_id", person_id),
                         ]
                         get_entry_id_or_create_it(

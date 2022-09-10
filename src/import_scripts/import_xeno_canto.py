@@ -160,22 +160,22 @@ def import_xeno_canto(
                     record_entry = [
                         ("date", "-".join(dateParts)),
                         (
-                            "start",
+                            "time",
                             record_start
                             if record_start is None
                             else record_start.time(),
                         ),
-                        (
-                            "end",
-                            record_start
-                            if record_start is None
-                            else (
-                                record_start
-                                + timedelta(
-                                    seconds=ceil(audio_file_parameters.duration)
-                                )
-                            ).time(),
-                        ),
+                        # (
+                        #     "end",
+                        #     record_start
+                        #     if record_start is None
+                        #     else (
+                        #         record_start
+                        #         + timedelta(
+                        #             seconds=ceil(audio_file_parameters.duration)
+                        #         )
+                        #     ).time(),
+                        # ),
                         ("duration", audio_file_parameters.duration),
                         ("sample_rate", audio_file_parameters.sample_rate),
                         ("bit_depth", audio_file_parameters.bit_depth),
@@ -242,7 +242,7 @@ def import_xeno_canto(
                         ("end_time", audio_file_parameters.duration),
                         ("start_frequency", None),
                         ("end_frequency", None),
-                        ("channel", None),
+                        ("channel_ix", None),
                         ("annotator_id", person_id),
                     ]
                     # print(forground_annoation)
@@ -276,7 +276,7 @@ def import_xeno_canto(
                             ("end_time", audio_file_parameters.duration),
                             ("start_frequency", None),
                             ("end_frequency", None),
-                            ("channel", None),
+                            ("channel_ix", None),
                             ("annotator_id", person_id),
                         ]
                         get_entry_id_or_create_it(

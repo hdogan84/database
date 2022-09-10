@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import soundfile as sf
+import pandas as pd
 
 root_dir = '/mnt/z/Projekte/DeViSe/'
 
@@ -39,7 +40,7 @@ path = src_dir + 'Devise07_2021-06-17T22-44-13.flac'
 #path = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2022/Devise03_2022-06-02T22-02-00.flac'
 path = root_dir + 'Annotationen/ARSU_temp/Scolopax_rusticola_Devise_ARSU_2022/Devise10_2022-05-25T20-58-22.flac'
 
-read_and_process_flac_files(path)
+#read_and_process_flac_files(path)
 
 def parse_date_in_filename(path):
 
@@ -55,6 +56,22 @@ def parse_date_in_filename(path):
 
 #path = '/mnt/z/Projekte/AMMOD/AudioData/BRITZ01/BRITZ01_201903/BRITZ01_190313_104500.wav'
 path = '/mnt/z/Projekte/AMMOD/AudioData/BRITZ01/BRITZ01_202206/BRITZ01_20220601_000000.wav'
-parse_date_in_filename(path)
+#parse_date_in_filename(path)
+
+def replaceNegativValuesInDataframeCol():
+
+    df = pd.DataFrame({"A": [1, 2, -3, 4, -5, 6],
+                   "B": [3, -5, -6, 7, 3, -2],
+                   "C": [-4, 5, 6, -7, 5, 4],
+                   "D": [34, 5, 32, -3, -56, -54]})
+  
+    print(df)
+
+    
+    df.loc[df['A'] < 0, 'A'] = 0
+    print(df)
+
+replaceNegativValuesInDataframeCol()
+
 
 print('Done.')

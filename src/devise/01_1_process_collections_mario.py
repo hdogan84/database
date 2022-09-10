@@ -196,7 +196,7 @@ def read_raven_label_file(path):
 path = root_dir + 'Scolopax_rusticola_Recordings/Monitoring/Peenemuende_140525_327_4ch.Table.1.selections.txt'
 #read_raven_label_file(path)
 
-def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_dir=None):
+def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_dir=None, format=None):
 
     # ToDo Maybe: resample, remove dc-offset (hp filter), normalize, fade in/out
 
@@ -229,6 +229,9 @@ def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_di
         if channel_ix is not None:
             filename_new += '_c' + str(channel_ix)
 
+        if format:
+            ext = '.' + format
+        
         path_new = dst_dir + filename_new + ext
 
         if channel_ix is not None:
@@ -273,12 +276,16 @@ def process_Criewen_2022_05_15():
 
 def process_Crex_crex_Unteres_Odertal_2017():
 
-    # ToDo: df_new_dict in new format, save metadata like schoenow and maybe separate for Crex crex vs BG
 
-    write_audio_files = True # True False
+    write_audio_files = False # True False
+    write_metadata = True
 
     audio_root_src_dir = root_dir + 'Crex_crex_annotated/Crex_crex_Unteres_Odertal_2017_annotated/'
     audio_root_dst_dir = root_dir + 'Annotationen/_Segments/'
+
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Unteres_Odertal_2017_v02'
+
+    collection_name = 'devise'
     
     # Read excel file
     path = metadata_dir + 'Crex_crex_Unteres_Odertal_2017.xlsx'
@@ -297,7 +304,7 @@ def process_Crex_crex_Unteres_Odertal_2017():
 
     # df_new stuff
     df_new_dict = {}
-    keys = ['filename', 'class', 'collection_id', 'channel_ix', 'start_time', 'end_time', 'sub_dir']
+    keys = ['filename', 'species_latin_name', 'noise_name', 'record_date', 'record_filepath']
     for key in keys:
         df_new_dict[key] = []
 
@@ -313,40 +320,60 @@ def process_Crex_crex_Unteres_Odertal_2017():
         channel_ix = row['channel_ix']
 
         if row['class'] == 'Crex crex':
-            class_new = 'Crex_crex'
+            dst_sub_dir = 'Crex_crex'
+            df_new_dict['species_latin_name'].append(row['class'])
+            df_new_dict['noise_name'].append(None)
         if row['class'] == 'BG':
-            class_new = 'Crex_crex_BG'
+            dst_sub_dir = 'Crex_crex_BG'
+            df_new_dict['species_latin_name'].append(None)
+            df_new_dict['noise_name'].append('Crex crex absent')
 
         path = audio_root_src_dir + row['sub_dir'] + '/' + filename + '.wav'
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+            continue
         
-        if os.path.isfile(path):
             
-            if write_audio_files:
-                dst_dir = audio_root_dst_dir + class_new + '/'
-                write_part_of_audio_file(path, start_time, end_time, channel_ix=channel_ix, dst_dir=dst_dir)
+        dst_dir = audio_root_dst_dir + dst_sub_dir + '/'
+
+        if write_audio_files:    
+            write_part_of_audio_file(path, start_time, end_time, channel_ix=channel_ix, dst_dir=dst_dir)
 
 
-            filename_new = filename + create_postfix_str(start_time) + '_c' + str(channel_ix)
+        filename_new = filename + create_postfix_str(start_time) + '_c' + str(channel_ix)
 
-            df_new_dict['filename'].append(filename_new + '.wav')
-            df_new_dict['class'].append(class_new)
-            df_new_dict['collection_id'].append(row['collection_id'])
-            df_new_dict['channel_ix'].append(None)
-            df_new_dict['start_time'].append(None)
-            df_new_dict['end_time'].append(None)
-            df_new_dict['sub_dir'].append(None)
+        df_new_dict['filename'].append(filename_new)
+        
+        date_str = filename.split('_')[3]
+        date = date_str[:4] + '-' + date_str[4:6] + '-' + date_str[6:8]
+        df_new_dict['record_date'].append(date)
 
-            print(filename, filename_new)
+        filenamepath_new = dst_dir + filename_new + '.wav'
+        df_new_dict['record_filepath'].append(filenamepath_new)
 
 
-        else:
-            print('Missing', path)
+        print(filename, filename_new)
+
 
     df_new = pd.DataFrame.from_dict(df_new_dict)
+
+    # Add infos
+    df_new['id_level'] = 1
+    df_new['vocalization_type'] = 'song'
+    
+    df_new['recordist_name'] = 'Frommolt, Karl-Heinz'
+    df_new['annotator_name'] = 'Frommolt, Karl-Heinz'
+    df_new['location_name'] = 'Unteres Odertal'
+    df_new['collection_name'] = collection_name
+
     print(df_new)
 
-    excel_path = audio_root_dst_dir + 'test02.xlsx'
-    df_new.to_excel(excel_path, index=False, engine='openpyxl')  
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df_new.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+        df_new.to_csv(metadata_path_without_ext + '.csv', index=False)
+
 
 process_Crex_crex_Unteres_Odertal_2017()
 
@@ -376,11 +403,11 @@ def fva_test():
 def process_hakan_schoenow():
 
     write_audio_parts = False # True False
-    write_metadata = False
+    write_metadata = True
     
     src_dir = root_dir + 'Scolopax_rusticola_Recordings/Monitoring/'
     dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola/'
-    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_MfN_Peenemuende+Schoenow_v01'
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_MfN_Peenemuende+Schoenow_v04'
 
     # Collect annotations from excel files
     xlsx_files = [
@@ -426,50 +453,6 @@ def process_hakan_schoenow():
         if row['end_time'] - row['start_time'] != 5:
             print('Warning end_time-start_time != 5', ix)
 
-    
-    # Create merged table
-    df_merged_list = []
-
-    df_merged_list = {}
-    df_merged_list['filename'] = []
-    df_merged_list['start_time'] = []
-    df_merged_list['end_time'] = []
-    
-    filename = df.filename.values[0]
-    start_time = df.start_time.values[0]
-    end_time = df.end_time.values[0]
-    #print(filename, start_time, end_time)
-
-    max_time_without_annotation = 2 #4
-
-    for ix, row in df.iterrows():
-        
-        if row['filename'] != filename or row['start_time'] - end_time > max_time_without_annotation:
-            # Add current values to df_merged_list
-            df_merged_list['filename'].append(filename)
-            df_merged_list['start_time'].append(start_time)
-            df_merged_list['end_time'].append(end_time)
-            # Init new 
-            filename = row['filename']
-            start_time = row['start_time']
-            end_time = row['end_time']
-        else:
-            end_time = row['end_time']
-
-    # Add last row
-    df_merged_list['filename'].append(filename)
-    df_merged_list['start_time'].append(start_time)
-    df_merged_list['end_time'].append(end_time)
-
-    df_merged = pd.DataFrame.from_dict(df_merged_list)
-    #print(df_merged)
-
-    # Rename files according to annotation interval
-    for ix, row in df_merged.iterrows():
-        filename_new = row['filename'] + create_postfix_str(row['start_time'], row['end_time'])
-        df_merged.at[ix, 'filename_new'] = filename_new
-    
-    print(df_merged)
 
     df_hakan = df.copy()
 
@@ -496,8 +479,12 @@ def process_hakan_schoenow():
         # Reorder cols
         df = df[['filename', 'channel_ix', 'start_time', 'end_time', 'start_frequency', 'end_frequency', 'vocalization_type']]
         # Rename vocalization_type 1: sq, 2: gr (grunt, squeak)
-        df.loc[df['vocalization_type'] == 1, 'vocalization_type'] = 'sq'
-        df.loc[df['vocalization_type'] == 2, 'vocalization_type'] = 'gr'
+        df.loc[df['vocalization_type'] == 1, 'vocalization_type'] = 'squeak'
+        df.loc[df['vocalization_type'] == 2, 'vocalization_type'] = 'grunt'
+
+        # Drop duplicates (e.g. both views are annotated Waveform 1 & Spectrogram 1)
+        df = df.drop_duplicates().reset_index(drop=True)
+
         
         #print(df)
 
@@ -519,7 +506,7 @@ def process_hakan_schoenow():
         end_time = row['end_time']
         vocalization_type = row['vocalization_type']
 
-        if vocalization_type == 'sq':
+        if vocalization_type == 'squeak':
     
             df_matching = df_hakan.loc[
                 (df_hakan['filename'] == filename) &
@@ -567,11 +554,14 @@ def process_hakan_schoenow():
     print(df_annotations_org)
                 
     # Create df_dilation (add time interval to start/end time)
-    dilation_time = 4
+    dilation_time = 4.0
     df_dilation = df_annotations_org.copy()
     df_dilation['start_time'] = df_dilation['start_time'] - dilation_time
     df_dilation['end_time'] = df_dilation['end_time'] + dilation_time
     print(df_dilation)
+
+    # Check if start_time >= 0 & end_time <= duration ?
+    df_dilation.loc[df_dilation['start_time'] < 0.0, 'start_time'] = 0.0
 
     
 
@@ -734,5 +724,188 @@ def process_hakan_schoenow():
     print(df)
 
 #process_hakan_schoenow()
+
+def postprocess_hakan_arsu(year):
+
+    write_audio_parts = False # True False
+    write_metadata = True
+    
+    src_dir = root_dir + 'Annotationen/ARSU_temp/'
+    #dst_dir = root_dir + 'Annotationen/_Segments/temp/'
+    dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola/'
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_' + str(year) + '_v06'
+
+    # Collect annotations from excel files
+    xlsx_files = [
+        #"Scolopax_rusticola_Devise_ARSU_2021_v1.xlsx",
+        #"Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx",
+        'Scolopax_rusticola_Devise_ARSU_' + str(year) + '_v1.xlsx'
+    ]
+    
+    df_list = []
+    for file in xlsx_files:
+        path = src_dir + file
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+
+        df = pd.read_excel(path, keep_default_na=False, engine="openpyxl")
+        df_list.append(df)
+        print("n_rows", len(df))
+
+    df = pd.concat(df_list).reset_index(drop=True)
+    #print(df)
+
+    # Get unique audio files
+    files = list(df["filename"].unique())
+    n_files = len(files)
+    # print(files)
+    print("n_files", n_files)
+
+
+
+    # Create df_dilation (add time interval to start/end time)
+    dilation_time = 4.0
+    df_dilation = df.copy()
+    df_dilation['start_time'] = df_dilation['start_time'] - dilation_time
+    df_dilation['end_time'] = df_dilation['end_time'] + dilation_time
+    #print(df_dilation)
+
+    # Check/correkt if start_time < 0 or end_time > duration
+    #df_dilation.loc[df_dilation['start_time'] < 0.0, 'start_time'] = 0.0
+    for ix, row in df_dilation.iterrows():
+        if row['start_time'] < 0.0:
+            df_dilation.at[ix, 'start_time'] = 0.0
+            print(row['filename'], 'start_time < 0.0,', row['start_time'], '-->', df_dilation.at[ix, 'start_time'])
+        # Get duration
+        path = src_dir + 'Scolopax_rusticola_Devise_ARSU_' + str(year) + '/' + row['filename'] + '.flac'
+        with sf.SoundFile(path) as f:
+            duration = f.frames/f.samplerate
+        if row['end_time'] > duration:
+            df_dilation.at[ix, 'end_time'] = duration
+            print(row['filename'], 'end_time > duration,', row['end_time'], '-->', df_dilation.at[ix, 'end_time'] )
+    
+    #quit()
+
+    # Create df_merged for original annotations
+    df_merged_list = {}
+    df_merged_list['filename'] = []
+    df_merged_list['start_time'] = []
+    df_merged_list['end_time'] = []
+    
+    filename = df_dilation.filename.values[0]
+    start_time = df_dilation.start_time.values[0]
+    end_time = df_dilation.end_time.values[0]
+    #print(filename, start_time, end_time)
+
+    max_time_without_annotation = 2 #10 #2 #4
+
+    for ix, row in df_dilation.iterrows():
+
+        if row['filename'] != filename or row['start_time'] - end_time > max_time_without_annotation:
+            # Add current values to df_merged_list
+            df_merged_list['filename'].append(filename)
+            df_merged_list['start_time'].append(start_time)
+            df_merged_list['end_time'].append(end_time)
+            # Init new 
+            filename = row['filename']
+            start_time = row['start_time']
+            end_time = row['end_time']
+        else:
+            end_time = row['end_time']
+
+    # Add last row
+    df_merged_list['filename'].append(filename)
+    df_merged_list['start_time'].append(start_time)
+    df_merged_list['end_time'].append(end_time)
+
+    df_merged = pd.DataFrame.from_dict(df_merged_list)
+    #print(df_merged)
+            
+
+
+    # Round times to nearest second
+    df_merged['start_time'] = df_merged['start_time'].apply(np.floor)
+    df_merged['end_time'] = df_merged['end_time'].apply(np.ceil)
+
+    # Write audio parts and rename files according to annotation interval
+    for ix, row in df_merged.iterrows():
+        filename = row['filename']
+        start_time = row['start_time'] # rounded to seconds
+        end_time = row['end_time']
+        
+        filename_new = filename + create_postfix_str(start_time) + '_c0'
+        df_merged.at[ix, 'filename_new'] = filename_new
+
+        if write_audio_parts:
+            path = src_dir + 'Scolopax_rusticola_Devise_ARSU_' + str(year) + '/' + filename + '.flac'
+            print('Writing', filename_new)
+            write_part_of_audio_file(path, start_time, end_time, channel_ix=0, dst_dir=dst_dir, format='wav')
+
+    
+    #print(df_merged)
+    n_files_merged = len(df_merged)
+    print('n_files_merged', n_files_merged)
+
+    #quit()
+
+    # Create df with annotation times relative to cuttet parts
+
+    #print(df)
+    for ix, row in df.iterrows():
+        filename = row['filename']
+        channel_ix = row['channel_ix']
+        start_time = row['start_time']
+        end_time = row['end_time']
+        #print(start_time.dtype)
+
+        df_merged_row = df_merged.loc[
+            (df_merged['filename'] == filename) &
+            (df_merged['start_time'] <= start_time) &
+            (df_merged['end_time'] >= end_time)
+            ].reset_index(drop=True)
+        
+        assert len(df_merged_row.index) == 1
+
+        filename_new = df_merged_row.at[0, 'filename_new']
+        start_time_new = start_time - df_merged_row.at[0, 'start_time']
+        end_time_new = end_time - df_merged_row.at[0, 'start_time']
+        
+        #print(filename, start_time, end_time, channel_ix,  filename_new, df_merged_row.at[0, 'start_time'], df_merged_row.at[0, 'end_time'], start_time_new, end_time_new)
+
+        df.at[ix, 'filename'] = filename_new
+        df.at[ix, 'start_time'] = start_time_new
+        df.at[ix, 'end_time'] = end_time_new
+
+        # Add file path
+        df.at[ix, 'record_filepath'] = dst_dir + filename_new + '.wav'
+
+
+    # Add channel info
+    df['channel_ix'] = 0
+    # Add id_level=1 (Tim knows)
+    df['id_level'] = 1
+    # Correct time format (e.g. 21-28-11 --> 21:28:11)
+    df['record_time'] = df['record_time'].str.replace('-',':')
+
+    # Add recording equipment info
+    df['equipment_name'] = 'devise'
+
+
+    # Rename cols
+    df = df.rename(columns={"quality": "quality_tag"})
+    df = df.rename(columns={"has_background": "background_level"})
+    df = df.rename(columns={"comment": "remarks"})
+
+    print(df)
+
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+        df.to_csv(metadata_path_without_ext + '.csv', index=False)
+
+#postprocess_hakan_arsu(2021)
+#postprocess_hakan_arsu(2022)
+
 
 print('Done.')

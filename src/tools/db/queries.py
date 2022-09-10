@@ -54,7 +54,7 @@ def is_annoation_in_database(
     annotation_table,
     sound_type_field,
     sound_type_field_id=None,
-    channel: int = None,
+    channel_ix: int = None,
     start_time: float = None,
     end_time: float = None,
     start_frequency: float = None,
@@ -62,7 +62,7 @@ def is_annoation_in_database(
 ) -> bool:
     parts = [
         (sound_type_field, sound_type_field_id),
-        ("channel", channel),
+        ("channel_ix", channel_ix),
         ("start_time", start_time),
         ("end_time", end_time),
         ("start_frequency", start_frequency),
