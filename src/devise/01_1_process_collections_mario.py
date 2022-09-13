@@ -242,7 +242,117 @@ def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_di
     else:
         print('Error file not found', path)
 
+
+def get_open_intervals(df, global_start_time=0.0, global_end_time=None):
     
+    # Input: df with intervals (start_time, end_time)
+    # Output: df with open intervals not intersecting with input intervals
+    
+    df_new_dict = {}
+    df_new_dict['start_time'] = []
+    df_new_dict['end_time'] = []
+
+    # Get list of dicts (pairs of time, start/stop event type)
+    events = []
+    for ix, row in df.iterrows():
+        event = {'time': row['start_time'], 'type': 'start_time'}
+        events.append(event)
+        event = {'time': row['end_time'], 'type': 'end_time'}
+        events.append(event)
+
+    # Sort by time
+    events = sorted(events, key=lambda d: d['time']) 
+    #print(events)
+
+    start_time = 0.0
+    counter = 0
+    for event in events:
+
+        if counter == 0 and event['time'] > global_start_time:
+            df_new_dict['start_time'].append(start_time)
+            df_new_dict['end_time'].append(event['time'])
+
+        if event['type'] == 'start_time': counter +=1
+        else: counter -=1
+
+        start_time = event['time']
+    
+    # Get last interval if last end_time < global_end_time
+    if global_end_time and global_end_time > start_time:
+        df_new_dict['start_time'].append(start_time)
+        df_new_dict['end_time'].append(global_end_time)
+
+    # Convert to df
+    df_new = pd.DataFrame.from_dict(df_new_dict)
+    #print(df_new) 
+
+    return df_new
+
+def create_noise_annotations(df, dilation_duration=1.0, min_duration=5.0):
+    
+    # Create dataframe with anti/none annotations (all intervals without annotation for each filename)
+
+    # Cols belonging to annoations that get meaningless
+    cols_set_to_none = ['start_frequency', 'end_frequency', 'individual_id', 'group_id', 'vocalization_type', 'quality_tag', 'id_level', 'background_level', 'remarks', 'xeno_canto_background', 'species_latin_name']
+
+    # Create df_dilation (add time interval to start/end time)
+    df_dilation = df.copy()
+    df_dilation['start_time'] = df_dilation['start_time'] - dilation_duration
+    df_dilation['end_time'] = df_dilation['end_time'] + dilation_duration
+
+    # Check/correkt if start_time < 0.0 (ToDo: end_time > duration)
+    df_dilation.loc[df_dilation['start_time'] < 0.0, 'start_time'] = 0.0
+
+    # Sort by filename and start_time
+    df_dilation = df_dilation.sort_values(['filename', 'start_time']).reset_index(drop=True)
+    #print(df_dilation[10:20])
+
+    # Create new df with same cols
+    cols = df_dilation.columns
+    #print(list(cols))
+    df_new = pd.DataFrame(columns=cols)
+
+    filenames = list(df['filename'].unique())
+    n_files = len(filenames)
+
+    counter = 0
+    for filename in filenames:
+
+        #if counter > 4: break
+
+        df_filename = df_dilation[df_dilation['filename']==filename].reset_index(drop=True)
+        #print(df_filename)
+
+        # Get duration
+        path = df_filename.record_filepath.values[0]
+        with sf.SoundFile(path) as f:
+            duration = f.frames/f.samplerate
+
+
+        df_filename_noise = get_open_intervals(df_filename, global_start_time=0.0, global_end_time=duration)
+
+        # Filter intervals >= min_duration
+        df_filename_noise = df_filename_noise[(df_filename_noise['end_time'] - df_filename_noise['start_time'] >= min_duration)].reset_index(drop=True)
+        #print(df_filename_noise)
+
+        # Add org recording metadata
+        for ix, row in df_filename_noise.iterrows():
+            # Append first row of df_filename
+            df_new = df_new.append(df_filename.iloc[0]).reset_index(drop=True)
+            # Change start/end_time
+            df_new.at[df_new.index[-1], 'start_time'] = row['start_time']
+            df_new.at[df_new.index[-1], 'end_time'] = row['end_time']
+
+        counter += 1
+
+    # Set cols with annoation individual values to None
+    for col in cols_set_to_none:
+        if col in cols:
+            df_new[col] = None
+
+    #print(df_new)
+
+    return df_new
     
 
 def process_Criewen_2022_05_15():
@@ -374,10 +484,15 @@ def process_Crex_crex_Unteres_Odertal_2017():
         df_new.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
         df_new.to_csv(metadata_path_without_ext + '.csv', index=False)
 
+#process_Crex_crex_Unteres_Odertal_2017()
 
-process_Crex_crex_Unteres_Odertal_2017()
+def process_fva():
 
-def fva_test():
+    write_metadata = False # True False
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v01'
+
+
+    audio_src_dir = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/Dateien_MFN_FVA/'
 
     # Read excel file
     path = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/220722_fva_selections.csv'
@@ -388,17 +503,113 @@ def fva_test():
     #encoding = 'cp1252'
     encoding = 'ISO-8859-1'
     df = pd.read_csv(path, sep=';', encoding=encoding)
-    print(df.columns.values.tolist())
+    #print(df.columns.values.tolist())
     
     # Drop cols not used (yet)
-    df = df.drop(columns=['Unnamed: 0', 'deploy_id', 'dateiname', 'selection', 'view', 'channel', 'species_code', 'common_name', 'import'])
+    df = df.drop(columns=[' "id"', 'Unnamed: 0', 'deploy_id', 'dateiname', 'selection', 'view', 'channel', 'species_code', 'common_name', 'import'])
 
     # Sort by (new) file name and begin_time
-    df = df.sort_values(['new_name', 'begin_time'])
+    df = df.sort_values(['new_name', 'begin_time']).reset_index(drop=True)
 
-    print(df[10:30])
+    #print(df[10:30])
 
-#fva_test()
+    print("n_annotations", len(df)) # 2497
+
+    # Get unique audio files
+    files = list(df['new_name'].unique())
+    n_files = len(files)
+    #print(files)
+    print('n_files', n_files) # 369 (10min, mono, 48 kHz)
+
+    # Get unique anmerkung
+    remarks = list(df['anmerkung'].unique())
+    n_remarks = len(remarks)
+    #print(remarks)
+    print('n_remarks', n_remarks) # 64
+
+    # Rename cols
+    df = df.rename(columns={'new_name': 'filename', 'begin_time': 'start_time', 'low_freq': 'start_frequency', 'high_freq': 'end_frequency', 'anmerkung': 'remarks'})
+    
+    # Add metadata
+    
+    df['record_date'] = None
+    df['record_time'] = None
+
+    df['vocalization_type'] = None
+    df['quality_tag'] = 3
+    df['record_filepath'] = None
+
+    
+    for ix, row in df.iterrows():
+
+        # Get vocalization_type from anmerkung (remarks)
+        remark = row['remarks']
+        if 'puitzen' in remark and not 'quorren' in remark:
+            df.at[ix, 'vocalization_type'] = 'squeak'
+        if not 'puitzen' in remark and 'quorren' in remark:
+            df.at[ix, 'vocalization_type'] = 'grunt'
+
+        # # ToDo: correct/add type depending on start/end_frequency
+        # if row['start_frequency'] > 1800.0 and row['end_frequency'] > 9000.0:
+        #     df.at[ix, 'vocalization_type'] = 'squeak'
+        # if row['end_frequency'] < 5000.0:
+        #     t=1
+
+
+
+        # Get quality from anmerkung
+        if 'gut' in remark:
+            df.at[ix, 'quality_tag'] = 2
+        if 'sehr gut' in remark or 'laut' in remark or 'deutlich' in remark:
+            df.at[ix, 'quality_tag'] = 1
+        if 'leise' in remark or 'Knacken' in remark or 'Regen' in remark or 'schlechte Qualität' in remark:
+            df.at[ix, 'quality_tag'] = 4
+        if 'sehr leise' in remark:
+            df.at[ix, 'quality_tag'] = 5
+
+        # Get date, time from filename
+        parts = row['filename'].split('_')
+        date_str = parts[6]
+        df.at[ix, 'record_date'] = date_str[:4] + '-' + date_str[4:6] + '-' + date_str[6:10]
+        time_str = parts[7]
+        df.at[ix, 'record_time'] = time_str[:2] + ':' + time_str[2:4] + ':' + time_str[4:6]
+
+        # Get record_filepath
+        df.at[ix, 'record_filepath'] = audio_src_dir + row['filename']
+
+        #print(ix, remark, date_str, time_str)
+    
+    
+    #print(df[:8])
+
+    # Add more global metadata
+    df['location_name'] = 'Baden-Württemberg'
+    df['record_license'] = 'Usage restricted for training devise models!'
+    df['record_remarks'] = 'Provided by Forstliche Versuchs- und Forschungsanstalt Baden-Württemberg (FVA). Only use for training (devise) models!'
+    df['equipment_name'] = 'AudioMoth'
+    df['equipment_sound_device'] = 'AudioMoth'
+    df['equipment_microphone'] = 'MEMS'
+    df['species_latin_name'] = 'Scolopax rusticola'
+    df['collection_name'] = 'FVA (devise)' # ?
+
+    #print(df[:8])
+
+    # Create noise (species absent) annotations
+    df_noise_annotations = create_noise_annotations(df)
+    df_noise_annotations['noise_name'] = 'Scolopax rusticola absent'
+    
+    # Concat dfs
+    df['noise_name'] = None
+    df = pd.concat([df, df_noise_annotations], ignore_index=True, sort=False).reset_index(drop=True)
+    
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+        df.to_csv(metadata_path_without_ext + '.csv', index=False)
+    
+    print(df)
+
+#process_fva()
 
 def process_hakan_schoenow():
 
@@ -554,10 +765,10 @@ def process_hakan_schoenow():
     print(df_annotations_org)
                 
     # Create df_dilation (add time interval to start/end time)
-    dilation_time = 4.0
+    dilation_duration = 4.0
     df_dilation = df_annotations_org.copy()
-    df_dilation['start_time'] = df_dilation['start_time'] - dilation_time
-    df_dilation['end_time'] = df_dilation['end_time'] + dilation_time
+    df_dilation['start_time'] = df_dilation['start_time'] - dilation_duration
+    df_dilation['end_time'] = df_dilation['end_time'] + dilation_duration
     print(df_dilation)
 
     # Check if start_time >= 0 & end_time <= duration ?
@@ -765,10 +976,10 @@ def postprocess_hakan_arsu(year):
 
 
     # Create df_dilation (add time interval to start/end time)
-    dilation_time = 4.0
+    dilation_duration = 4.0
     df_dilation = df.copy()
-    df_dilation['start_time'] = df_dilation['start_time'] - dilation_time
-    df_dilation['end_time'] = df_dilation['end_time'] + dilation_time
+    df_dilation['start_time'] = df_dilation['start_time'] - dilation_duration
+    df_dilation['end_time'] = df_dilation['end_time'] + dilation_duration
     #print(df_dilation)
 
     # Check/correkt if start_time < 0 or end_time > duration
