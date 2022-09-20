@@ -155,7 +155,10 @@ def checScolopaxRusticolaCallTypesFreq():
         query = "SELECT * FROM libro_animalis.annotation_view WHERE " 
         query += "(vocalization_type = 'squeak' "
         query += "OR vocalization_type = 'grunt') "
+        #query += "vocalization_type = 'grunt' "
         query += "AND start_frequency IS NOT NULL "
+        query += "AND annotator LIKE 'Steinkamp%' "
+        #query += "AND annotator LIKE 'Fromm%' "
         query += ";"
         
         db_cursor.execute(query)
@@ -187,16 +190,15 @@ def checScolopaxRusticolaCallTypesFreq():
             print(len(events), event)
             events.append(event)
 
-        print(np.max(squeak_end_freq))
+        #print(np.max(squeak_end_freq))
         plt.plot(squeak_start_freq, squeak_end_freq, 'o')
         plt.plot(grunt_start_freq, grunt_start_freq, 'o')
-        plt.xlim([0, 23000])
-        plt.ylim([0, 23000])
+        #plt.xlim([0, 23000])
+        #plt.ylim([0, 23000])
         
-        plt.savefig('src/devise/images/test02.jpg', bbox_inches='tight')
+        plt.savefig('src/devise/images/test06.jpg', bbox_inches='tight')
         #plt.show()
 
-
-checScolopaxRusticolaCallTypesFreq()
+#checScolopaxRusticolaCallTypesFreq()
 
 print('Done.')

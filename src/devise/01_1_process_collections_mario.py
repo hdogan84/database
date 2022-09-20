@@ -8,7 +8,8 @@ import soundfile as sf
 
 root_dir = '/mnt/z/Projekte/DeViSe/'
 metadata_dir = root_dir + 'Annotationen/'
-lars_dir = '/mnt/z/AG/TSA/Lars_Beck/'
+#lars_dir = '/mnt/z/AG/TSA/Lars_Beck/'
+lars_dir = metadata_dir + 'Lars_Beck/'
 
 
 def create_postfix_str(start_time, end_time=None):
@@ -95,7 +96,7 @@ def read_audacity_label_file(path, ignore_freq_range=False):
         #print(df)
         return df
 
-def process_audacity_label_data(df):
+def process_audacity_label_data(df, check_label_data=True):
 
     '''
     example of label: sp=Crex crex; ct=s; ql=2; id=1; bg=0; cm=Hallo
@@ -127,6 +128,11 @@ def process_audacity_label_data(df):
 
     for ix, row in df.iterrows():
         label_str = row['label']
+        # Remove leading and trailing whitespaces
+        label_str = label_str.strip()
+        # Remove leading and trailing separators
+        label_str = label_str.strip(separator)
+
         #print(ix, label_str)
 
         # Split into labels
@@ -156,12 +162,13 @@ def process_audacity_label_data(df):
     #print(label_df_dict)
 
     # Check if there are label without any/some data
-    for key in key_tags:
-        if label_df_dict[key].count(None) == len(label_df_dict[key]):
-            print(key, 'has no data at all')
-        else:
-            if label_df_dict[key].count(None) > 0:
-                print(key, 'has no data sometimes')
+    if check_label_data:
+        for key in key_tags:
+            if label_df_dict[key].count(None) == len(label_df_dict[key]):
+                print(key, 'has no data at all')
+            else:
+                if label_df_dict[key].count(None) > 0:
+                    print(key, 'has no data sometimes')
 
     label_df = pd.DataFrame.from_dict(label_df_dict)
     # Rename cols (e.g. sp --> species)
@@ -176,12 +183,15 @@ def process_audacity_label_data(df):
     df_concatenated = pd.concat([df, label_df], axis="columns")
     #print(df_concatenated)
 
+    return df_concatenated
 
-path = lars_dir + 'Unteres_Odertal_2021_06_10/Devise02_2021-06-10T22-38-32_Pos01.txt'
+
+#path = lars_dir + 'Unteres_Odertal_2021_06_10/Devise02_2021-06-10T22-38-32_Pos01.txt'
 #path = metadata_dir + '_BackupML/Devise07_2022-05-09T20-40-27_Annotation.txt'
 path = lars_dir + 'Criewen_2022_05_15/Criewen02/CRIEWEN02_20220515_202400.txt'
-#df = read_audacity_label_file(path)
-#if df: df = process_audacity_label_data(df)
+# df = read_audacity_label_file(path)
+# df = process_audacity_label_data(df)
+# print(df)
 
 def read_raven_label_file(path):
 
@@ -362,10 +372,10 @@ def process_Criewen_2022_05_15():
     # Search for audacity label track txt files
     root_src_dir = lars_dir + 'Criewen_2022_05_15/'
 
-    #root_src_dir = metadata_dir + 'Unteres_Odertal_2021_06_10/'
-    #root_src_dir = metadata_dir + 'Unteres_Odertal_2021_06_16/'
-    #root_src_dir = metadata_dir + 'Unteres_Odertal_2021_06_23/'
-    #root_src_dir = metadata_dir + 'Unteres_Odertal_2021_07_15/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_10/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_16/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_23/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_07_15/'
     
     for root, dirs, files in os.walk(root_src_dir):
         for file in files:
@@ -377,7 +387,7 @@ def process_Criewen_2022_05_15():
                     print(path)
                     df = read_audacity_label_file(path, ignore_freq_range=True)
                     if df is not None:
-                        df = process_audacity_label_data(df)
+                        df = process_audacity_label_data(df, check_label_data=False)
                         df_list.append(df)
                 else:
                     print('Warning no corresponding wav file', path)
