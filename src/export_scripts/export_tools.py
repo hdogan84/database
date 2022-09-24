@@ -4,6 +4,8 @@ def map_filename_to_derivative_filepath(
     result = list(data_row)  #
     try:
         tmp_path = derivates_dict[result[filename_index]]
+        # print(tmp_path)
+        # return
         if tmp_path is None:
             result[filename_index] = None
         else:
