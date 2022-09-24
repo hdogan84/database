@@ -71,7 +71,134 @@ def replaceNegativValuesInDataframeCol():
     df.loc[df['A'] < 0, 'A'] = 0
     print(df)
 
-replaceNegativValuesInDataframeCol()
+#replaceNegativValuesInDataframeCol()
 
+
+def getOpenIntervals():
+
+    # https://stackoverflow.com/questions/71784063/how-to-correctly-find-intervals-between-other-intervals
+    
+    global_start_time = 0.0
+    global_end_time = 12.0
+    
+    df_dict = {}
+    df_dict['start_time'] = []
+    df_dict['end_time'] = []
+
+    df_new_dict = {}
+    df_new_dict['start_time'] = []
+    df_new_dict['end_time'] = []
+
+    df_dict['start_time'].append(1.0)
+    df_dict['end_time'].append(2.0)
+    df_dict['start_time'].append(1.0)
+    df_dict['end_time'].append(4.0)
+    df_dict['start_time'].append(2.0)
+    df_dict['end_time'].append(3.0)
+    df_dict['start_time'].append(5.0)
+    df_dict['end_time'].append(8.0)
+    df_dict['start_time'].append(9.0)
+    df_dict['end_time'].append(10.0)
+
+    df = pd.DataFrame.from_dict(df_dict)
+    print(df)
+
+    # Get list of dicts (pairs of time, start/stop event type)
+    events = []
+    for ix, row in df.iterrows():
+        event = {'time': row['start_time'], 'type': 'start_time'}
+        events.append(event)
+        event = {'time': row['end_time'], 'type': 'end_time'}
+        events.append(event)
+
+    # Sort by time
+    events = sorted(events, key=lambda d: d['time']) 
+    #print(events)
+
+    start_time = 0.0
+    counter = 0
+    for event in events:
+
+        if counter == 0 and event['time'] > global_start_time:
+            df_new_dict['start_time'].append(start_time)
+            df_new_dict['end_time'].append(event['time'])
+
+        if event['type'] == 'start_time': counter +=1
+        else: counter -=1
+
+        start_time = event['time']
+    
+    # Get last interval if last end_time < global_end_time
+    if global_end_time > start_time:
+        df_new_dict['start_time'].append(start_time)
+        df_new_dict['end_time'].append(global_end_time)
+
+    # Convert to df
+    df_new = pd.DataFrame.from_dict(df_new_dict)
+    print(df_new)
+
+#getOpenIntervals()
+
+def checScolopaxRusticolaCallTypesFreq():
+
+    from mysql.connector import connect
+    import matplotlib.pyplot as plt
+
+    db = {'host': 'localhost', 'user': 'root', 'port': 3306, 'password': 'Password123!?', 'name': 'libro_animalis'}
+    db_connection = connect(host=db['host'], port=db['port'], user=db['user'], passwd=db['password'], database=db['name'], auth_plugin='mysql_native_password',)
+    
+    with db_connection.cursor(dictionary=True) as db_cursor:
+
+        #query = 'SELECT * FROM libro_animalis.annotation_view LIMIT 4;'
+        #query = "SELECT * FROM libro_animalis.annotation_view WHERE collection LIKE '%devise%' AND annotator LIKE 'Steinkamp%' AND vocalization_type = 'squeak';"
+        
+        query = "SELECT * FROM libro_animalis.annotation_view WHERE " 
+        query += "(vocalization_type = 'squeak' "
+        query += "OR vocalization_type = 'grunt') "
+        #query += "vocalization_type = 'grunt' "
+        query += "AND start_frequency IS NOT NULL "
+        query += "AND annotator LIKE 'Steinkamp%' "
+        #query += "AND annotator LIKE 'Fromm%' "
+        query += ";"
+        
+        db_cursor.execute(query)
+        rows = db_cursor.fetchall()
+        print('n_rows', db_cursor.rowcount)
+
+        events = []
+        squeak_start_freq = []
+        squeak_end_freq = []
+        grunt_start_freq = []
+        grunt_end_freq = []
+        for row in rows:
+            start_frequency = float(row['start_frequency'])
+            end_frequency = float(row['end_frequency'])
+            vocalization_type = row['vocalization_type']
+            event = {
+                'annotator': row['annotator'],
+                'vocalization_type':  vocalization_type, 
+                'start_frequency': start_frequency,
+                'end_frequency': end_frequency
+                }
+            if vocalization_type == 'squeak':
+                squeak_start_freq.append(start_frequency)
+                squeak_end_freq.append(end_frequency)
+            if vocalization_type == 'grunt':
+                grunt_start_freq.append(start_frequency)
+                grunt_end_freq.append(end_frequency)
+
+            print(len(events), event)
+            events.append(event)
+
+        #print(np.max(squeak_end_freq))
+        plt.plot(squeak_start_freq, squeak_end_freq, 'o')
+        plt.plot(grunt_start_freq, grunt_start_freq, 'o')
+        #plt.xlim([0, 23000])
+        #plt.ylim([0, 23000])
+        
+        plt.savefig('src/devise/images/test06.jpg', bbox_inches='tight')
+        #plt.show()
+
+#checScolopaxRusticolaCallTypesFreq()
 
 print('Done.')

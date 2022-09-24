@@ -4,3 +4,4 @@ __pycache__
 *.csv
 downloads
 workspace.code-workspace
+src/devise/images/*
