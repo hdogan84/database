@@ -4,6 +4,7 @@
 import os
 import pandas as pd
 import soundfile as sf
+import time
 
 root_dir = "/mnt/z/Projekte/DeViSe/"
 metadata_dir = root_dir + "Annotationen/"
@@ -479,10 +480,6 @@ def process_ARSU_segments():
         end_time = row["end_time"]
         # print(start_time.dtype)
 
-        # Find corresponding row in df_merged
-        # df_merged_row = df_merged[df_merged.filename == filename & df_merged.start_time <= start_time & df_merged.end_time >= end_time]
-        # df_merged_row = df_merged[df_merged.filename == filename & int(df_merged.start_time) <= start_time]
-
         df_merged_row = df_merged.loc[
             (df_merged["filename"] == filename)
             & (df_merged["start_time"] <= start_time)
@@ -596,9 +593,90 @@ def process_ARSU_audiofiles(id, audio_sub_dir):
 
 
 # input form: xlsx file, audio_sub_dir
-process_ARSU_audiofiles(
-    "Scolopax_rusticola_Devise_ARSU_2022_v3", "Scolopax_rusticola_Devise_ARSU_2022/"
-)
+# process_ARSU_audiofiles(
+#    "Scolopax_rusticola_Devise_ARSU_2022_v3", "Scolopax_rusticola_Devise_ARSU_2022/"
+# )
+
+
+def ts_to_dt(ts):
+    return datetime.datetime.fromtimestamp(ts)
+
+
+def process_Wellenberge_annotation():
+
+    audio_dir = "/mnt/z/Projekte/DeViSe/Crex_crex_Recordings/Lokalisation_2017_05_18/Recorder01/"
+
+    # Collect annotations from excel files
+    xlsx_files = [
+        "Crex_crex_Wellenberge_Lokalisation_2017.xlsx",
+    ]
+    # output should be consistent with the above input file
+    outpul_excel_file = ARSU_dir + "Crex_crex_Wellenberge_Lokalisation_2017_v1.xlsx"
+
+    df_list = []
+    for file in xlsx_files:
+        path = metadata_dir + file
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+
+        df = pd.read_excel(path, engine="openpyxl")
+        # print(df)
+        # return
+        df_list.append(df)
+        print("n_rows", len(df))
+
+    df = pd.concat(df_list).reset_index(drop=True)
+
+    key_names_final = [
+        "filename",
+        "channel_ix",
+        "start_time",
+        "end_time",
+        "start_frequency",
+        "end_frequency",
+        "vocalization_type",
+        "id_level",
+        "species_latin_name",
+        "annotator_name",
+        "recordist_name",
+        "location_name",
+        "record_date",
+        "record_time",
+        "collection_name",
+        "record_filepath",
+    ]
+
+    df["class"] = df["class"].replace("BG", "Crex crex absent")
+    df = df.rename(
+        columns={"collection_id": "collection_name", "class": "species_latin_name"}
+    )
+    df = df.drop(columns=["sub_dir"])
+    df = df.reindex(columns=key_names_final)
+    df["annotator_name"] = "Dogan, Hakan"
+    df["recordist_name"] = "Frommolt, Karl-Heinz"
+    df["location_name"] = "Wellenberge"
+    df["collection_name"] = "devise"
+    df["vocalization_type"] = "song"
+
+    for ix, row in df.iterrows():
+        record_filepath = audio_dir + row["filename"] + ".wav"
+        df.loc[ix, "record_filepath"] = record_filepath
+
+        modTimesinceEpoc = os.path.getmtime(record_filepath)
+        # Convert seconds since epoch to readable timestamp
+        modificationTime = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(modTimesinceEpoc)
+        )
+        # print(modificationTime[:10])
+
+        df.loc[ix, "record_date"] = modificationTime[:10]
+        df.loc[ix, "record_time"] = modificationTime[11:]
+
+    df.to_excel(outpul_excel_file, index=False)
+
+
+process_Wellenberge_annotation()
 
 
 print("Done.")
