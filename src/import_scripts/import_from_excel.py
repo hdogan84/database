@@ -22,19 +22,23 @@ ROOT_DIR = '/mnt/z/Projekte/DeViSe/'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_2022_v06.xlsx'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Unteres_Odertal_2017_v02.xlsx'
 
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/CrexCrex_LarsAnnotaions_v03.xlsx'
+
+
 
 audio_root_dir = '/net/mfnstore-lin/export/tsa_transfer/TrainData/libro_animalis/temp/'
 #audio_root_dir = '/net/mfnstore-lin/export/tsa_transfer/TrainData/libro_animalis/original/'
 
 allow_noise_name_insert = True
 
-db = {
-  'host': 'localhost',
-  'user': 'root',
-  'port': 3306,
-  'password': 'Password123!?',
-  'name': 'libro_animalis'
-}
+db_connection = connect(
+    host='localhost',
+    port=3306,
+    user='root',
+    passwd='Password123!?',
+    database='libro_animalis',
+    auth_plugin='mysql_native_password',
+)
 
 keys = [
     'filename',
@@ -103,16 +107,6 @@ def import_from_excel(path, dry_run=False):
     print('n_rows', len(df))
 
     # ToDo maybe check and remove cols without any data
-
-
-    db_connection = connect(
-        host=db['host'],
-        port=db['port'],
-        user=db['user'],
-        passwd=db['password'],
-        database=db['name'],
-        auth_plugin='mysql_native_password',
-    )
 
 
     with db_connection.cursor(dictionary=False) as db_cursor:
@@ -348,10 +342,6 @@ def import_from_excel(path, dry_run=False):
                     #print('annotation_id', annotation_id)
                 else:
                     print('Warning no annotation tabel match')
-
-
-
-
 
 
             if dry_run is False:

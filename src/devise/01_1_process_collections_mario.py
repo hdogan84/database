@@ -8,6 +8,7 @@ import soundfile as sf
 
 root_dir = '/mnt/z/Projekte/DeViSe/'
 metadata_dir = root_dir + 'Annotationen/'
+
 #lars_dir = '/mnt/z/AG/TSA/Lars_Beck/'
 lars_dir = metadata_dir + 'Lars_Beck/'
 
@@ -23,7 +24,6 @@ def create_postfix_str(start_time, end_time=None):
     # Olaf style Shhmmss.ssEhhmmss.ss
 
     return postfix_str
-
 
 
 def read_audacity_label_file(path, ignore_freq_range=False):
@@ -113,7 +113,7 @@ def process_audacity_label_data(df, check_label_data=True):
     separator = ';'
 
     key_tags = ['sp', 'ct', 'ql', 'id', 'bg', 'cm']
-    key_names = ['species', 'call_type', 'quality', 'id_level', 'has_background', 'comment']
+    key_names = ['species', 'call_type', 'quality', 'id_level', 'background_level', 'comment']
 
     # ToDo: Sanity checks
     # assignment_operator, separator correct
@@ -363,36 +363,7 @@ def create_noise_annotations(df, dilation_duration=1.0, min_duration=5.0):
     #print(df_new)
 
     return df_new
-    
 
-def process_Criewen_2022_05_15():
-
-    df_list = []
-
-    # Search for audacity label track txt files
-    root_src_dir = lars_dir + 'Criewen_2022_05_15/'
-
-    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_10/'
-    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_16/'
-    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_23/'
-    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_07_15/'
-    
-    for root, dirs, files in os.walk(root_src_dir):
-        for file in files:
-            # Only use txt file with corresponing wav file
-            if file.endswith('.txt'):
-                path = os.path.join(root, file)
-                path_wav = path[:-4] + '.wav'
-                if os.path.isfile(path_wav): 
-                    print(path)
-                    df = read_audacity_label_file(path, ignore_freq_range=True)
-                    if df is not None:
-                        df = process_audacity_label_data(df, check_label_data=False)
-                        df_list.append(df)
-                else:
-                    print('Warning no corresponding wav file', path)
-
-#process_Criewen_2022_05_15()
 
 def process_Crex_crex_Unteres_Odertal_2017():
 
@@ -615,7 +586,7 @@ def process_fva():
     # Write metadata (excel, csv)
     if write_metadata:
         df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
-        df.to_csv(metadata_path_without_ext + '.csv', index=False)
+        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
     
     print(df)
 
@@ -939,7 +910,7 @@ def process_hakan_schoenow():
     # Write metadata (excel, csv)
     if write_metadata:
         df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
-        df.to_csv(metadata_path_without_ext + '.csv', index=False)
+        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
 
 
     print(df)
@@ -954,7 +925,7 @@ def postprocess_hakan_arsu(year):
     src_dir = root_dir + 'Annotationen/ARSU_temp/'
     #dst_dir = root_dir + 'Annotationen/_Segments/temp/'
     dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola/'
-    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_' + str(year) + '_v06'
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_ARSU_' + str(year) + '_v07'
 
     # Collect annotations from excel files
     xlsx_files = [
@@ -1118,15 +1089,138 @@ def postprocess_hakan_arsu(year):
     df = df.rename(columns={"has_background": "background_level"})
     df = df.rename(columns={"comment": "remarks"})
 
+    # Correct some mistakes
+    df.loc[df['vocalization_type'] == '3', 'vocalization_type'] = 'grunt'
+    df.loc[df['vocalization_type'] == 'sgr', 'vocalization_type'] = 'grunt'
+    
+
+    # Correct start/end freq (Tim only annotated time intervals!)
+    df.loc[df['vocalization_type'] == 'grunt', 'start_frequency'] = 200.0
+    df.loc[df['vocalization_type'] == 'grunt', 'end_frequency'] = 2500.0 # 2000/2500
+    df.loc[df['vocalization_type'] == 'squeak', 'start_frequency'] = 1500.0 # 1500/2000
+    df.loc[df['vocalization_type'] == 'squeak', 'end_frequency'] = None # 24000.0/NF/None
+    
     print(df)
+
+
 
     # Write metadata (excel, csv)
     if write_metadata:
         df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
-        df.to_csv(metadata_path_without_ext + '.csv', index=False)
+        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
 
 #postprocess_hakan_arsu(2021)
 #postprocess_hakan_arsu(2022)
+
+def process_Lars_Annotations():
+
+    write_metadata = True
+    
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/CrexCrex_LarsAnnotaions_v03'
+
+    df_list = []
+
+    # Search for audacity label track txt files
+    #root_src_dir = lars_dir + 'Criewen_2022_05_15/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_10/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_16/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_06_23/'
+    #root_src_dir = lars_dir + 'Unteres_Odertal_2021_07_15/'
+    #root_src_dir = lars_dir + 'Crex_crex Tierstimmenarchiv'
+
+    # All Lars Annotations
+    root_src_dir = lars_dir
+    
+    n_files = 0
+    for root, dirs, files in os.walk(root_src_dir):
+        for file in files:
+            # Only use txt file with corresponing wav file
+            if file.endswith('.txt'):
+                path = os.path.join(root, file)
+                path_wav = path[:-4] + '.wav'
+                if os.path.isfile(path_wav): 
+                    print(path)
+                    df = read_audacity_label_file(path, ignore_freq_range=True)
+                    #if df is not None:
+                    df = process_audacity_label_data(df, check_label_data=False)
+
+                    # Add filename, record_filepath
+                    df['record_filepath'] = path_wav
+                    df['filename'] = os.path.splitext(os.path.basename(path_wav))[0]
+                    #print(df)
+
+                    df_list.append(df)
+                else:
+                    print('Warning no corresponding wav file', path)
+            
+            n_files += 1
+    
+    
+    # Concat and sort
+    df = pd.concat(df_list).reset_index(drop=True)
+    df = df.sort_values(['filename', 'start_time']).reset_index(drop=True)
+
+    # Move filename to front
+    df.insert(0, 'filename', df.pop('filename'))
+
+    print(df)
+
+    # Check distinct species/bg events
+    species_unique = list(df["species"].unique())
+    print('species_unique', species_unique) # ['Crex crex BG', 'wind', 'Crex crex']
+
+    # Postprocess annotations
+
+    # Rename cols
+    df = df.rename(columns={"species": "species_latin_name"})
+    df = df.rename(columns={"call_type": "vocalization_type"})
+    df = df.rename(columns={"quality": "quality_tag"})
+    df = df.rename(columns={"comment": "remarks"})
+
+    # Add cols
+    df['record_date'] = None
+    df['record_time'] = None
+    df['location_name'] = None
+    df['noise_name'] = None
+    df['annotator_name'] = 'Beck, Lars'
+    df['recordist_name'] = 'Frommolt, Karl-Heinz'
+    df['collection_name'] = 'devise'
+
+    # Add infos
+    for ix, row in df.iterrows():
+        filename = row['filename']
+        species = row['species_latin_name']
+
+        filename_parts = filename.split('_')
+
+        if filename.startswith('CRIEWEN'):
+            df.at[ix, 'location_name'] = 'Criewen'
+            df.at[ix, 'record_date'] = filename_parts[1][:4] + '-' + filename_parts[1][4:6] + '-' + filename_parts[1][6:8]
+            df.at[ix, 'record_time'] = filename_parts[2][:2] + ':' + filename_parts[2][2:4] + ':' + filename_parts[2][4:6]
+
+        if filename.startswith('Devise'):
+            df.at[ix, 'location_name'] = 'Unteres Odertal'
+            df.at[ix, 'record_date'] = filename_parts[1][:10]
+            df.at[ix, 'record_time'] = filename_parts[1][11:19].replace("-", ":")
+
+        if species != 'Crex crex':
+            df.at[ix, 'species_latin_name'] = None
+            if species == 'Crex crex BG':
+                df.at[ix, 'noise_name'] = 'Crex crex absent'
+            else:
+                df.at[ix, 'noise_name'] = species
+                print(ix, filename, species)
+
+
+    # Correct vocalization_type = s --> song
+    df.loc[df['vocalization_type'] == 's', 'vocalization_type'] = 'song'
+    
+    
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+#process_Lars_Annotations()
 
 
 print('Done.')
