@@ -11,12 +11,12 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
-COLLECTION_ID = 176  # 155
+COLLECTION_ID = 176
 BACKGROUND_LEVEL = ""
-SET_FILENAME = "devise-test.csv"
+SET_FILENAME = "devise-test-2.csv"
 CLASS_LIST_FILENAME = "devise-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
-class_list = """
+class_list = """ 
 (
 'AVSCSCRU'
 )
@@ -32,8 +32,10 @@ FROM
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
+        LEFT JOIN
+    location AS l ON l.id = r.location_id
 WHERE
-    a.background_level = 2 and
+    l.name = "Gellener Torfmöörte" and
     r.collection_id = {} and
     s.olaf8_id IN {}
 
@@ -61,6 +63,7 @@ SELECT
     a.background_level,
     a.start_frequency,
     a.end_frequency,
+    l.name,
     r.id
 FROM
     annotation_of_species AS a
@@ -68,11 +71,13 @@ FROM
     species AS s ON s.id = a.species_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
-    LEFT JOIN
+        LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
+        LEFT JOIN
+    location AS l ON l.id = r.location_id 
    
 WHERE
-    a.background_level = 0 and
+    l.name = "Gellener Torfmöörte" and
     r.collection_id = {} and
     s.olaf8_id IN {} 
    
@@ -111,6 +116,7 @@ class Index(IntEnum):
     BACKGROUND_LEVEL = 15
     START_FREQ = 16
     END_FREQ = 17
+    LOCATION = 18
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -141,6 +147,7 @@ def annotation_to_label(annotation):
     background_level = annotation[Index.BACKGROUND_LEVEL]
     start_frequency = annotation[Index.START_FREQ]
     end_frequency = annotation[Index.END_FREQ]
+    location = annotation[Index.LOCATION]
     # return (duration, start, stop, label, 1, filename, channels, collection_id)
     return (
         Path(filename).stem,
@@ -155,6 +162,7 @@ def annotation_to_label(annotation):
         background_level,
         start_frequency,
         end_frequency,
+        location,
     )
 
 
@@ -197,11 +205,11 @@ def create_labels(config: DatabaseConfig):
             # Collect Labels of Different record intervalls
             for a in data:
                 if a[12] is None:
-                    if str(a[18]) in intervals:
+                    if str(a[19]) in intervals:
 
-                        intervals[str(a[18])].append(a)
+                        intervals[str(a[19])].append(a)
                     else:
-                        intervals.update({str(a[18]): [a]})
+                        intervals.update({str(a[19]): [a]})
                 else:
                     if str(a[12]) in intervals:
 
@@ -258,19 +266,6 @@ def export_data(
     print(single_labels[1])
     print(single_labels[2])
 
-    print("Create annoation file")
-    pointing_to_derivates_single_labels = list(
-        filter(
-            lambda x: x[1] is not None,
-            list(
-                map(
-                    lambda x: map_filename_to_derivative_filepath(x, 1, derivates_dict),
-                    single_labels,
-                )
-            ),
-        )
-    )
-
     write_to_csv(
         pointing_to_derivates_single_labels,
         filename_labels,
@@ -287,6 +282,7 @@ def export_data(
             "vocalization_type",
             "quality_tag",
             "background_level",
+            "location",
         ],
     )
     class_list = create_class_list(config)
