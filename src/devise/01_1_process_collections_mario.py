@@ -19,7 +19,12 @@ def create_postfix_str(start_time, end_time=None):
     # S00000500E00002000ms
     #postfix_str = '_S' + str(int(1000*start_time)).zfill(8) + 'E' + str(int(1000*end_time)).zfill(8) + 'ms'
     # S00000500ms
-    postfix_str = '_s' + str(int(1000*start_time)).zfill(8) + 'ms'
+    
+    if start_time:
+        postfix_str = '_s' + str(int(1000*start_time)).zfill(8) + 'ms'
+    else:
+        postfix_str = ''
+
 
     # Olaf style Shhmmss.ssEhhmmss.ss
 
@@ -206,7 +211,7 @@ def read_raven_label_file(path):
 path = root_dir + 'Scolopax_rusticola_Recordings/Monitoring/Peenemuende_140525_327_4ch.Table.1.selections.txt'
 #read_raven_label_file(path)
 
-def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_dir=None, format=None):
+def write_part_of_audio_file(path, start_time=0.0, end_time=None, channel_ix=None, dst_dir=None, format=None):
 
     # ToDo Maybe: resample, remove dc-offset (hp filter), normalize, fade in/out
 
@@ -231,8 +236,12 @@ def write_part_of_audio_file(path, start_time, end_time, channel_ix=None, dst_di
             n_channels = f.channels
             subtype = f.subtype # bit depth info, e.g. 'PCM_16', 'PCM_24'
 
-        start_ix = int(start_time*samplerate)
-        end_ix = int(end_time*samplerate)
+        start_ix = 0
+        end_ix = None
+        if start_time:
+            start_ix = int(start_time*samplerate)
+        if end_time:
+            end_ix = int(end_time*samplerate)
         data, samplerate = sf.read(path, start=start_ix, stop=end_ix, always_2d=True)
 
         filename_new = filename_without_ext + create_postfix_str(start_time)
@@ -463,134 +472,9 @@ def process_Crex_crex_Unteres_Odertal_2017():
     # Write metadata (excel, csv)
     if write_metadata:
         df_new.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
-        df_new.to_csv(metadata_path_without_ext + '.csv', index=False)
+        #df_new.to_csv(metadata_path_without_ext + '.csv', index=False)
 
 #process_Crex_crex_Unteres_Odertal_2017()
-
-def process_fva():
-
-    write_metadata = False # True False
-    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v01'
-
-
-    audio_src_dir = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/Dateien_MFN_FVA/'
-
-    # Read excel file
-    path = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/220722_fva_selections.csv'
-
-    if not os.path.isfile(path): 
-        print('Error: File not found', path)
-
-    #encoding = 'cp1252'
-    encoding = 'ISO-8859-1'
-    df = pd.read_csv(path, sep=';', encoding=encoding)
-    #print(df.columns.values.tolist())
-    
-    # Drop cols not used (yet)
-    df = df.drop(columns=[' "id"', 'Unnamed: 0', 'deploy_id', 'dateiname', 'selection', 'view', 'channel', 'species_code', 'common_name', 'import'])
-
-    # Sort by (new) file name and begin_time
-    df = df.sort_values(['new_name', 'begin_time']).reset_index(drop=True)
-
-    #print(df[10:30])
-
-    print("n_annotations", len(df)) # 2497
-
-    # Get unique audio files
-    files = list(df['new_name'].unique())
-    n_files = len(files)
-    #print(files)
-    print('n_files', n_files) # 369 (10min, mono, 48 kHz)
-
-    # Get unique anmerkung
-    remarks = list(df['anmerkung'].unique())
-    n_remarks = len(remarks)
-    #print(remarks)
-    print('n_remarks', n_remarks) # 64
-
-    # Rename cols
-    df = df.rename(columns={'new_name': 'filename', 'begin_time': 'start_time', 'low_freq': 'start_frequency', 'high_freq': 'end_frequency', 'anmerkung': 'remarks'})
-    
-    # Add metadata
-    
-    df['record_date'] = None
-    df['record_time'] = None
-
-    df['vocalization_type'] = None
-    df['quality_tag'] = 3
-    df['record_filepath'] = None
-
-    
-    for ix, row in df.iterrows():
-
-        # Get vocalization_type from anmerkung (remarks)
-        remark = row['remarks']
-        if 'puitzen' in remark and not 'quorren' in remark:
-            df.at[ix, 'vocalization_type'] = 'squeak'
-        if not 'puitzen' in remark and 'quorren' in remark:
-            df.at[ix, 'vocalization_type'] = 'grunt'
-
-        # # ToDo: correct/add type depending on start/end_frequency
-        # if row['start_frequency'] > 1800.0 and row['end_frequency'] > 9000.0:
-        #     df.at[ix, 'vocalization_type'] = 'squeak'
-        # if row['end_frequency'] < 5000.0:
-        #     t=1
-
-
-
-        # Get quality from anmerkung
-        if 'gut' in remark:
-            df.at[ix, 'quality_tag'] = 2
-        if 'sehr gut' in remark or 'laut' in remark or 'deutlich' in remark:
-            df.at[ix, 'quality_tag'] = 1
-        if 'leise' in remark or 'Knacken' in remark or 'Regen' in remark or 'schlechte Qualität' in remark:
-            df.at[ix, 'quality_tag'] = 4
-        if 'sehr leise' in remark:
-            df.at[ix, 'quality_tag'] = 5
-
-        # Get date, time from filename
-        parts = row['filename'].split('_')
-        date_str = parts[6]
-        df.at[ix, 'record_date'] = date_str[:4] + '-' + date_str[4:6] + '-' + date_str[6:10]
-        time_str = parts[7]
-        df.at[ix, 'record_time'] = time_str[:2] + ':' + time_str[2:4] + ':' + time_str[4:6]
-
-        # Get record_filepath
-        df.at[ix, 'record_filepath'] = audio_src_dir + row['filename']
-
-        #print(ix, remark, date_str, time_str)
-    
-    
-    #print(df[:8])
-
-    # Add more global metadata
-    df['location_name'] = 'Baden-Württemberg'
-    df['record_license'] = 'Usage restricted for training devise models!'
-    df['record_remarks'] = 'Provided by Forstliche Versuchs- und Forschungsanstalt Baden-Württemberg (FVA). Only use for training (devise) models!'
-    df['equipment_name'] = 'AudioMoth'
-    df['equipment_sound_device'] = 'AudioMoth'
-    df['equipment_microphone'] = 'MEMS'
-    df['species_latin_name'] = 'Scolopax rusticola'
-    df['collection_name'] = 'FVA (devise)' # ?
-
-    #print(df[:8])
-
-    # Create noise (species absent) annotations
-    df_noise_annotations = create_noise_annotations(df)
-    df_noise_annotations['noise_name'] = 'Scolopax rusticola absent'
-    
-    # Concat dfs
-    df['noise_name'] = None
-    df = pd.concat([df, df_noise_annotations], ignore_index=True, sort=False).reset_index(drop=True)
-    
-    # Write metadata (excel, csv)
-    if write_metadata:
-        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
-        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
-    
-    print(df)
-
-#process_fva()
 
 def process_hakan_schoenow():
 
@@ -1222,5 +1106,242 @@ def process_Lars_Annotations():
 
 #process_Lars_Annotations()
 
+
+def process_fva():
+
+    write_metadata = False # True False
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v02'
+
+
+    audio_src_dir = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/Dateien_MFN_FVA/'
+
+    # Read excel file
+    path = metadata_dir + 'Scolopax_rusticola_FVA_BadenWürttemberg/220722_fva_selections.csv'
+
+    if not os.path.isfile(path): 
+        print('Error: File not found', path)
+
+    #encoding = 'cp1252'
+    encoding = 'ISO-8859-1'
+    df = pd.read_csv(path, sep=';', encoding=encoding)
+    #print(df.columns.values.tolist())
+    
+    # Drop cols not used (yet)
+    df = df.drop(columns=[' "id"', 'Unnamed: 0', 'deploy_id', 'dateiname', 'selection', 'view', 'channel', 'species_code', 'common_name', 'import'])
+    
+    
+    
+    # Sort by (new) file name and begin_time
+    df = df.sort_values(['new_name', 'begin_time']).reset_index(drop=True)
+
+    #print(df[10:30])
+
+    print("n_annotations", len(df)) # 2497
+
+    # Get unique audio files
+    files = list(df['new_name'].unique())
+    n_files = len(files)
+    #print(files)
+    print('n_files', n_files) # 369 (10min, mono, 48 kHz)
+
+    # Get unique anmerkung
+    remarks = list(df['anmerkung'].unique())
+    n_remarks = len(remarks)
+    #print(remarks)
+    print('n_remarks', n_remarks) # 64
+
+    # Rename cols
+    df = df.rename(columns={'new_name': 'filename', 'begin_time': 'start_time', 'low_freq': 'start_frequency', 'high_freq': 'end_frequency', 'anmerkung': 'remarks'})
+    
+    # Add metadata
+    
+    df['record_date'] = None
+    df['record_time'] = None
+
+    df['vocalization_type'] = None
+    df['quality_tag'] = 3
+    df['record_filepath'] = None
+
+    
+    for ix, row in df.iterrows():
+
+        # Get vocalization_type from anmerkung (remarks)
+        remark = row['remarks']
+        if 'puitzen' in remark and not 'quorren' in remark:
+            df.at[ix, 'vocalization_type'] = 'squeak'
+        if not 'puitzen' in remark and 'quorren' in remark:
+            df.at[ix, 'vocalization_type'] = 'grunt'
+
+        # # ToDo: correct/add type depending on start/end_frequency
+        # if row['start_frequency'] > 1800.0 and row['end_frequency'] > 9000.0:
+        #     df.at[ix, 'vocalization_type'] = 'squeak'
+        # if row['end_frequency'] < 5000.0:
+        #     t=1
+
+
+
+        # Get quality from anmerkung
+        if 'gut' in remark:
+            df.at[ix, 'quality_tag'] = 2
+        if 'sehr gut' in remark or 'laut' in remark or 'deutlich' in remark:
+            df.at[ix, 'quality_tag'] = 1
+        if 'leise' in remark or 'Knacken' in remark or 'Regen' in remark or 'schlechte Qualität' in remark:
+            df.at[ix, 'quality_tag'] = 4
+        if 'sehr leise' in remark:
+            df.at[ix, 'quality_tag'] = 5
+
+        # Get date, time from filename
+        parts = row['filename'].split('_')
+        date_str = parts[6]
+        df.at[ix, 'record_date'] = date_str[:4] + '-' + date_str[4:6] + '-' + date_str[6:10]
+        time_str = parts[7]
+        df.at[ix, 'record_time'] = time_str[:2] + ':' + time_str[2:4] + ':' + time_str[4:6]
+
+        # Get record_filepath
+        df.at[ix, 'record_filepath'] = audio_src_dir + row['filename']
+
+        #print(ix, remark, date_str, time_str)
+    
+    
+    #print(df[:8])
+
+    # Add more global metadata
+    df['location_name'] = 'Baden-Württemberg'
+    df['record_license'] = 'Usage restricted for training devise models!'
+    df['record_remarks'] = 'Provided by Forstliche Versuchs- und Forschungsanstalt Baden-Württemberg (FVA). Only use for training (devise) models!'
+    df['equipment_name'] = 'AudioMoth'
+    df['equipment_sound_device'] = 'AudioMoth'
+    df['equipment_microphone'] = 'MEMS'
+    df['species_latin_name'] = 'Scolopax rusticola'
+    df['collection_name'] = 'FVA (devise)' # ?
+
+    #print(df[:8])
+
+    # Create noise (species absent) annotations
+    #  Unfortunately not reliable
+    #  Some weak signals are not annotated, e.g. 14569_1_2020_06_11_FVA133_20200611_194506.WAV 116,18898 - 369,0195s)
+    df_noise_annotations = create_noise_annotations(df)
+    df_noise_annotations['noise_name'] = 'Scolopax rusticola absent'
+    
+    # Concat dfs
+    df['noise_name'] = None
+    df = pd.concat([df, df_noise_annotations], ignore_index=True, sort=False).reset_index(drop=True)
+    
+    
+    
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
+    
+    #print(df)
+
+#process_fva()
+
+def postprocess_fva():
+
+    write_metadata = True
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v02'
+
+    path = root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v01_TableTemp.xlsx'
+    df = pd.read_excel(path, keep_default_na=False, engine='openpyxl')
+    df = df.sort_values(['filename', 'start_time']).reset_index(drop=True)
+
+    # Get Karl modifications
+    path_karl = root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v01_TableTemp_korr_KF.xlsx'
+    df_karl = pd.read_excel(path_karl, keep_default_na=False, engine='openpyxl')
+    df_karl = df_karl.sort_values(['filename', 'start_time']).reset_index(drop=True)
+    
+    df_diff = df.compare(df_karl)
+    #print(df_diff)
+
+    # Use karl modifications
+    df = df_karl.copy()
+
+    # Sanity checks 
+    for ix, row in df.iterrows():
+        if row['end_time'] - row['start_time'] < 0.01:
+            print('Warning end_time-start_time < 0.01', ix, row['filename'], row['start_time'], row['end_time'])
+        if row['end_frequency'] and row['start_frequency'] and row['end_frequency'] - row['start_frequency'] < 10:
+            print('Warning end_frequency-start_frequency < 10', ix, row['filename'], row['start_frequency'], row['end_frequency'])
+
+    '''
+    Warning end_time-start_time < 0.01 2963 44174_1_2020_06_23_FVA031_20200623_201930.WAV 314.3247 314.3247
+    Warning end_frequency-start_frequency < 10 2963 44174_1_2020_06_23_FVA031_20200623_201930.WAV 6946.5 6946.5
+    Warning end_time-start_time < 0.01 3002 44397_4_2020_06_01_FVA031_20200601_194506.WAV 372.3435 37.24712
+    Warning end_time-start_time < 0.01 3007 44397_4_2020_06_19_FVA031_20200619_193349.WAV 244.5683 24.46741
+    '''
+
+    # 3002 & 3007 corrected manually in Scolopax_rusticola_FVA_v01_TableTemp_korr_KF.xlsx
+
+    # Remove id=2963
+    df = df.drop([2963]).reset_index(drop=True)
+
+
+    # Set id=1 and background examples to id=2 ?
+    df['id_level'] = 2
+    df.loc[df['species_latin_name'] == 'Scolopax rusticola', 'id_level'] = 1
+
+
+    # Write metadata
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+
+#postprocess_fva()
+
+def postprocess_hakan_Crex_crex_Wellenberge_Lokalisation_2017():
+
+    write_audio_files = False # True False
+    write_metadata = True
+
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Wellenberge_Lokalisation_2017_v02'
+
+    path = root_dir + 'Annotationen/Crex_crex_Wellenberge/Crex_crex_Wellenberge_Lokalisation_2017_v1.xlsx'
+    df = pd.read_excel(path, keep_default_na=False, engine='openpyxl')
+    df = df.sort_values(['filename', 'start_time']).reset_index(drop=True)
+    #print(df)
+
+    filenames = list(df['filename'].unique())
+    n_files = len(filenames)
+
+    audio_dst_dir = root_dir + 'Annotationen/Crex_crex_Wellenberge/_Segments/'
+    
+    counter = 0
+    for filename in filenames:
+
+        #if counter > 1: break
+
+        path = df[df['filename']==filename].record_filepath.values[0]
+
+        # with sf.SoundFile(path) as f:
+        #     duration = f.frames/f.samplerate
+
+        # Extract channel 0
+        channel_ix = 0
+        if write_audio_files:
+            write_part_of_audio_file(path, channel_ix=channel_ix, dst_dir=audio_dst_dir)
+
+        # Update filename and path
+        filename_new = filename + create_postfix_str(0) + '_c' + str(channel_ix)
+        record_filepath_new = audio_dst_dir + filename_new + '.wav'
+        df.loc[df['filename'] == filename, 'record_filepath'] = record_filepath_new
+        df.loc[df['filename'] == filename, 'filename'] = filename_new
+        
+
+
+        print(filename)
+        counter += 1
+    
+    # Update channel_ix=None (only one channel after selecting channel 0)
+    df['channel_ix'] = None
+
+    print(df)
+
+    # Write metadata
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+#postprocess_hakan_Crex_crex_Wellenberge_Lokalisation_2017()
 
 print('Done.')

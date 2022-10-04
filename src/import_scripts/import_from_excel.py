@@ -23,6 +23,8 @@ ROOT_DIR = '/mnt/z/Projekte/DeViSe/'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Unteres_Odertal_2017_v02.xlsx'
 
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/CrexCrex_LarsAnnotaions_v03.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v02.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Wellenberge_Lokalisation_2017_v02.xlsx'
 
 
 
@@ -105,6 +107,9 @@ def import_from_excel(path, dry_run=False):
     print(df)
     print(cols)
     print('n_rows', len(df))
+
+    # Store audio file parameters per filepath
+    audio_file_parameters_dict = {}
 
     # ToDo maybe check and remove cols without any data
 
@@ -203,17 +208,23 @@ def import_from_excel(path, dry_run=False):
 
 
             filepath = Path(row['record_filepath'])
+            filepath_str = filepath.as_posix()
 
             if not filepath.exists():
-                error('File does not exhist {}'.format(filepath.as_posix()))
+                error('File does not exhist {}'.format(filepath_str))
                 continue
             
-            audio_file_parameters = None
-            try:
-                audio_file_parameters = read_parameters_from_audio_file(filepath)
-            except:
-                error('Could not read audio Parameters from {}'.format(filepath))
-                continue
+            if filepath_str not in audio_file_parameters_dict:
+                #audio_file_parameters = None
+                try:
+                    audio_file_parameters = read_parameters_from_audio_file(filepath)
+                    audio_file_parameters_dict[filepath_str] = audio_file_parameters
+                except:
+                    error('Could not read audio Parameters from {}'.format(filepath_str))
+                    continue
+            else:
+                audio_file_parameters = audio_file_parameters_dict[filepath_str]
+
 
             target_record_file_path = '{}/{}/{}'.format(
                 audio_file_parameters.md5sum[0],

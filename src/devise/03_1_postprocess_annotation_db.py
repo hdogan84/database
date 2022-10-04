@@ -68,5 +68,16 @@ def correctLarsVocalizationType():
 
 #correctLarsVocalizationType()
 
+def correctChannelIxForWellenberge():
+    with db_connection.cursor(dictionary=True) as db_cursor:
+        query = "UPDATE `libro_animalis`.`annotation_of_species` SET `channel_ix` = NULL WHERE id >= '3947823' AND id <= '3947935';"
+        db_cursor.execute(query)
+        db_connection.commit()
+    with db_connection.cursor(dictionary=True) as db_cursor:
+        query = "UPDATE `libro_animalis`.`annotation_of_noise` SET `channel_ix` = NULL WHERE id >= '37191' AND id <= '37207';"
+        db_cursor.execute(query)
+        db_connection.commit()
+
+#correctChannelIxForWellenberge()
 
 print('Done.')

@@ -45,8 +45,11 @@ WHERE (`id` = '3942001');
 UPDATE `libro_animalis`.`annotation_of_species`
 SET `vocalization_type` = 'grunt'
 WHERE (`id` = '3943635');
+-- More modifications via src/devise/03_1_postprocess_annotation_db.py
 /* ToDo's
  - drop end col in records table
  - reorder cols of annotation_of_species, annotation_of_noise
  - add new cols to views
+ - make quality_tag consistant
+ - maybe rename id_level (confidence/certainty)
  */
