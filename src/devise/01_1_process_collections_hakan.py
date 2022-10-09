@@ -605,13 +605,16 @@ def ts_to_dt(ts):
 def process_Wellenberge_annotation():
 
     audio_dir = "/mnt/z/Projekte/DeViSe/Crex_crex_Recordings/Lokalisation_2017_05_18/Recorder01/"
+    Wellenberge_dir = "/mnt/z/Projekte/DeViSe/Annotationen/Crex_crex_Wellenberge/"
 
     # Collect annotations from excel files
     xlsx_files = [
         "Crex_crex_Wellenberge_Lokalisation_2017.xlsx",
     ]
     # output should be consistent with the above input file
-    outpul_excel_file = ARSU_dir + "Crex_crex_Wellenberge_Lokalisation_2017_v1.xlsx"
+    outpul_excel_file = (
+        Wellenberge_dir + "Crex_crex_Wellenberge_Lokalisation_2017_v1.xlsx"
+    )
 
     df_list = []
     for file in xlsx_files:
@@ -633,14 +636,13 @@ def process_Wellenberge_annotation():
         "channel_ix",
         "start_time",
         "end_time",
-        "start_frequency",
-        "end_frequency",
+        "species_latin_name",
         "vocalization_type",
         "id_level",
-        "species_latin_name",
         "annotator_name",
         "recordist_name",
         "location_name",
+        "noise_name",
         "record_date",
         "record_time",
         "collection_name",
@@ -662,6 +664,9 @@ def process_Wellenberge_annotation():
     for ix, row in df.iterrows():
         record_filepath = audio_dir + row["filename"] + ".wav"
         df.loc[ix, "record_filepath"] = record_filepath
+        if df["species_latin_name"][ix] == "Crex crex absent":
+            df.loc[ix, "noise_name"] = "Crex crex absent"
+            df.loc[ix, "species_latin_name"] = None
 
         modTimesinceEpoc = os.path.getmtime(record_filepath)
         # Convert seconds since epoch to readable timestamp
@@ -670,7 +675,11 @@ def process_Wellenberge_annotation():
         )
         # print(modificationTime[:10])
 
-        df.loc[ix, "record_date"] = modificationTime[:10]
+        df.loc[ix, "record_date"] = (
+            str(int(modificationTime[:4]) + 1)
+            + "-05-"
+            + str(int(modificationTime[8:10]) - 10)
+        )
         df.loc[ix, "record_time"] = modificationTime[11:]
 
     df.to_excel(outpul_excel_file, index=False)
