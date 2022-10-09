@@ -12,7 +12,7 @@ from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
 CONFIG_FILE_PATH = Path("config_training.cfg")
-class_list = """
+noise_id_list = """
 (
     1, 2, 5
 )
@@ -23,20 +23,20 @@ SELECT
 FROM
     annotation_of_noise AS a
         LEFT JOIN
-    noise AS s ON s.id = a.noise_id
+    noise AS n ON n.id = a.noise_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
 WHERE
     r.collection_id = 176 and
-    s.id IN {}
+    n.id IN {}
 
 """.format(
-    class_list
+    noise_id_list
 )
 
 query_annoations = """
 SELECT 
-    s.name,
+    n.name,
     r.file_path,
 	r.filename,
     a.start_time,
@@ -57,17 +57,17 @@ SELECT
 FROM
     annotation_of_noise AS a
         LEFT JOIN
-    noise AS s ON s.id = a.noise_id
+    noise AS n ON n.id = a.noise_id
         LEFT JOIN
     record AS r ON r.id = a.record_id
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     r.collection_id = 176 and
-    s.id IN {}
+    n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
-    class_list
+    noise_id_list
 )
 
 query_species = """
@@ -75,7 +75,7 @@ SELECT name FROM libro_animalis.noise where
     id IN {}
 ORDER BY name ASC
 """.format(
-    class_list
+    noise_id_list
 )
 
 
@@ -203,7 +203,7 @@ def create_labels(config: DatabaseConfig):
             return labels
 
 
-def create_class_list(config: DatabaseConfig):
+def create_noise_id_list(config: DatabaseConfig):
     with connectToDB(config.database) as db_connection:
         with db_connection.cursor() as db_cursor:
             db_cursor: MySQLCursor  # set type hint
@@ -257,9 +257,9 @@ def export_data(
             "type",
         ],
     )
-    class_list = create_class_list(config)
+    noise_id_list = create_noise_id_list(config)
     write_to_csv(
-        class_list, filename_class_list, ["latin_name", "english_name", "german_name"]
+        noise_id_list, filename_class_list, ["latin_name", "english_name", "german_name"]
     )
 
 
