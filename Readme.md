@@ -62,7 +62,7 @@ conda install -c conda-forge librosa
 - group_id,
 - vocalization_type,
 - quality_tag,
-- id_level,
+- id_level, # annotation confidence 1: sure, 2: pretty sure, 3: unsure (maybe rename to confidence or certainty?)
 - background_level, #0 none; 1 little; 2 a lot;
 - xeno_canto_background, # Only for xeno_canto files if species is annotated as background species
 - species_latin_name, # if species_latin_name --> insert in annotation_of_species

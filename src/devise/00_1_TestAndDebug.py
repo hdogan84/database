@@ -2,6 +2,7 @@ import os
 import numpy as np
 import soundfile as sf
 import pandas as pd
+from pathlib import Path
 
 root_dir = '/mnt/z/Projekte/DeViSe/'
 
@@ -200,5 +201,15 @@ def checScolopaxRusticolaCallTypesFreq():
         #plt.show()
 
 #checScolopaxRusticolaCallTypesFreq()
+
+def convertFileExtensionToLowerCaseViaPath():
+    pathStr = 'test.WAV'
+    path = Path(pathStr)
+    ext = path.suffix.lower()
+
+    print(ext)
+    print(type(path))
+
+convertFileExtensionToLowerCaseViaPath()
 
 print('Done.')
