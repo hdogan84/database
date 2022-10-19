@@ -1344,4 +1344,62 @@ def postprocess_hakan_Crex_crex_Wellenberge_Lokalisation_2017():
 
 #postprocess_hakan_Crex_crex_Wellenberge_Lokalisation_2017()
 
+
+def concat_excel_annotations():
+
+    write_metadata = True
+
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/AnnotationsInDbSoFar_v02'
+
+    src_dir = root_dir + 'Annotationen/_MetadataReadyForDbInsert/'
+    xlsx_files = [
+        "Crex_crex_Unteres_Odertal_2017_v02.xlsx",
+        "Crex_crex_Wellenberge_Lokalisation_2017_v02.xlsx",
+        "CrexCrex_LarsAnnotaions_v03.xlsx",
+        "Scolopax_rusticola_ARSU_2021_v07.xlsx",
+        "Scolopax_rusticola_ARSU_2022_v07.xlsx",
+        "Scolopax_rusticola_FVA_v02.xlsx",
+        "Scolopax_rusticola_MfN_Peenemuende+Schoenow_v04.xlsx"
+    ]
+    
+    df_list = []
+    for file in xlsx_files:
+        path = src_dir + file
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+
+        df = pd.read_excel(path, keep_default_na=False, engine="openpyxl")
+        df_list.append(df)
+
+    df = pd.concat(df_list).reset_index(drop=True)
+    #df = df.sort_values(['filename', 'start_time']).reset_index(drop=True)
+
+    # Drop some cols
+    df = df.drop(columns=['record_filepath', 'collection_name', 'remarks', 'record_license', 'record_remarks', ])
+
+    # Add split
+    df['split'] = 'train'
+
+    # Choose test split
+    # Scolopax rusticola ARSU 2022 
+    df.loc[(df['location_name'] == 'Gellener Torfmöörte') & (df['record_date'].str.startswith('2022-', na=False)), 'split'] = 'test'
+    # Crex crex devise recordings ? --> To check if devise equipment was used
+    df.loc[(df['location_name'] == 'Unteres Odertal') & (df['annotator_name'] == 'Beck, Lars'), 'split'] = 'test'
+
+
+    cols = df.columns
+    #print(cols)
+
+    # print('location_name', list(df['location_name'].unique()))
+    # print('annotator_name', list(df['annotator_name'].unique()))
+    # print('noise_name', list(df['noise_name'].unique()))
+
+    # Write metadata
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+#concat_excel_annotations()
+
+
 print('Done.')

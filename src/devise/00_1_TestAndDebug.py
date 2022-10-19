@@ -206,10 +206,9 @@ def convertFileExtensionToLowerCaseViaPath():
     pathStr = 'test.WAV'
     path = Path(pathStr)
     ext = path.suffix.lower()
-
     print(ext)
-    print(type(path))
+    print(type(ext))
 
-convertFileExtensionToLowerCaseViaPath()
+#convertFileExtensionToLowerCaseViaPath()
 
 print('Done.')
