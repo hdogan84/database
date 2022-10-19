@@ -73,8 +73,16 @@ def duration_string_to_seconds(duration):
 
 
 def make_api_call(species, page=None):
+    
+    # parameter dir & order not used in api
+    # r = requests.get(
+    #     "https://www.xeno-canto.org/api/2/recordings?query={}&dir=1&order=dt".format(
+    #         species
+    #     )
+    #     + ("&page={}".format(page) if page is not None else "")
+    # )
     r = requests.get(
-        "https://www.xeno-canto.org/api/2/recordings?query={}&dir=1&order=dt".format(
+        "https://www.xeno-canto.org/api/2/recordings?query={}".format(
             species
         )
         + ("&page={}".format(page) if page is not None else "")
