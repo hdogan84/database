@@ -63,7 +63,8 @@ FROM
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
-    r.original_filename LIKE '%Devise%' and
+    r.original_filename NOT LIKE '%Devise%' and
+    a.annotator_id = 6193 and
     n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -271,7 +272,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WK-absent-test.csv",
+    default="devise-WK-absent-train.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

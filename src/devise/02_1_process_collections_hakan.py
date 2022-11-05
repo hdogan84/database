@@ -598,10 +598,6 @@ def process_ARSU_audiofiles(id, audio_sub_dir):
 # )
 
 
-def ts_to_dt(ts):
-    return datetime.datetime.fromtimestamp(ts)
-
-
 def process_Wellenberge_annotation():
 
     audio_dir = "/mnt/z/Projekte/DeViSe/Crex_crex_Recordings/Lokalisation_2017_05_18/Recorder01/"
@@ -685,7 +681,7 @@ def process_Wellenberge_annotation():
     df.to_excel(outpul_excel_file, index=False)
 
 
-process_Wellenberge_annotation()
+# process_Wellenberge_annotation()
 
 
 print("Done.")
