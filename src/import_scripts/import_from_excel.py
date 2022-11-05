@@ -26,6 +26,8 @@ ROOT_DIR = '/mnt/z/Projekte/DeViSe/'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_FVA_v02.xlsx'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Wellenberge_Lokalisation_2017_v02.xlsx'
 
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_2022_v07.xlsx'
+
 
 
 audio_root_dir = '/net/mfnstore-lin/export/tsa_transfer/TrainData/libro_animalis/temp/'

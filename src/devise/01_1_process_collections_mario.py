@@ -13,20 +13,19 @@ metadata_dir = root_dir + 'Annotationen/'
 lars_dir = metadata_dir + 'Lars_Beck/'
 
 
-def create_postfix_str(start_time, end_time=None):
+def create_postfix_str(start_time, add_start_time_even_if_zero=False):
     # _500To20000ms
     #postfix_str = '_' + str(int(1000*start_time)) + 'To' + str(int(1000*end_time)) + 'ms'
     # S00000500E00002000ms
     #postfix_str = '_S' + str(int(1000*start_time)).zfill(8) + 'E' + str(int(1000*end_time)).zfill(8) + 'ms'
     # S00000500ms
+
+    # Olaf style Shhmmss.ssEhhmmss.ss
     
-    if start_time:
+    if start_time or add_start_time_even_if_zero:
         postfix_str = '_s' + str(int(1000*start_time)).zfill(8) + 'ms'
     else:
         postfix_str = ''
-
-
-    # Olaf style Shhmmss.ssEhhmmss.ss
 
     return postfix_str
 
@@ -211,7 +210,7 @@ def read_raven_label_file(path):
 path = root_dir + 'Scolopax_rusticola_Recordings/Monitoring/Peenemuende_140525_327_4ch.Table.1.selections.txt'
 #read_raven_label_file(path)
 
-def write_part_of_audio_file(path, start_time=0.0, end_time=None, channel_ix=None, dst_dir=None, format=None):
+def write_part_of_audio_file(path, start_time=0.0, end_time=None, channel_ix=None, dst_dir=None, format=None, add_start_time_even_if_zero=False):
 
     # ToDo Maybe: resample, remove dc-offset (hp filter), normalize, fade in/out
 
@@ -228,38 +227,42 @@ def write_part_of_audio_file(path, start_time=0.0, end_time=None, channel_ix=Non
     if not os.path.exists(dst_dir): 
         os.makedirs(dst_dir)
 
-    if os.path.isfile(path):
-        
-        # Get audio file infos
-        with sf.SoundFile(path) as f:
-            samplerate = f.samplerate
-            n_channels = f.channels
-            subtype = f.subtype # bit depth info, e.g. 'PCM_16', 'PCM_24'
+    # Get dst path
+    filename_new = filename_without_ext + create_postfix_str(start_time, add_start_time_even_if_zero=add_start_time_even_if_zero)
+    if channel_ix is not None: 
+        filename_new += '_c' + str(channel_ix)
+    if format: 
+        ext = '.' + format
+    path_new = dst_dir + filename_new + ext
 
-        start_ix = 0
-        end_ix = None
-        if start_time:
-            start_ix = int(start_time*samplerate)
-        if end_time:
-            end_ix = int(end_time*samplerate)
-        data, samplerate = sf.read(path, start=start_ix, stop=end_ix, always_2d=True)
+    if not os.path.isfile(path_new):
 
-        filename_new = filename_without_ext + create_postfix_str(start_time)
-        if channel_ix is not None:
-            filename_new += '_c' + str(channel_ix)
+        if os.path.isfile(path):
+            
+            # Get audio file infos
+            with sf.SoundFile(path) as f:
+                samplerate = f.samplerate
+                n_channels = f.channels
+                subtype = f.subtype # bit depth info, e.g. 'PCM_16', 'PCM_24'
 
-        if format:
-            ext = '.' + format
-        
-        path_new = dst_dir + filename_new + ext
+            start_ix = 0
+            end_ix = None
+            if start_time:
+                start_ix = int(start_time*samplerate)
+            if end_time:
+                end_ix = int(end_time*samplerate)
+            data, samplerate = sf.read(path, start=start_ix, stop=end_ix, always_2d=True)
 
-        if channel_ix is not None:
-            sf.write(path_new, data[:,channel_ix], samplerate, subtype=subtype)
+            if channel_ix is not None:
+                sf.write(path_new, data[:,channel_ix], samplerate, subtype=subtype)
+            else:
+                sf.write(path_new, data, samplerate, subtype=subtype)
+            
         else:
-            sf.write(path_new, data, samplerate, subtype=subtype)
-        
+            print('Error file not found', path)
+
     else:
-        print('Error file not found', path)
+        print('Warning dst path already existing', path_new)
 
 
 def get_open_intervals(df, global_start_time=0.0, global_end_time=None):
@@ -373,6 +376,44 @@ def create_noise_annotations(df, dilation_duration=1.0, min_duration=5.0):
 
     return df_new
 
+def divide_intervals_into_beginning_and_end(df, segment_duration=10.0, segment_duration_max=30.0, segment_duration_min=None):
+
+    # Divide/Reduce intervals in beginning and end part with duration=segment_duration 
+    # Divide/Reduce interval only if original duration >= segment_duration_max
+    # Discard middle part
+    # Remove intervals with duration < segment_duration_min
+
+    assert segment_duration_max > 2*segment_duration
+
+    rows_to_remove_ixs = []
+
+    for ix, row in df.iterrows():
+        start_time = row['start_time']
+        end_time = row['end_time']
+        duration = end_time - start_time
+        assert duration > 0.0
+        
+        if duration >= segment_duration_max:
+            # Adjust original interval
+            df.at[ix, 'end_time'] = start_time + segment_duration
+            # Append end segment to df
+            row_new = row
+            row_new['start_time'] = end_time - segment_duration
+            df = df.append(row_new, ignore_index=True)
+            #print(ix, start_time, end_time)
+
+        if segment_duration_min and duration < segment_duration_min:
+            rows_to_remove_ixs.append(ix)
+            #print(ix, start_time, end_time)
+    
+    # Remove intervals with duration < segment_duration_min
+    if len(rows_to_remove_ixs):
+        df = df.drop(df.index[rows_to_remove_ixs]).reset_index(drop=True)
+    
+    # Sort
+    df = df.sort_values(['filename', 'start_time']).reset_index(drop=True)
+
+    return df
 
 def process_Crex_crex_Unteres_Odertal_2017():
 
@@ -996,7 +1037,214 @@ def postprocess_hakan_arsu(year):
 #postprocess_hakan_arsu(2021)
 #postprocess_hakan_arsu(2022)
 
+def get_arsu_background_annotations():
 
+    # Beginn is equal to postprocess_hakan_arsu(year)
+    # But noise will annotatied later via create_noise_annotations (using get_open_intervals)
+
+    write_audio_parts = False # True False
+    write_metadata = True
+    
+    src_dir = root_dir + 'Annotationen/ARSU_temp/'
+    #dst_dir = root_dir + 'Annotationen/_Segments/temp/'
+    #dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola/'
+    dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola_BG/'
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_2022_v07'
+
+    # Collect annotations from excel files
+    xlsx_files = [
+        'Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx'
+    ]
+    
+    df_list = []
+    for file in xlsx_files:
+        path = src_dir + file
+
+        if not os.path.isfile(path):
+            print("Error: File not found", path)
+
+        df = pd.read_excel(path, keep_default_na=False, engine="openpyxl")
+        df_list.append(df)
+        print("n_rows", len(df))
+
+    df = pd.concat(df_list).reset_index(drop=True)
+    #print(df)
+
+    # Get unique audio files
+    files = list(df["filename"].unique())
+    n_files = len(files)
+    # print(files)
+    print("n_files", n_files)
+
+
+
+    # Create df_dilation (add time interval to start/end time)
+    dilation_duration = 4.0
+    df_dilation = df.copy()
+    df_dilation['start_time'] = df_dilation['start_time'] - dilation_duration
+    df_dilation['end_time'] = df_dilation['end_time'] + dilation_duration
+    #print(df_dilation)
+
+    # Check/correkt if start_time < 0 or end_time > duration
+    #df_dilation.loc[df_dilation['start_time'] < 0.0, 'start_time'] = 0.0
+    for ix, row in df_dilation.iterrows():
+        if row['start_time'] < 0.0:
+            df_dilation.at[ix, 'start_time'] = 0.0
+            print(row['filename'], 'start_time < 0.0,', row['start_time'], '-->', df_dilation.at[ix, 'start_time'])
+        # Get duration
+        path = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + row['filename'] + '.flac'
+        with sf.SoundFile(path) as f:
+            duration = f.frames/f.samplerate
+        if row['end_time'] > duration:
+            df_dilation.at[ix, 'end_time'] = duration
+            print(row['filename'], 'end_time > duration,', row['end_time'], '-->', df_dilation.at[ix, 'end_time'] )
+    
+    #quit()
+
+    # Create df_merged for original annotations
+    df_merged_list = {}
+    df_merged_list['filename'] = []
+    df_merged_list['start_time'] = []
+    df_merged_list['end_time'] = []
+    
+    filename = df_dilation.filename.values[0]
+    start_time = df_dilation.start_time.values[0]
+    end_time = df_dilation.end_time.values[0]
+    #print(filename, start_time, end_time)
+
+    max_time_without_annotation = 2 #10 #2 #4
+
+    for ix, row in df_dilation.iterrows():
+
+        if row['filename'] != filename or row['start_time'] - end_time > max_time_without_annotation:
+            # Add current values to df_merged_list
+            df_merged_list['filename'].append(filename)
+            df_merged_list['start_time'].append(start_time)
+            df_merged_list['end_time'].append(end_time)
+            # Init new 
+            filename = row['filename']
+            start_time = row['start_time']
+            end_time = row['end_time']
+        else:
+            end_time = row['end_time']
+
+    # Add last row
+    df_merged_list['filename'].append(filename)
+    df_merged_list['start_time'].append(start_time)
+    df_merged_list['end_time'].append(end_time)
+
+    df_merged = pd.DataFrame.from_dict(df_merged_list)
+    #print(df_merged)
+            
+
+
+    # Round times to nearest second
+    df_merged['start_time'] = df_merged['start_time'].apply(np.floor)
+    df_merged['end_time'] = df_merged['end_time'].apply(np.ceil)
+
+    print(df_merged)
+    n_files_merged = len(df_merged)
+    print('n_files_merged', n_files_merged)
+
+    
+
+    # Create noise (species absent) annotations
+
+    # Add record_filepath to df_merged (to get duration)
+    df_merged['record_filepath'] = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + df_merged['filename'] + '.flac'
+    
+
+    df = create_noise_annotations(df_merged, dilation_duration=0.0, min_duration=5.0)
+    df['noise_name'] = 'Scolopax rusticola absent'
+    
+    # Get total duration of noise annotations (and species annotations)
+    print('noise_duration_total', (df['end_time']-df['start_time']).sum()) # 257190.02933333334
+    print('species_duration_total', (df_merged['end_time']-df_merged['start_time']).sum()) # 7688.0
+
+    #print(df)
+
+    # Reduce noise annotations (to beginning and end parts)
+    df = divide_intervals_into_beginning_and_end(df, segment_duration=20.0, segment_duration_max=50.0, segment_duration_min=10.0)
+
+    # Round times to nearest second
+    df['start_time'] = df['start_time'].apply(np.floor)
+    df['end_time'] = df['end_time'].apply(np.floor)
+
+    # Sanity checks and corrections for start_time (shoud not be negative)
+    if not df.loc[df['start_time'] < 0.0].empty:
+        print('Warning negative start_time:', df.loc[df['start_time'] < 0.0])
+    df.loc[df['start_time'] < 0.0, 'start_time'] = 0.0 
+
+    # Devise04_2022-06-16T02-47-13_s01852000ms_c0 makes problems when reading part via soundfile
+    df = df.drop(df[(df.filename == 'Devise04_2022-06-16T02-47-13') & (df.start_time == 1852)].index)
+
+    
+    print('noise_duration_total', (df['end_time']-df['start_time']).sum()) # 16300.0
+
+    print(df)
+
+    #quit()
+
+    # Write audio parts and rename files according to annotation interval
+    for ix, row in df.iterrows():
+        filename = row['filename']
+        start_time = row['start_time'] # rounded to seconds
+        end_time = row['end_time']
+        
+        filename_new = filename + create_postfix_str(start_time, add_start_time_even_if_zero=True) + '_c0'
+        df.at[ix, 'filename_new'] = filename_new
+
+        if write_audio_parts:
+            path = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + filename + '.flac'
+            print('Writing', filename_new)
+            write_part_of_audio_file(path, start_time, end_time, channel_ix=0, dst_dir=dst_dir, format='wav', add_start_time_even_if_zero=True)
+
+    
+    #print(df)
+
+    # Add metadata:
+    df['id_level'] = 1
+    df['annotator_name'] = 'Steinkamp, Tim'
+    df['recordist_name'] = 'Steinkamp, Tim'
+    df['location_name'] = 'Gellener Torfmöörte'
+    df['equipment_name'] = 'devise'
+    df['collections_name'] = 'devise'
+    
+    # Adjust path to new filename
+    df['record_filepath'] = dst_dir + df['filename_new'] + '.wav'
+
+
+    # Add record_date, record_time from filename and adjust start/end time to 0.0 and duration of file
+    df['record_date'] = None
+    df['record_time'] = None
+    for ix, row in df.iterrows():
+        df.at[ix, 'record_date'] = row['filename'].split('_')[1][:10]
+        df.at[ix, 'record_time'] = row['filename'].split('_')[1][11:19].replace("-", ":")
+
+        # Check and adjust start/end time (to 0.0, duration)
+        path = dst_dir + row['filename_new'] + '.wav'
+        with sf.SoundFile(path) as f:
+            duration = f.frames/f.samplerate
+        assert row['end_time'] - row['start_time'] == duration
+        df.at[ix, 'start_time'] = 0.0
+        df.at[ix, 'end_time'] = duration
+
+
+        #df.at[ix, 'filename'] = filename_new
+    
+    # Replace filename with filename_new
+    df['filename'] = df['filename_new']
+    df = df.drop(columns=['filename_new'])
+
+    print(df)
+
+
+    # Write metadata (excel, csv)
+    if write_metadata:
+        df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+        #df.to_csv(metadata_path_without_ext + '.csv', index=False)
+
+#get_arsu_background_annotations()
 
 def process_Lars_Annotations():
 
@@ -1222,12 +1470,12 @@ def process_fva():
     # Create noise (species absent) annotations
     #  Unfortunately not reliable
     #  Some weak signals are not annotated, e.g. 14569_1_2020_06_11_FVA133_20200611_194506.WAV 116,18898 - 369,0195s)
-    df_noise_annotations = create_noise_annotations(df)
-    df_noise_annotations['noise_name'] = 'Scolopax rusticola absent'
+    df_noise = create_noise_annotations(df)
+    df_noise['noise_name'] = 'Scolopax rusticola absent'
     
     # Concat dfs
     df['noise_name'] = None
-    df = pd.concat([df, df_noise_annotations], ignore_index=True, sort=False).reset_index(drop=True)
+    df = pd.concat([df, df_noise], ignore_index=True, sort=False).reset_index(drop=True)
     
     
     
