@@ -3,6 +3,7 @@ import numpy as np
 import soundfile as sf
 import pandas as pd
 from pathlib import Path
+from datetime import datetime
 
 root_dir = '/mnt/z/Projekte/DeViSe/'
 
@@ -206,10 +207,12 @@ def convertFileExtensionToLowerCaseViaPath():
     pathStr = 'test.WAV'
     path = Path(pathStr)
     ext = path.suffix.lower()
-
     print(ext)
-    print(type(path))
+    print(type(ext))
 
-convertFileExtensionToLowerCaseViaPath()
+#convertFileExtensionToLowerCaseViaPath()
+
+end_date = datetime.strptime("2020-05-01", "%Y-%m-%d")
+print(end_date)
 
 print('Done.')

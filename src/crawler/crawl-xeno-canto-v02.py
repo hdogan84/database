@@ -1,44 +1,32 @@
+# https://xeno-canto.org/explore/api
+# https://xeno-canto.org/help/search
+# https://xeno-canto.org/search
+
 import requests
 
 from datetime import datetime
 import shutil
 from pathlib import Path
 import csv
+import time
 
 species_list = [
-    "Fringilla coelebs",
     "Scolopax rusticola",
     "Crex crex",
-    "Chloris chloris",
-    "Coccothraustes coccothraustes",
-    "Spinus spinus",
-    "Anthus trivialis",
-    "Erithacus rubecula",
-    "Ficedula hypoleuca",
-    "Muscicapa striata",
-    "Phoenicurus phoenicurus",
-    "Cyanistes caeruleus",
-    "Lophophanes cristatus",
-    "Parus major",
-    "Periparus ater",
-    "Poecile palustris",
-    "Phylloscopus sibilatrix",
-    "Phylloscopus trochilus",
-    "Sitta europaea",
-    "Sylvia atricapilla",
-    "Troglodytes troglodytes",
-    "Turdus merula",
-    "Turdus philomelos",
-    "Turdus viscivorus",
-    "Dendrocopos major",
 ]
 
-download_path = "./downloads"
-collection = "xeno_canto-ammod"
+#download_path = "./downloads"
+download_path = "/net/mfnstore-lin/export/tsa_transfer/AudioData/xeno-canto/"
+collection = "xeno-canto-2022-10-19-03"
 result_file = "collection-data.csv"
 result_filepath = download_path + "/" + collection + "/" + result_file
 
 end_date = datetime.strptime("2020-05-01", "%Y-%m-%d")
+
+api_call_sleep_time = 1.0
+
+download_file_flag = True
+download_file_sleep_time = 1.0
 
 
 def write_to_csv(data, filename, header) -> None:
@@ -61,7 +49,7 @@ def download_file(url, local_filename, subfolder=None):
     with requests.get(url, stream=True) as r:
         with open(download_folder + "/" + local_filename, "wb") as f:
             shutil.copyfileobj(r.raw, f)
-    return local_filename
+    #return local_filename
 
 
 def duration_string_to_seconds(duration):
@@ -74,13 +62,6 @@ def duration_string_to_seconds(duration):
 
 def make_api_call(species, page=None):
     
-    # parameter dir & order not used in api
-    # r = requests.get(
-    #     "https://www.xeno-canto.org/api/2/recordings?query={}&dir=1&order=dt".format(
-    #         species
-    #     )
-    #     + ("&page={}".format(page) if page is not None else "")
-    # )
     r = requests.get(
         "https://www.xeno-canto.org/api/2/recordings?query={}".format(
             species
@@ -108,7 +89,11 @@ for species in species_list:
             result["numRecordings"], species, result["numSpecies"]
         )
     )
-    for page in range(1, result["numPages"]):
+
+    if api_call_sleep_time:
+        time.sleep(api_call_sleep_time)
+    
+    for page in range(1, result["numPages"]+1):
         print(page)
         result = make_api_call(species, page=page)
         break_page_iteration = False
@@ -119,7 +104,18 @@ for species in species_list:
                 print("Reached end date on page {} record {}".format(page, index))
                 break_page_iteration = True
                 break
-            filepath = download_file("https:" + record["file"], record["file-name"])
+            
+            if download_file_flag:
+                #filepath = download_file("https:" + record["file"], record["file-name"])
+                download_file(record["file"], record["file-name"])
+                if download_file_sleep_time:
+                    time.sleep(api_call_sleep_time)
+            else:
+                if api_call_sleep_time:
+                    time.sleep(api_call_sleep_time)
+
+
+            
             record_csv_entry = [
                 record["rec"].replace(";", ","),  # recordist sanitize ;
                 record["loc"].replace(";", ","),  # location sanitize ;
