@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 noise_id_list = """
 (
-    1, 2, 5
+    1
 )
 """
 query_files = """
@@ -63,7 +63,8 @@ FROM
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
-    r.collection_id = 176 and
+    r.original_filename NOT LIKE '%Devise%' and
+    a.annotator_id = 6193 and
     n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -259,7 +260,9 @@ def export_data(
     )
     noise_id_list = create_noise_id_list(config)
     write_to_csv(
-        noise_id_list, filename_class_list, ["latin_name", "english_name", "german_name"]
+        noise_id_list,
+        filename_class_list,
+        ["latin_name", "english_name", "german_name"],
     )
 
 
@@ -269,7 +272,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-waldschnepfe-XXX.csv",
+    default="devise-WK-absent-train.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

@@ -11,7 +11,7 @@ from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
-COLLECTION_ID = 176
+COLLECTION_ID = 177
 BACKGROUND_LEVEL = ""
 SET_FILENAME = "devise-test-2.csv"
 CLASS_LIST_FILENAME = "devise-class-list.csv"
@@ -77,7 +77,6 @@ FROM
     location AS l ON l.id = r.location_id 
    
 WHERE
-    l.name = "Gellener Torfmöörte" and
     r.collection_id = {} and
     s.olaf8_id IN {} 
    

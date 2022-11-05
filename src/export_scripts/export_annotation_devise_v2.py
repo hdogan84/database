@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-'AVRACRCR'
+    'AVRACRCR'
 )
 """
 query_files = """
@@ -64,7 +64,9 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     r.collection_id = 176 and
-    r.original_filename LIKE 'WK2017%' and
+    a.annotator_id = 6193 and
+    r.location_id = 57248 and
+    r.original_filename LIKE '%mono%' and
     s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -270,7 +272,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-waldschnepfe-XXX.csv",
+    default="devise-WK-XXX.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
