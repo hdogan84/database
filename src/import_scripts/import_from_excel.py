@@ -27,6 +27,7 @@ ROOT_DIR = '/mnt/z/Projekte/DeViSe/'
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Crex_crex_Wellenberge_Lokalisation_2017_v02.xlsx'
 
 #EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_2022_v07.xlsx'
+#EXCEL_PATH = ROOT_DIR + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_2021_v07.xlsx'
 
 
 

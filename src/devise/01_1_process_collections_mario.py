@@ -1037,7 +1037,7 @@ def postprocess_hakan_arsu(year):
 #postprocess_hakan_arsu(2021)
 #postprocess_hakan_arsu(2022)
 
-def get_arsu_background_annotations():
+def get_arsu_background_annotations(year):
 
     # Beginn is equal to postprocess_hakan_arsu(year)
     # But noise will annotatied later via create_noise_annotations (using get_open_intervals)
@@ -1049,11 +1049,11 @@ def get_arsu_background_annotations():
     #dst_dir = root_dir + 'Annotationen/_Segments/temp/'
     #dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola/'
     dst_dir = root_dir + 'Annotationen/_Segments/Scolopax_rusticola_BG/'
-    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_2022_v07'
+    metadata_path_without_ext =  root_dir + 'Annotationen/_MetadataReadyForDbInsert/Scolopax_rusticola_BG_ARSU_' + str(year) + '_temp'
 
     # Collect annotations from excel files
     xlsx_files = [
-        'Scolopax_rusticola_Devise_ARSU_2022_v1.xlsx'
+        'Scolopax_rusticola_Devise_ARSU_' + str(year) + '_v1.xlsx'
     ]
     
     df_list = []
@@ -1092,7 +1092,7 @@ def get_arsu_background_annotations():
             df_dilation.at[ix, 'start_time'] = 0.0
             print(row['filename'], 'start_time < 0.0,', row['start_time'], '-->', df_dilation.at[ix, 'start_time'])
         # Get duration
-        path = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + row['filename'] + '.flac'
+        path = src_dir + 'Scolopax_rusticola_Devise_ARSU_' + str(year) + '/' + row['filename'] + '.flac'
         with sf.SoundFile(path) as f:
             duration = f.frames/f.samplerate
         if row['end_time'] > duration:
@@ -1151,7 +1151,7 @@ def get_arsu_background_annotations():
     # Create noise (species absent) annotations
 
     # Add record_filepath to df_merged (to get duration)
-    df_merged['record_filepath'] = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + df_merged['filename'] + '.flac'
+    df_merged['record_filepath'] = src_dir + 'Scolopax_rusticola_Devise_ARSU_' + str(year) + '/' + df_merged['filename'] + '.flac'
     
 
     df = create_noise_annotations(df_merged, dilation_duration=0.0, min_duration=5.0)
@@ -1176,7 +1176,8 @@ def get_arsu_background_annotations():
     df.loc[df['start_time'] < 0.0, 'start_time'] = 0.0 
 
     # Devise04_2022-06-16T02-47-13_s01852000ms_c0 makes problems when reading part via soundfile
-    df = df.drop(df[(df.filename == 'Devise04_2022-06-16T02-47-13') & (df.start_time == 1852)].index)
+    if year == 2022:
+        df = df.drop(df[(df.filename == 'Devise04_2022-06-16T02-47-13') & (df.start_time == 1852)].index)
 
     
     print('noise_duration_total', (df['end_time']-df['start_time']).sum()) # 16300.0
@@ -1195,12 +1196,14 @@ def get_arsu_background_annotations():
         df.at[ix, 'filename_new'] = filename_new
 
         if write_audio_parts:
-            path = src_dir + 'Scolopax_rusticola_Devise_ARSU_2022/' + filename + '.flac'
+            path = src_dir + 'Scolopax_rusticola_Devise_ARSU_' + str(year) + '/' + filename + '.flac'
             print('Writing', filename_new)
             write_part_of_audio_file(path, start_time, end_time, channel_ix=0, dst_dir=dst_dir, format='wav', add_start_time_even_if_zero=True)
 
     
     #print(df)
+
+    #quit()
 
     # Add metadata:
     df['id_level'] = 1
@@ -1208,7 +1211,7 @@ def get_arsu_background_annotations():
     df['recordist_name'] = 'Steinkamp, Tim'
     df['location_name'] = 'Gellener Torfmöörte'
     df['equipment_name'] = 'devise'
-    df['collections_name'] = 'devise'
+    df['collection_name'] = 'devise'
     
     # Adjust path to new filename
     df['record_filepath'] = dst_dir + df['filename_new'] + '.wav'
@@ -1244,7 +1247,8 @@ def get_arsu_background_annotations():
         df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
         #df.to_csv(metadata_path_without_ext + '.csv', index=False)
 
-#get_arsu_background_annotations()
+#get_arsu_background_annotations(2022)
+#get_arsu_background_annotations(2021)
 
 def process_Lars_Annotations():
 
