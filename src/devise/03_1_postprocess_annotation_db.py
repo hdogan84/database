@@ -80,4 +80,13 @@ def correctChannelIxForWellenberge():
 
 #correctChannelIxForWellenberge()
 
+def correctCollectionIdForArsu2022ScolopaxRusticolaAbsentFiles():
+    with db_connection.cursor(dictionary=True) as db_cursor:
+        query = "UPDATE `libro_animalis`.`record` SET `collection_id` = 176 WHERE id >= '1114883' AND id <= '1115680';"
+        db_cursor.execute(query)
+        db_connection.commit()
+
+#correctCollectionIdForArsu2022ScolopaxRusticolaAbsentFiles()
+
+
 print('Done.')

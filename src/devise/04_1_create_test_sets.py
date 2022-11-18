@@ -47,7 +47,7 @@ def get_start_and_end_times_of_overlapping_segments(global_end_time, global_star
     return start_times, end_times
 
 
-def get_annotationes_crex_crex():
+def get_annotations_crex_crex():
 
     keys = ['original_filename', 'start_time', 'end_time']
     #keys += ['start_frequency', 'end_frequency']
@@ -89,7 +89,7 @@ def get_annotationes_crex_crex():
 
     return df
 
-def get_annotationes_Scolopax_rusticola():
+def get_annotations_Scolopax_rusticola_of_original_files():
 
     # Use original files (not annotation db segments)
     # Start from hakan excel file
@@ -133,6 +133,95 @@ def get_annotationes_Scolopax_rusticola():
 
 
     print(df)
+
+    metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
+    df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+    return df
+
+
+def get_annotations_Scolopax_rusticola():
+
+    keys = ['original_filename', 'start_time', 'end_time']
+    #keys += ['start_frequency', 'end_frequency']
+    #keys += ['channel_ix']
+    #keys += ['vocalization_type']
+    keys += ['quality_tag', 'background_level']
+    #keys += ['id_level']
+    keys += ['file_path', 'filename', 'duration', 'channels']
+
+
+    print(keys)
+
+    df_dict = {}
+    for key in keys:
+        df_dict[key] = []
+
+    with db_connection.cursor(dictionary=True) as db_cursor:
+        
+        query = "SELECT * FROM libro_animalis.annotation_view WHERE collection LIKE '%devise%'"
+        query += " AND latin_name = 'Scolopax rusticola'"
+        query += " AND annotator LIKE 'Steinkamp%'"
+        query += " AND date>='2022-01-01';"
+        
+        db_cursor.execute(query)
+        rows = db_cursor.fetchall()
+
+        for row in rows:
+            for key in keys:
+                df_dict[key].append(row[key])
+            print(row['id'], row['start_time'], row['end_time'], row['start_frequency'], row['end_frequency'], row['vocalization_type'])
+
+        print('n_rows', db_cursor.rowcount)
+
+    df = pd.DataFrame.from_dict(df_dict)
+    print(df)
+
+    metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
+    df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+    return df
+
+def get_annotations_Scolopax_rusticola_absent():
+
+    keys = ['original_filename', 'start_time', 'end_time']
+    #keys += ['start_frequency', 'end_frequency']
+    #keys += ['channel_ix']
+    #keys += ['vocalization_type']
+    keys += ['quality_tag', 'background_level']
+    #keys += ['id_level']
+    keys += ['file_path', 'filename', 'duration', 'channels']
+
+
+    print(keys)
+
+    df_dict = {}
+    for key in keys:
+        df_dict[key] = []
+
+    with db_connection.cursor(dictionary=True) as db_cursor:
+        
+        query = "SELECT * FROM libro_animalis.annotation_of_noise_view WHERE collection LIKE '%devise%'"
+        query += " AND noise_name = 'Scolopax rusticola absent'"
+        query += " AND annotator LIKE 'Steinkamp%'"
+        query += " AND date>='2022-01-01';"
+        
+        db_cursor.execute(query)
+        rows = db_cursor.fetchall()
+
+        for row in rows:
+            for key in keys:
+                df_dict[key].append(row[key])
+            print(row['id'], row['start_time'], row['end_time'], row['start_frequency'], row['end_frequency'], row['vocalization_type'])
+
+        print('n_rows', db_cursor.rowcount)
+
+    df = pd.DataFrame.from_dict(df_dict)
+    print(df)
+
+    # Hack: set start/end time to 0.0 because otherwise interval will be interpreted as species annotation
+    df['start_time'] = 0.0
+    df['end_time'] = 0.0
 
     metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
     df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
@@ -325,6 +414,101 @@ def split_test_set_via_quality(df):
 
     return df
 
+def split_test_set_via_quality_relative_to_files_before_segmentation(df):
+
+    # Convert cols quality_tag and background_level to numeric
+    df['quality_tag'] = pd.to_numeric(df['quality_tag'])
+    df['background_level'] = pd.to_numeric(df['background_level'])
+
+    # Add col of original filename before segmentation
+    # e.g. Devise01_2022-06-13T21-12-18_s00000000ms_c0.wav --> Devise01_2022-06-13T21-12-18
+    df['original_filename_before_segmentation'] = None
+    for ix, row in df.iterrows():
+        df.at[ix, 'original_filename_before_segmentation'] = row['original_filename'][:-19]
+
+    print(df)
+
+    filenames_all = list(df['original_filename_before_segmentation'].unique())
+    n_files_all = len(filenames_all)
+    print('n_files_all', n_files_all)
+
+    n_segments_all = len(df.index)
+    print('n_segments_all', n_segments_all)
+
+
+    df_quality_below_3 = df.loc[(df['quality_tag'] < 3)]
+    n_segments_quality_below_3 = len(df_quality_below_3.index)
+    print('n_segments_quality_below_3', n_segments_quality_below_3) # 1136
+
+    df_quality_below_4 = df.loc[(df['quality_tag'] < 4)]
+    n_segments_quality_below_4 = len(df_quality_below_4.index)
+    print('n_segments_quality_below_4', n_segments_quality_below_4) # 5854
+
+    df_quality_above_3 = df.loc[(df['quality_tag'] > 3)]
+    n_segments_quality_above_3 = len(df_quality_above_3.index)
+    print('n_segments_quality_above_3', n_segments_quality_above_3) # 4613
+
+    # Get files with good quality (< 4) segments
+    filenames_easy = list(df_quality_below_4['original_filename_before_segmentation'].unique())
+    n_files_easy = len(filenames_easy)
+    print('n_files_easy', n_files_easy) # 132
+
+    filenames_hard = list(df_quality_above_3['original_filename_before_segmentation'].unique())
+    n_files_hard = len(filenames_hard)
+    print('n_files_hard_n_easy', n_files_hard) # 127 (but files can also have segments with good quality!)
+
+    # # Add test split type (init with test_hard)
+    # # test_hard has only quality > 3 segments
+    #df['split'] = 'test_hard'
+    #df.loc[df['original_filename_before_segmentation'].isin(filenames_easy), 'split'] = 'test_easy'
+
+    # Add test split type (init with test_easy)
+    # test_easy has only quality < 4 segments
+    df['split'] = 'test_easy'
+    df.loc[df['original_filename_before_segmentation'].isin(filenames_hard), 'split'] = 'test_hard'
+
+    print(df)
+
+
+    # Get some final stats
+
+    df_easy = df.loc[(df['split'] == 'test_easy')]
+    
+    filenames_easy = list(df_easy['original_filename_before_segmentation'].unique())
+    n_files_easy = len(filenames_easy)
+    print('n_files_easy', n_files_easy)
+    n_segments_easy = len(df_easy.index)
+    print('n_segments_easy', n_segments_easy)
+    n_segments_positiv_easy = len(df_easy.loc[df_easy['species_latin_name'] != ''])
+    print('n_segments_positiv_easy', n_segments_positiv_easy)
+    n_segments_negativ_easy = len(df_easy.loc[df_easy['species_latin_name'] == ''])
+    print('n_segments_negativ_easy', n_segments_negativ_easy)
+    assert n_segments_positiv_easy + n_segments_negativ_easy == n_segments_easy
+
+
+    df_hard = df.loc[(df['split'] == 'test_hard')]
+
+    filenames_hard = list(df_hard['original_filename_before_segmentation'].unique())
+    n_files_hard = len(filenames_hard)
+    print('n_files_hard', n_files_hard)
+    n_segments_hard = len(df_hard.index)
+    print('n_segments_hard', n_segments_hard)
+    n_segments_positiv_hard = len(df_hard.loc[df_hard['species_latin_name'] != ''])
+    print('n_segments_positiv_hard', n_segments_positiv_hard)
+    n_segments_negativ_hard = len(df_hard.loc[df_hard['species_latin_name'] == ''])
+    print('n_segments_negativ_hard', n_segments_negativ_hard)
+    assert n_segments_positiv_hard + n_segments_negativ_hard == n_segments_hard
+
+    assert n_segments_easy + n_segments_hard == n_segments_all
+
+    # Drop col
+    df = df.drop(columns=['original_filename_before_segmentation'])
+
+
+    metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v04'
+    df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+    return df
 
 
 
@@ -338,28 +522,37 @@ def split_test_set_via_quality(df):
 
 ##################################################################################################
 
-#df = get_annotationes_crex_crex()
+#df = get_annotations_crex_crex()
 
-metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v01'
-df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v01'
+#df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
 #df = create_test_segments(df)
 
-metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v02_5s'
-df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v02_5s'
+#df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
 #df = split_test_set_via_quality(df)
 
 
 
-#df = get_annotationes_Scolopax_rusticola()
+# Use orignal files and annotations
+#df = get_annotations_Scolopax_rusticola_of_original_files()
 
-metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaAnnotations_v01'
-df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
-#df = create_test_segments(df, species_latin_name='Scolopax rusticola')
+# Use segments in DB 
+# df = get_annotations_Scolopax_rusticola()
+# df_noise = get_annotations_Scolopax_rusticola_absent()
+# df = pd.concat([df, df_noise], ignore_index=True, sort=False).reset_index(drop=True)
+# metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
+# df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
 
-metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaAnnotations_v02_5s'
-df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
-df = split_test_set_via_quality(df)
 
+# metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaAnnotations_v21'
+# df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+# df = create_test_segments(df, species_latin_name='Scolopax rusticola')
+
+#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaAnnotations_v22_5s'
+#df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+#df = split_test_set_via_quality(df)
+#df = split_test_set_via_quality_relative_to_files_before_segmentation(df)
 
 
 print('Done.')
