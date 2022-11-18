@@ -80,4 +80,4 @@ class Standart22050hz(DerivativeBaseClass):
 
         sf.write(target_file_path, y, self.sample_rate, "PCM_16")
 
-        debug("standart2khz {}".format(target_file_path.as_posix()))
+        debug("standart22khz {}".format(target_file_path.as_posix()))

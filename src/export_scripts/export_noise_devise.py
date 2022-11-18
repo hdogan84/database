@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 noise_id_list = """
 (
-    1
+    5
 )
 """
 query_files = """
@@ -63,8 +63,7 @@ FROM
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
-    r.original_filename NOT LIKE '%Devise%' and
-    a.annotator_id = 6193 and
+    r.location_id = 57247 and 
     n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -220,7 +219,7 @@ def export_data(
 ):
     config = parse_config(config_path)
 
-    print("Search an create file derivations")
+    print("Search and create file derivations")
     derivates_dict = create_file_derivates(config)
     # multi_labels = create_multiabels(config)
     # pointing_to_derivates_multi_labels = list(
@@ -272,7 +271,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WK-absent-train.csv",
+    default="ARSU21-WS-absent.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

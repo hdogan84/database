@@ -7,15 +7,13 @@ import soundfile as sf
 import time
 
 root_dir = "/mnt/z/Projekte/DeViSe/"
-metadata_dir = root_dir + "Annotationen/"
-
 
 
 def process_csv_export_file():
 
     # Search for audacity label track txt files
-    file_dir = "data/devise/WK_train/"
-    input_csv_file = file_dir + "devise-WK-Criewen-TSA-with-absent.csv"
+    file_dir = "data/devise/WS_new/"
+    input_csv_file = file_dir + "devise-WS_MfN_ARSU2021.csv"
 
     df = pd.read_csv(input_csv_file, header="infer", delimiter=";")
     print(df.columns)
@@ -25,12 +23,60 @@ def process_csv_export_file():
 
     print(df)
 
-    outpul_csv_file = file_dir + "WK-Criewen-TSA-pos-neg.csv"
+    outpul_csv_file = file_dir + "devise-WS-MfN-ARSU2021.csv"
     df.to_csv(outpul_csv_file, index=False, sep=";")
 
 
-process_csv_export_file()
+# process_csv_export_file()
 
+
+def negative_data_from_ammod_species():
+
+    # Search for audacity label track txt files
+    file_dir = "data/devise/WS_new/"
+    input_csv_file = file_dir + "ammod-xc-tsa-shorts-val.csv"
+
+    df = pd.read_csv(input_csv_file, header="infer", delimiter=";")
+    df_new = pd.DataFrame(columns=df.columns)
+    # print(df.iloc[0 + 1]["class_id"])
+
+    for ix in range(0, len(df), 2):
+        # Append rows of df
+        if (
+            df.iloc[ix + 1]["class_id"] != "Scolopax rusticola"
+            and df.iloc[ix + 1]["class_id"] != "Crex crex"
+        ):
+            df_new = df_new.append(df.iloc[ix])
+            df_new = df_new.append(df.iloc[ix + 1])
+
+    # print(df)
+
+    outpul_csv_file = file_dir + "ammod-xc-tsa-val-23species.csv"
+    df_new.to_csv(outpul_csv_file, index=False, sep=";")
+
+
+# negative_data_from_ammod_species()
+
+def simplify_FVA_negatives():
+
+    # Search for audacity label track txt files
+    file_dir = "data/devise/WS_new/"
+    input_csv_file = file_dir + "FVA-WS-absent.csv"
+
+    df = pd.read_csv(input_csv_file, header="infer", delimiter=";")
+    df_new = pd.DataFrame(columns=df.columns)
+
+    for ix in range(0, len(df)):
+        # Append rows of df
+        if  df.iloc[ix]["class_id"] == "annotation_interval":
+            df_new = df_new.append(df.iloc[ix])
+            df_new = df_new.append(df.iloc[ix + 1])
+
+    # print(df)
+
+    outpul_csv_file = file_dir + "FVA-WS-absent-short.csv"
+    df_new.to_csv(outpul_csv_file, index=False, sep=";")
+
+simplify_FVA_negatives()
 
 print("Done.")
-
