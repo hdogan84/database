@@ -77,6 +77,25 @@ def simplify_FVA_negatives():
     outpul_csv_file = file_dir + "FVA-WS-absent-short.csv"
     df_new.to_csv(outpul_csv_file, index=False, sep=";")
 
-simplify_FVA_negatives()
+# simplify_FVA_negatives()
+
+
+def compare_Xls_Csv_Testfiles():
+
+    # Search for audacity label track txt files
+    src_dir = root_dir + "Annotationen/_MetadataTestSets/"
+    output_dir = "data/devise/WS_test/"
+
+    input_xls_file = src_dir + "ScolopaxRusticolaAnnotations_v26_5s_Scores.xlsx"
+    df = pd.read_excel(input_xls_file, engine='openpyxl')
+
+    input_csv_file = output_dir + "WS-ARSU2022-pos-neg.csv"
+    df2 = pd.read_csv(input_csv_file, header="infer", delimiter=";")
+ 
+    print(len(df["filename"].unique()))
+    print(len(df2["file_id"].unique()))
+
+
+compare_Xls_Csv_Testfiles()
 
 print("Done.")
