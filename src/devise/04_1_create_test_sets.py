@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import soundfile as sf
+import shutil
 
 from mysql.connector import connect, MySQLConnection
 
@@ -68,7 +69,7 @@ def get_annotations_crex_crex():
         
         query = "SELECT * FROM libro_animalis.annotation_view WHERE collection LIKE '%devise%'"
         query += " AND latin_name = 'Crex crex'"
-        query += " AND annotator LIKE 'Beck, Lars'"
+        #query += " AND annotator LIKE 'Beck, Lars'" # Karl added more annotations by checking false positives of birdid
         query += " AND original_filename LIKE '%Devise%';"
         
         db_cursor.execute(query)
@@ -222,6 +223,45 @@ def get_annotations_Scolopax_rusticola_absent():
     # Hack: set start/end time to 0.0 because otherwise interval will be interpreted as species annotation
     df['start_time'] = 0.0
     df['end_time'] = 0.0
+
+    metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
+    df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
+
+    return df
+
+def get_annotations_Scolopax_rusticola_FVA():
+
+    keys = ['original_filename', 'start_time', 'end_time']
+    #keys += ['start_frequency', 'end_frequency']
+    #keys += ['channel_ix']
+    #keys += ['vocalization_type']
+    keys += ['quality_tag', 'background_level']
+    #keys += ['id_level']
+    keys += ['file_path', 'filename', 'duration', 'channels']
+
+
+    print(keys)
+
+    df_dict = {}
+    for key in keys:
+        df_dict[key] = []
+
+    with db_connection.cursor(dictionary=True) as db_cursor:
+
+        query = "SELECT * FROM libro_animalis.annotation_view WHERE collection = 'FVA (devise)';"
+        
+        db_cursor.execute(query)
+        rows = db_cursor.fetchall()
+
+        for row in rows:
+            for key in keys:
+                df_dict[key].append(row[key])
+            print(row['id'], row['start_time'], row['end_time'], row['start_frequency'], row['end_frequency'], row['vocalization_type'])
+
+        print('n_rows', db_cursor.rowcount)
+
+    df = pd.DataFrame.from_dict(df_dict)
+    print(df)
 
     metadata_path_without_ext = metadata_dir + '_MetadataTestSets/_temp_v01'
     df.to_excel(metadata_path_without_ext + '.xlsx', index=False, engine='openpyxl')
@@ -511,11 +551,34 @@ def split_test_set_via_quality_relative_to_files_before_segmentation(df):
     return df
 
 
+def copy_test_audio_files():
 
+    # Copy all test files in excel sheet from libro_animalis/original to single (species) folder
 
+    # dst_dir = '/net/mfnstore-lin/export/tsa_transfer/AudioData/Devise_TestSets/Crex_crex/'
+    # metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v04_5s_TestSplit'
 
+    dst_dir = '/net/mfnstore-lin/export/tsa_transfer/AudioData/Devise_TestSets/Scolopax_rusticola/'
+    metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaAnnotations_v24_5s_TestSplit'
     
+    src_dir = '/net/mfnstore-lin/export/tsa_transfer/TrainData/libro_animalis/original/'
+    
+    df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
 
+    filenames = list(df['original_filename'].unique())
+    n_files = len(filenames)
+    print('n_files', n_files)
+
+    for file_ix in range(n_files):
+        #if file_ix > 1: break
+        original_filename = filenames[file_ix]
+        df_filename = df[df['original_filename']==original_filename].reset_index(drop=True)
+        src_path = src_dir + df_filename['file_path'][0] + '/' + df_filename['filename'][0]
+        print(file_ix, src_path)
+
+        shutil.copy2(src_path, dst_dir)
+
+        
 
 
 
@@ -524,13 +587,13 @@ def split_test_set_via_quality_relative_to_files_before_segmentation(df):
 
 #df = get_annotations_crex_crex()
 
-#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v01'
+#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v11'
 #df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
 #df = create_test_segments(df)
 
-#metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v02_5s'
-#df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
-#df = split_test_set_via_quality(df)
+# metadata_path_without_ext = metadata_dir + '_MetadataTestSets/CrexCrexAnnotations_v12_5s'
+# df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+# df = split_test_set_via_quality(df)
 
 
 
@@ -554,5 +617,18 @@ def split_test_set_via_quality_relative_to_files_before_segmentation(df):
 #df = split_test_set_via_quality(df)
 #df = split_test_set_via_quality_relative_to_files_before_segmentation(df)
 
+# FVA
+#df = get_annotations_Scolopax_rusticola_FVA()
+
+# metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaFVA_v01'
+# df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+# df = create_test_segments(df, species_latin_name='Scolopax rusticola')
+
+# metadata_path_without_ext = metadata_dir + '_MetadataTestSets/ScolopaxRusticolaFVA_v02_5s'
+# df = pd.read_excel(metadata_path_without_ext + '.xlsx', keep_default_na=False, engine="openpyxl")
+# df = split_test_set_via_quality(df)
+
+
+#copy_test_audio_files()
 
 print('Done.')

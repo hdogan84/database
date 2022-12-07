@@ -7,6 +7,12 @@ import soundfile as sf
 
 from mysql.connector import connect, MySQLConnection
 
+from tools.db import (
+    get_entry_id_or_create_it,
+    get_id_of_entry_in_table,
+    connectToDB,
+)
+
 root_dir = '/mnt/z/Projekte/DeViSe/'
 metadata_dir = root_dir + 'Annotationen/'
 
@@ -87,6 +93,86 @@ def correctCollectionIdForArsu2022ScolopaxRusticolaAbsentFiles():
         db_connection.commit()
 
 #correctCollectionIdForArsu2022ScolopaxRusticolaAbsentFiles()
+
+
+def correct_crex_crex_devise_test():
+
+    # Missing crex crex parts in devise test set annotated by karl
+
+    dry_run = True # True False
+
+    path = root_dir + 'Annotationen/_MetadataTestSets/CrexCrexFalsePositivesToCheck_v02.xlsx'
+    df = pd.read_excel(path, keep_default_na=False, engine='openpyxl')
+    print(df)
+
+
+    annotation_table = 'annotation_of_species'
+
+    vocalization_type = 'song'
+    annotator_id = 6099 # Karl
+    species_id = 2597
+
+    with db_connection.cursor(dictionary=False) as db_cursor:
+
+        for ix, row in df.iterrows():
+
+            print(ix, row['original_filename'], row['start_time'])
+
+            # Get record_id
+            query = "SELECT id FROM libro_animalis.record WHERE original_filename = '"
+            query += row['original_filename'] + "';"
+            db_cursor.execute(query)
+            rows = db_cursor.fetchall()
+            if db_cursor.rowcount != 1:
+                print('Warning no or multible record_id for', row['original_filename'])
+
+            record_id = rows[0][0]
+
+
+
+            annotation = [
+                ('record_id', record_id),
+
+                ('start_time', row['start_time']),
+                ('end_time', row['end_time']),
+                #('start_frequency', None),
+                #('end_frequency', None),
+                #('channel_ix', None),
+                
+                #('individual_id', None),
+                #('group_id', None),
+                
+                ('vocalization_type', vocalization_type),
+                ('quality_tag', row['quality_tag']),
+
+                ('id_level', row['id_level']),
+
+                ('xeno_canto_background', 0),
+
+                ('species_id', species_id),
+
+
+                ('background_level', row['background_level']),
+                ('remarks', row['remarks']),
+                
+                ('annotator_id', annotator_id)
+            ]
+
+
+            (annotation_id, annotation_created) = get_entry_id_or_create_it(
+                db_cursor,
+                annotation_table,
+                annotation,
+                annotation,
+                info=True,
+            )
+            #print('annotation_id', annotation_id)
+
+            if dry_run is False:
+                db_connection.commit()
+
+#correct_crex_crex_devise_test()
+
 
 
 print('Done.')
