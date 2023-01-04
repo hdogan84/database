@@ -11,7 +11,7 @@ root_dir = "/mnt/z/Projekte/DeViSe/"
 
 def process_csv_export_file():
 
-    # Search for audacity label track txt files
+    # This function sort the annotations start_time, to avoid errors in data loader
     file_dir = "data/devise/WS_new/"
     input_csv_file = file_dir + "devise-WS_MfN_ARSU2021.csv"
 
@@ -28,6 +28,29 @@ def process_csv_export_file():
 
 
 # process_csv_export_file()
+
+def merge_multiple_csv_export_files():
+
+    # 
+    file_dir = "data/devise/WK_WS_new/"
+    input_csv_files = [ "WS-ARSU2022-pos-neg.csv", "WK-test-pos-neg.csv"]
+    output_csv_file = "WK-WS-test-pos-neg.csv"
+
+    df = pd.read_csv(file_dir + input_csv_files[0], header="infer", delimiter=";")
+
+    df_merged = pd.DataFrame(columns=df.columns)
+
+    for file in input_csv_files:
+
+        df = pd.read_csv(file_dir + file, header="infer", delimiter=";")
+        df_merged = pd.concat([df_merged, df], ignore_index=True)
+
+    df_merged = df_merged.sort_values(["file_id", "start_time"])
+    df = df.drop_duplicates()
+
+    df_merged.to_csv(file_dir + output_csv_file, index=False, sep=";")
+
+merge_multiple_csv_export_files()
 
 
 def negative_data_from_ammod_species():
@@ -96,6 +119,6 @@ def compare_Xls_Csv_Testfiles():
     print(len(df2["file_id"].unique()))
 
 
-compare_Xls_Csv_Testfiles()
+#compare_Xls_Csv_Testfiles()
 
 print("Done.")

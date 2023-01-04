@@ -12,6 +12,7 @@ root_dir = "/mnt/z/Projekte/DeViSe/"
 def process_json2excel(model_name):
 
     class_index = 1  #Crex crex=0  & Waldschnepfe=1
+    channel = 0
 
     model_dir = result_dir + model_name + "-1/"
 
@@ -23,11 +24,10 @@ def process_json2excel(model_name):
     df_new = df
     df_new[model_name] = None # add new column with the model name
 
-    # !! this part needed when the input is Mario's excel file
-    #for i in range(len(df_new)):
-    #    df_new.at[i,"filename"]=df.at[i,"filename"][:-4]
-    
-    print(df_new["filename"])
+    if "file_id" not in df_new.columns: 
+        df_new["file_id"] = None
+        for i in range(len(df_new)):
+            df_new.at[i,"file_id"]=df.at[i,"filename"][:-4]
 
     # go through results
     count=0
@@ -38,7 +38,7 @@ def process_json2excel(model_name):
         f=open(model_dir+file)
         result_file = json.load(f)
         file_id = result_file["fileId"]
-        result_arr = result_file["channels"][0]
+        result_arr = result_file["channels"][channel]
         count += len(result_arr)
         idx=df.index[df['filename']==file_id].tolist()
         #print(idx)
