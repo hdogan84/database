@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-'AVRACRCR'
+    'AVRACRCR'
 )
 """
 query_files = """

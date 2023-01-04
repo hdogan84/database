@@ -5,7 +5,7 @@ from pathlib import Path
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
-from derivates import Standart32khz
+from derivates.Standart22050hz_Highpass100Hz import Standart22050hz_Highpass100Hz as Derivate6
 import argparse
 from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-    'AVRACRCR'
+    'AVSCSCRU'
 )
 """
 query_files = """
@@ -64,9 +64,6 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     r.collection_id = 176 and
-    a.annotator_id = 6193 and
-    r.location_id = 57248 and
-    r.original_filename LIKE '%mono%' and
     s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -80,7 +77,6 @@ ORDER BY latin_name ASC
 """.format(
     class_list
 )
-
 
 class Index(IntEnum):
     LATIN_NAME = 0
@@ -107,7 +103,8 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
             filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
-            derivatateCreator = Standart32khz(config.database)
+            print(len(filepathes))
+            derivatateCreator = Derivate6(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
                 filepathes
             )
@@ -272,7 +269,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WK-XXX.csv",
+    default="devise-WS-22kHz-100Hz.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

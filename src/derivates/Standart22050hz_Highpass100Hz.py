@@ -14,7 +14,7 @@ sampleRateDst = 22050
 
 
 class Standart22050hz_Highpass100Hz(DerivativeBaseClass):
-    name = "Standart22.050khzNormalisedHighpassFilter"
+    name = "Standart22.050khzNormalised-HP100Hz"
 
     sample_rate: int = sampleRateDst
     resampleType = "kaiser_best"  # "kaiser_fast"  # or use
@@ -23,7 +23,7 @@ class Standart22050hz_Highpass100Hz(DerivativeBaseClass):
     description: str = "Normalised: 0.7071;  Highpass: butter, cutoff 100Hz; "
 
     def __init__(self, config: DatabaseConfig):
-        super(Standart22050hz, self).__init__(config)
+        super(Standart22050hz_Highpass100Hz, self).__init__(config)
 
     def apply_high_pass_filter(self, input, sample_rate: int, filePath: Path):
         order = 1
