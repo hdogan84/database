@@ -12,36 +12,13 @@ from enum import Enum, IntEnum
 from export_scripts.export_tools import map_filename_to_derivative_filepath
 
 COLLECTION_ID = 1  # 155
-SET_FILENAME = "ammod-XC(calltype).csv"
+SET_FILENAME = "devise-WS-XC.csv"
 CLASS_LIST_FILENAME = "ammod-class-list.csv"
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-'AVRACRCR',
-'AVSCSCRU',
-'AVPIDEMA',
-'AVPDPEAT',
-'AVPDLOCR',
-'AVPDPOPA',
-'AVPDCYCA',
-'AVPDPAMA',
-'AVPCPHSI',
-'AVPCPHTR',
-'AVSYSYAT',
-'AVTGTRTR',
-'AVSISIEU',
-'AVTUTUME',
-'AVTUTUPH',
-'AVTUTUVI',
-'AVMUMUST',
-'AVMUERRU',
-'AVMUFIHY',
-'AVMUPHPH',
-'AVMTANTR',
-'AVFRFRCO',
-'AVFRCOCO',
-'AVFRCHCH',
-'AVFRSPSP')
+'AVSCSCRU'
+)
 """
 query_files = """
 SELECT 
@@ -55,7 +32,7 @@ FROM
 WHERE
     r.collection_id = {} and
     r.duration > 5.0 and
-    r.duration < 30.1 and
+    r.duration < 3000.1 and
     s.olaf8_id IN {}
 
 """.format(
@@ -87,7 +64,7 @@ FROM
 WHERE
     r.collection_id = {} and
     r.duration > 5 and
-    r.duration < 30.1 and
+    r.duration < 3000.1 and
     s.olaf8_id IN {} 
    
  ORDER BY r.filename , a.start_time ASC

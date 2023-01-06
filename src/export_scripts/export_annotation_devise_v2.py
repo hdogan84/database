@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-    'AVSCSCRU'
+    'AVRACRCR'
 )
 """
 query_files = """
@@ -269,7 +269,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WS-22kHz-100Hz.csv",
+    default="devise-WK-22kHz-100Hz.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
