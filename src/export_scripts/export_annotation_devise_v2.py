@@ -14,7 +14,7 @@ from export_scripts.export_tools import map_filename_to_derivative_filepath
 CONFIG_FILE_PATH = Path("config_training.cfg")
 class_list = """
 (
-    'AVRACRCR'
+    'AVSCSCRU'
 )
 """
 query_files = """
@@ -52,7 +52,8 @@ SELECT
     i.start_time,
     i.end_time,
     r.id,
-    r.original_filename
+    r.original_filename,
+    a.channel_ix
     
 FROM
     annotation_of_species AS a
@@ -64,6 +65,7 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     r.collection_id = 176 and
+    r.date NOT LIKE '2022%' and 
     s.olaf8_id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -94,6 +96,9 @@ class Index(IntEnum):
     ANNOTATION_INTERVAL_ID = 12
     ANNOTATION_INTERVAL_START = 13
     ANNOTATION_INTERVAL_END = 14
+    ID = 15
+    ORIGINAL_NAME = 16
+    CHANNEL_IX =17
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -119,6 +124,9 @@ def annotation_to_label(annotation):
     stop = annotation[Index.END_TIME]
     label = annotation[Index.LATIN_NAME]
     filename = annotation[Index.FILENAME]
+    calltype = annotation[Index.VOCALIZATION_TYPE]
+    channel_ix = annotation[Index.CHANNEL_IX]
+
     # return (duration, start, stop, label, 1, filename, channels, collection_id)
     return (
         Path(filename).stem,
@@ -128,7 +136,8 @@ def annotation_to_label(annotation):
         label,
         start,
         stop,
-        "",
+        calltype,
+        channel_ix
     )
 
 
@@ -219,7 +228,7 @@ def export_data(
 ):
     config = parse_config(config_path)
 
-    print("Search an create file derivations")
+    print("Search and create file derivations")
     derivates_dict = create_file_derivates(config)
     # multi_labels = create_multiabels(config)
     # pointing_to_derivates_multi_labels = list(
@@ -255,6 +264,7 @@ def export_data(
             "start_time",
             "end_time",
             "type",
+            "channel_ix",
         ],
     )
     class_list = create_class_list(config)
@@ -269,7 +279,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WK-22kHz-100Hz.csv",
+    default="devise-WS-train-22kHz-CH_IX.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

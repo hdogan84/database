@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import soundfile as sf
 import time
+import numpy as np
 
 root_dir = "/mnt/z/Projekte/DeViSe/"
 
@@ -50,7 +51,7 @@ def merge_multiple_csv_export_files():
 
     df_merged.to_csv(file_dir + output_csv_file, index=False, sep=";")
 
-merge_multiple_csv_export_files()
+# merge_multiple_csv_export_files()
 
 
 def negative_data_from_ammod_species():
@@ -77,8 +78,9 @@ def negative_data_from_ammod_species():
     outpul_csv_file = file_dir + "ammod-xc-tsa-val-23species.csv"
     df_new.to_csv(outpul_csv_file, index=False, sep=";")
 
-
 # negative_data_from_ammod_species()
+
+
 
 def simplify_FVA_negatives():
 
@@ -101,6 +103,56 @@ def simplify_FVA_negatives():
     df_new.to_csv(outpul_csv_file, index=False, sep=";")
 
 # simplify_FVA_negatives()
+
+
+def shorten_XC_export():
+
+    # Search for audacity label track txt files
+    file_dir = "data/devise/derivate6/"
+    input_csv_file = file_dir + "devise-ammod25-XC(calltype).csv"
+    max_annotation = 200
+
+    df = pd.read_csv(input_csv_file, header="infer", delimiter=";")
+    species, counts = np.unique(df["class_id"], return_counts=True)
+    species = species.tolist()
+    species.remove("annotation_interval")
+    counts=counts[:25]
+
+    mydict=dict(zip(species,0*counts))
+
+    df_new = pd.DataFrame(columns=df.columns)
+    df_new2 = df_new
+
+    # correct if 'annotation_interval' is occuring consequtively
+    for ix in range(0, len(df)-1):
+
+        anno_id = df.iloc[ix]["class_id"]
+        class_id = df.iloc[ix+1]["class_id"]
+
+        if anno_id == 'annotation_interval' and class_id != 'annotation_interval': 
+            df_new = df_new.append(df.iloc[ix])
+            df_new = df_new.append(df.iloc[ix + 1])
+
+
+    # shorten the annotations to a max number
+    for ix in range(0, len(df_new)-2, 2):
+
+        class_id = df_new.iloc[ix+1]["class_id"]
+
+        if mydict[class_id] > max_annotation:
+            continue
+        else:
+            # Append rows of df
+            df_new2 = df_new2.append(df_new.iloc[ix])
+            df_new2 = df_new2.append(df_new.iloc[ix + 1])
+            mydict[class_id] += 1
+
+    #print(df_new)
+
+    outpul_csv_file = file_dir + "devise-ammod25-XC-short.csv"
+    df_new2.to_csv(outpul_csv_file, index=False, sep=";")
+
+shorten_XC_export()
 
 
 def compare_Xls_Csv_Testfiles():
