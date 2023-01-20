@@ -279,7 +279,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="devise-WS-train-22kHz-CH_IX.csv",
+    default="devXXX.csv",
     help="target filename for label csv",
 )
 parser.add_argument(

@@ -52,7 +52,7 @@ SELECT
     i.start_time,
     i.end_time,
     r.original_filename,
-    r.id,
+    r.id
     
 FROM
     annotation_of_noise AS a
@@ -64,6 +64,7 @@ FROM
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
     r.collection_id = 176 and 
+    r.date LIKE '2022%' and 
     n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -275,7 +276,7 @@ parser.add_argument(
     metavar="string",
     type=str,
     nargs="?",
-    default="ARSU21-WS-absent.csv",
+    default="ARSU22-WS-absent.csv",
     help="target filename for label csv",
 )
 parser.add_argument(
