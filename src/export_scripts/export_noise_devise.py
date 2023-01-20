@@ -5,7 +5,7 @@ from pathlib import Path
 from tools.logging import debug
 from tools.configuration import DatabaseConfig, parse_config
 from tools.db import connectToDB
-from derivates import Standart32khz
+from derivates.Standart22050hz_Highpass100Hz import Standart22050hz_Highpass100Hz as Derivate6
 import argparse
 from tools.file_handling.csv import write_to_csv
 from enum import Enum, IntEnum
@@ -51,8 +51,8 @@ SELECT
     i.id,
     i.start_time,
     i.end_time,
+    r.original_filename,
     r.id,
-    r.original_filename
     
 FROM
     annotation_of_noise AS a
@@ -63,7 +63,7 @@ FROM
         LEFT JOIN
     annotation_interval AS i ON i.id = a.annotation_interval_id 
 WHERE
-    r.location_id = 57247 and 
+    r.collection_id = 176 and 
     n.id IN {}
 ORDER BY r.filename , a.start_time ASC
 """.format(
@@ -95,6 +95,7 @@ class Index(IntEnum):
     ANNOTATION_INTERVAL_ID = 12
     ANNOTATION_INTERVAL_START = 13
     ANNOTATION_INTERVAL_END = 14
+    ORIGINAL_FILENAME = 15
 
 
 def create_file_derivates(config: DatabaseConfig):
@@ -104,7 +105,7 @@ def create_file_derivates(config: DatabaseConfig):
             db_cursor.execute(query_files)
             data = db_cursor.fetchall()
             filepathes = list(map(lambda x: (Path(x[1]).joinpath(x[0])), data))
-            derivatateCreator = Standart32khz(config.database)
+            derivatateCreator = Derivate6(config.database)
             file_derivates_dict = derivatateCreator.get_original_derivate_dict(
                 filepathes
             )
@@ -119,6 +120,7 @@ def annotation_to_label(annotation):
     stop = annotation[Index.END_TIME]
     label = annotation[Index.LATIN_NAME]
     filename = annotation[Index.FILENAME]
+    original_fname = annotation[Index.ORIGINAL_FILENAME]
     # return (duration, start, stop, label, 1, filename, channels, collection_id)
     return (
         Path(filename).stem,
@@ -128,7 +130,7 @@ def annotation_to_label(annotation):
         label,
         start,
         stop,
-        "",
+        original_fname,
     )
 
 
@@ -138,6 +140,8 @@ def create_annoation_interval_label(annotation_list):
     collection_id = annotation[Index.COLLECTION_ID]
     channels = annotation[Index.CHANNELS]
     duration = annotation[Index.DURATION]
+    original_fname = annotation[Index.ORIGINAL_FILENAME]
+
     start = (
         annotation[Index.ANNOTATION_INTERVAL_START]
         if annotation[Index.ANNOTATION_INTERVAL_ID] is not None
@@ -159,7 +163,7 @@ def create_annoation_interval_label(annotation_list):
         label,
         start,
         stop,
-        "",
+        original_fname,
     )
 
 
@@ -254,7 +258,7 @@ def export_data(
             "class_id",
             "start_time",
             "end_time",
-            "type",
+            "original_filename",
         ],
     )
     noise_id_list = create_noise_id_list(config)
